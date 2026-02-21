@@ -1,0 +1,16 @@
+Rack-SDK/
+*.zip
+tests/test_fourmm_dsp
+tests/test_fourmm_engine
+tests/test_vortexmm_dsp
+*.dSYM/
+.claude/
+build/
+dist/
+plugin.dylib
+plugin.dll
+plugin.so
+*.d
+*.o
+dep/
+._*

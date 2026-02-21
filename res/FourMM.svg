@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="132.08mm" height="128.5mm" viewBox="0 0 132.08 128.5">
+  <rect width="132.08" height="128.5" fill="#1a1a2e" />
+  <rect x="16.0" y="11.0" width="100.1" height="8" rx="1" fill="#0a0a1a" stroke="#404060" stroke-width="0.3" />
+  <circle cx="20.0" cy="26.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="66.0" cy="26.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="105.1" cy="26.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="114.1" cy="26.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="20.0" cy="36.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="29.0" cy="36.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="37.0" cy="36.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="105.1" cy="36.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="114.1" cy="36.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <line x1="4.0" y1="43.0" x2="128.1" y2="43.0" stroke="#404060" stroke-width="0.2" />
+  <line x1="47.0" y1="50.0" x2="47.0" y2="119.0" stroke="#404060" stroke-width="0.2" />
+  <line x1="74.0" y1="50.0" x2="74.0" y2="119.0" stroke="#404060" stroke-width="0.2" />
+  <line x1="101.1" y1="50.0" x2="101.1" y2="119.0" stroke="#404060" stroke-width="0.2" />
+  <circle cx="25.0" cy="55.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <rect x="31.0" y="50.0" width="5.0" height="10.0" fill="#444" stroke="#888" stroke-width="0.3" />
+  <circle cx="42.0" cy="55.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="52.0" cy="55.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <rect x="58.0" y="50.0" width="5.0" height="10.0" fill="#444" stroke="#888" stroke-width="0.3" />
+  <circle cx="69.0" cy="55.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="79.0" cy="55.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <rect x="85.0" y="50.0" width="5.0" height="10.0" fill="#444" stroke="#888" stroke-width="0.3" />
+  <circle cx="96.0" cy="55.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="106.1" cy="55.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <rect x="112.1" y="50.0" width="5.0" height="10.0" fill="#444" stroke="#888" stroke-width="0.3" />
+  <circle cx="123.1" cy="55.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="25.0" cy="70.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="33.5" cy="70.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="42.0" cy="70.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="52.0" cy="70.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="60.5" cy="70.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="69.0" cy="70.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="79.0" cy="70.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="87.5" cy="70.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="96.0" cy="70.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="106.1" cy="70.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="114.6" cy="70.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="123.1" cy="70.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="25.0" cy="85.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="33.5" cy="85.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="42.0" cy="85.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="52.0" cy="85.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="60.5" cy="85.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="69.0" cy="85.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="79.0" cy="85.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="87.5" cy="85.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="96.0" cy="85.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="106.1" cy="85.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="114.6" cy="85.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="123.1" cy="85.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="25.0" cy="100.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="33.5" cy="100.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="42.0" cy="100.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="52.0" cy="100.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="60.5" cy="100.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="69.0" cy="100.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="79.0" cy="100.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="87.5" cy="100.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="96.0" cy="100.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="106.1" cy="100.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="114.6" cy="100.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="123.1" cy="100.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="25.0" cy="115.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="33.5" cy="115.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="42.0" cy="115.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="52.0" cy="115.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="60.5" cy="115.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="69.0" cy="115.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="79.0" cy="115.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="87.5" cy="115.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="96.0" cy="115.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="106.1" cy="115.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="114.6" cy="115.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="123.1" cy="115.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />
+</svg>

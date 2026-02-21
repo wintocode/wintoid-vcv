@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="71.12mm" height="128.5mm" viewBox="0 0 71.12 128.5">
+  <rect width="71.12" height="128.5" fill="#1a1a2e" />
+  <rect x="10.0" y="12.0" width="51.1" height="8" rx="1" fill="#0a0a1a" stroke="#404060" stroke-width="0.3" />
+  <circle cx="35.6" cy="28.0" r="4.0" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="20.0" cy="40.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="51.1" cy="40.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="35.6" cy="50.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
+  <circle cx="38.0" cy="62.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="50.0" cy="62.0" r="2.0" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="38.0" cy="70.5" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="50.0" cy="70.5" r="2.0" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="38.0" cy="79.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="50.0" cy="79.0" r="2.0" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="38.0" cy="87.5" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="50.0" cy="87.5" r="2.0" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="38.0" cy="96.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="50.0" cy="96.0" r="2.0" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="38.0" cy="104.5" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="50.0" cy="104.5" r="2.0" fill="#333" stroke="#666" stroke-width="0.3" />
+  <circle cx="20.0" cy="116.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="51.1" cy="116.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+</svg>
