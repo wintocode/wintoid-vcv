@@ -410,6 +410,7 @@ private:
 const char* FoldTypeDisplay::shortNames[3] = { "Sym", "Asym", "Soft" };
 const char* FoldTypeDisplay::longNames[3] = { "Symmetric", "Asymmetric", "Soft Clip" };
 
+namespace {
 struct PanelLabels : Widget {
     PanelLabels() {
         using namespace fourmm_layout;
@@ -430,46 +431,43 @@ struct PanelLabels : Widget {
         nvgFontSize(args.vg, 14);
         nvgFillColor(args.vg, nvgRGB(220, 220, 220));
         nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        nvgText(args.vg, mm2px(PANEL_WIDTH / 2), mm2px(6.5f), "FourMM", nullptr);
+        nvgText(args.vg, mm2px(PANEL_WIDTH / 2), mm2px(8.0f), "FourMM", nullptr);
 
-        // ── wintoid logo (top left) ──
-        // Use bold font for the logo
+        // ── wintoid logo (bottom center, between screws) ──
         nvgFontFaceId(args.vg, font->handle);
         nvgFontSize(args.vg, 10);
-        nvgTextAlign(args.vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+        nvgTextAlign(args.vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-        float logoX = mm2px(11.0f);  // moved right to avoid screw
-        float logoY = mm2px(2.0f);
-
-        // Measure "wint" to position "oid"
         float wintBounds[4];
         nvgTextBounds(args.vg, 0, 0, "wint", nullptr, wintBounds);
         float wintWidth = wintBounds[2] - wintBounds[0];
+        float oidBounds[4];
+        nvgTextBounds(args.vg, 0, 0, "oid", nullptr, oidBounds);
+        float oidWidth = oidBounds[2] - oidBounds[0];
+        float totalWidth = wintWidth + oidWidth;
 
-        // Draw "wint" in white
+        float logoX = mm2px(PANEL_WIDTH / 2) - totalWidth / 2;
+        float logoY = mm2px(124.5f);
+
         nvgFillColor(args.vg, nvgRGB(255, 255, 255));
         nvgText(args.vg, logoX, logoY, "wint", nullptr);
 
-        // Draw "oid" in orange (normal spacing)
         nvgFillColor(args.vg, nvgRGB(255, 77, 0));
         nvgText(args.vg, logoX + wintWidth, logoY, "oid", nullptr);
 
-        // Draw horizontal lines below logo
-        float lineY = logoY + mm2px(4.5f);
+        float lineY = logoY + mm2px(2.5f);
         nvgStrokeWidth(args.vg, 1.0f);
 
-        // White line (under "wint")
         nvgStrokeColor(args.vg, nvgRGBA(255, 255, 255, 200));
         nvgBeginPath(args.vg);
         nvgMoveTo(args.vg, logoX, lineY);
         nvgLineTo(args.vg, logoX + wintWidth, lineY);
         nvgStroke(args.vg);
 
-        // Orange line (under "oid")
         nvgStrokeColor(args.vg, nvgRGB(255, 77, 0));
         nvgBeginPath(args.vg);
         nvgMoveTo(args.vg, logoX + wintWidth, lineY);
-        nvgLineTo(args.vg, logoX + wintWidth * 2, lineY);
+        nvgLineTo(args.vg, logoX + totalWidth, lineY);
         nvgStroke(args.vg);
 
         // ── Global control labels (alongside controls, right-aligned) ──
@@ -483,7 +481,7 @@ struct PanelLabels : Widget {
 
         float jackOff = mm2px(4.7f);   // jack radius + 1.5mm gap
         nvgText(args.vg, mm2px(VOCT_JACK_X) - jackOff, mm2px(VOCT_JACK_Y), "V/Oct", nullptr);
-        nvgText(args.vg, mm2px(XM_KNOB_X) - knobOff, mm2px(XM_KNOB_Y), "Mod", nullptr);
+        nvgText(args.vg, mm2px(XM_KNOB_X) - knobOff, mm2px(XM_KNOB_Y), "XMod", nullptr);
         // Ext PM label: positioned left of jack
         nvgText(args.vg, mm2px(FM_CV_JACK_X) - jackOff, mm2px(FM_CV_JACK_Y), "Ext PM", nullptr);
 
@@ -511,6 +509,7 @@ struct PanelLabels : Widget {
         Widget::drawLayer(args, layer);
     }
 };
+} // anonymous namespace
 
 struct FourMMWidget : ModuleWidget {
     FourMMWidget(FourMM* module) {

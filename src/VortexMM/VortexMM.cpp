@@ -16,27 +16,20 @@ struct VortexMM : Module {
         CUTOFF_PARAM,
         RESONANCE_PARAM,
         DRIVE_PARAM,
-        MIX_PARAM,
 
         // CV attenuverters
-        VOCT_CV_ATTEN_PARAM,
-        FM_CV_ATTEN_PARAM,
+        CUTOFF_CV_ATTEN_PARAM,
         RESONANCE_CV_ATTEN_PARAM,
-        MODE_CV_ATTEN_PARAM,
         DRIVE_CV_ATTEN_PARAM,
-        MIX_CV_ATTEN_PARAM,
 
         PARAMS_LEN
     };
     enum InputId {
         AUDIO_INPUT,
 
-        VOCT_CV_INPUT,
-        FM_CV_INPUT,
+        CUTOFF_CV_INPUT,
         RESONANCE_CV_INPUT,
-        MODE_CV_INPUT,
         DRIVE_CV_INPUT,
-        MIX_CV_INPUT,
 
         INPUTS_LEN
     };
@@ -65,24 +58,17 @@ struct VortexMM : Module {
 
         configParam(RESONANCE_PARAM, 0.f, 1.f, 0.f, "Resonance", "%", 0.f, 100.f);
         configParam(DRIVE_PARAM, 0.f, 1.f, 0.f, "Drive", "%", 0.f, 100.f);
-        configParam(MIX_PARAM, 0.f, 1.f, 1.f, "Mix", "%", 0.f, 100.f);
 
         // CV attenuverters
-        configParam(VOCT_CV_ATTEN_PARAM, -1.f, 1.f, 0.f, "V/OCT CV", "%", 0.f, 100.f);
-        configParam(FM_CV_ATTEN_PARAM, -1.f, 1.f, 0.f, "FM CV", "%", 0.f, 100.f);
+        configParam(CUTOFF_CV_ATTEN_PARAM, -1.f, 1.f, 0.f, "Cutoff CV", "%", 0.f, 100.f);
         configParam(RESONANCE_CV_ATTEN_PARAM, -1.f, 1.f, 0.f, "Resonance CV", "%", 0.f, 100.f);
-        configParam(MODE_CV_ATTEN_PARAM, -1.f, 1.f, 0.f, "Mode CV", "%", 0.f, 100.f);
         configParam(DRIVE_CV_ATTEN_PARAM, -1.f, 1.f, 0.f, "Drive CV", "%", 0.f, 100.f);
-        configParam(MIX_CV_ATTEN_PARAM, -1.f, 1.f, 0.f, "Mix CV", "%", 0.f, 100.f);
 
         // Inputs
         configInput(AUDIO_INPUT, "Audio");
-        configInput(VOCT_CV_INPUT, "Cutoff V/OCT");
-        configInput(FM_CV_INPUT, "Cutoff FM");
+        configInput(CUTOFF_CV_INPUT, "Cutoff CV");
         configInput(RESONANCE_CV_INPUT, "Resonance CV");
-        configInput(MODE_CV_INPUT, "Mode CV");
         configInput(DRIVE_CV_INPUT, "Drive CV");
-        configInput(MIX_CV_INPUT, "Mix CV");
 
         // Output
         configOutput(AUDIO_OUTPUT, "Audio");
@@ -93,16 +79,9 @@ struct VortexMM : Module {
 
         // --- Read input ---
         float input = inputs[AUDIO_INPUT].getVoltage() / 5.f;  // normalize to ~+/-1
-        float dry = input;
 
         // --- Mode ---
         int mode = (int)params[MODE_PARAM].getValue();
-        if (inputs[MODE_CV_INPUT].isConnected()) {
-            float modeCv = inputs[MODE_CV_INPUT].getVoltage()
-                         * params[MODE_CV_ATTEN_PARAM].getValue();
-            int modeOffset = (int)(modeCv * 2.4f);
-            mode = clamp(mode + modeOffset, 0, 11);
-        }
 
         // Reset filter state when mode changes
         if (mode != lastMode) {
@@ -115,16 +94,10 @@ struct VortexMM : Module {
         // --- Cutoff ---
         float cutoff = params[CUTOFF_PARAM].getValue();
 
-        if (inputs[VOCT_CV_INPUT].isConnected()) {
-            float voctCv = inputs[VOCT_CV_INPUT].getVoltage()
-                         * params[VOCT_CV_ATTEN_PARAM].getValue();
-            cutoff *= vortex::voct_to_mult(voctCv);
-        }
-
-        if (inputs[FM_CV_INPUT].isConnected()) {
-            float fmCv = inputs[FM_CV_INPUT].getVoltage()
-                       * params[FM_CV_ATTEN_PARAM].getValue();
-            cutoff *= vortex::voct_to_mult(fmCv);
+        if (inputs[CUTOFF_CV_INPUT].isConnected()) {
+            float cutoffCv = inputs[CUTOFF_CV_INPUT].getVoltage()
+                           * params[CUTOFF_CV_ATTEN_PARAM].getValue();
+            cutoff *= vortex::voct_to_mult(cutoffCv);
         }
 
         cutoff = clamp(cutoff, 20.f, 20000.f);
@@ -147,14 +120,6 @@ struct VortexMM : Module {
             float driveCv = inputs[DRIVE_CV_INPUT].getVoltage()
                           * params[DRIVE_CV_ATTEN_PARAM].getValue() / 10.f;
             drv = clamp(drv + driveCv, 0.f, 1.f);
-        }
-
-        // --- Mix ---
-        float mix = params[MIX_PARAM].getValue();
-        if (inputs[MIX_CV_INPUT].isConnected()) {
-            float mixCv = inputs[MIX_CV_INPUT].getVoltage()
-                        * params[MIX_CV_ATTEN_PARAM].getValue() / 10.f;
-            mix = clamp(mix + mixCv, 0.f, 1.f);
         }
 
         // --- Drive stage ---
@@ -235,11 +200,8 @@ struct VortexMM : Module {
         f2b.z0 = vortex::flush_denormal(f2b.z0);
         f2b.z1 = vortex::flush_denormal(f2b.z1);
 
-        // --- Mix ---
-        float result = dry * (1.f - mix) + wet * mix;
-
         // Output at +/-5V
-        outputs[AUDIO_OUTPUT].setVoltage(result * 5.f);
+        outputs[AUDIO_OUTPUT].setVoltage(wet * 5.f);
     }
 };
 
@@ -258,7 +220,7 @@ struct ModeDisplay : Widget {
 
     ModeDisplay() {
         using namespace vortexmm_layout;
-        float w = PANEL_WIDTH - 20;
+        float w = PANEL_WIDTH - 10;
         box.size = mm2px(Vec(w, 8));
     }
 
@@ -310,6 +272,7 @@ struct ModeDisplay : Widget {
     }
 };
 
+namespace {
 struct PanelLabels : Widget {
     PanelLabels() {
         using namespace vortexmm_layout;
@@ -330,18 +293,22 @@ struct PanelLabels : Widget {
         nvgFontSize(args.vg, 14);
         nvgFillColor(args.vg, nvgRGB(220, 220, 220));
         nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        nvgText(args.vg, mm2px(PANEL_WIDTH / 2), mm2px(6.5f), "VortexMM", nullptr);
+        nvgText(args.vg, mm2px(PANEL_WIDTH / 2), mm2px(8.0f), "VortexMM", nullptr);
 
-        // wintoid logo
+        // wintoid logo (bottom center, between screws)
         nvgFontSize(args.vg, 10);
-        nvgTextAlign(args.vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-
-        float logoX = mm2px(11.0f);
-        float logoY = mm2px(2.0f);
+        nvgTextAlign(args.vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
         float wintBounds[4];
         nvgTextBounds(args.vg, 0, 0, "wint", nullptr, wintBounds);
         float wintWidth = wintBounds[2] - wintBounds[0];
+        float oidBounds[4];
+        nvgTextBounds(args.vg, 0, 0, "oid", nullptr, oidBounds);
+        float oidWidth = oidBounds[2] - oidBounds[0];
+        float totalWidth = wintWidth + oidWidth;
+
+        float logoX = mm2px(PANEL_WIDTH / 2) - totalWidth / 2;
+        float logoY = mm2px(124.5f);
 
         nvgFillColor(args.vg, nvgRGB(255, 255, 255));
         nvgText(args.vg, logoX, logoY, "wint", nullptr);
@@ -349,7 +316,7 @@ struct PanelLabels : Widget {
         nvgFillColor(args.vg, nvgRGB(255, 77, 0));
         nvgText(args.vg, logoX + wintWidth, logoY, "oid", nullptr);
 
-        float lineY = logoY + mm2px(4.5f);
+        float lineY = logoY + mm2px(2.5f);
         nvgStrokeWidth(args.vg, 1.0f);
 
         nvgStrokeColor(args.vg, nvgRGBA(255, 255, 255, 200));
@@ -361,43 +328,29 @@ struct PanelLabels : Widget {
         nvgStrokeColor(args.vg, nvgRGB(255, 77, 0));
         nvgBeginPath(args.vg);
         nvgMoveTo(args.vg, logoX + wintWidth, lineY);
-        nvgLineTo(args.vg, logoX + wintWidth * 2, lineY);
+        nvgLineTo(args.vg, logoX + totalWidth, lineY);
         nvgStroke(args.vg);
 
-        // Knob labels
+        // Knob labels (above each knob)
         nvgFontSize(args.vg, 9);
         nvgFillColor(args.vg, nvgRGB(180, 180, 180));
         nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
 
-        nvgText(args.vg, mm2px(CUTOFF_KNOB_X), mm2px(CUTOFF_KNOB_Y) - mm2px(5.0f), "Cutoff", nullptr);
-        nvgText(args.vg, mm2px(RESONANCE_KNOB_X), mm2px(RESONANCE_KNOB_Y) - mm2px(3.5f), "Reso", nullptr);
-        nvgText(args.vg, mm2px(DRIVE_KNOB_X), mm2px(DRIVE_KNOB_Y) - mm2px(3.5f), "Drive", nullptr);
-        nvgText(args.vg, mm2px(MIX_KNOB_X), mm2px(MIX_KNOB_Y) - mm2px(3.5f), "Mix", nullptr);
-
-        // CV row labels (left-aligned)
-        nvgFontSize(args.vg, 8);
-        nvgFillColor(args.vg, nvgRGB(160, 160, 180));
-        nvgTextAlign(args.vg, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
-
-        const char* cvLabels[] = { "V/Oct", "FM", "Reso", "Mode", "Drive", "Mix" };
-        const float cvY[] = {
-            CV_VOCT_JACK_Y, CV_FM_JACK_Y, CV_RESONANCE_JACK_Y,
-            CV_MODE_JACK_Y, CV_DRIVE_JACK_Y, CV_MIX_JACK_Y
-        };
-        float labelX = mm2px(CV_VOCT_JACK_X) - mm2px(4.7f);
-        for (int i = 0; i < 6; i++)
-            nvgText(args.vg, labelX, mm2px(cvY[i]), cvLabels[i], nullptr);
+        nvgText(args.vg, mm2px(CUTOFF_KNOB_X), mm2px(CUTOFF_KNOB_Y - 6.0f), "Cutoff", nullptr);
+        nvgText(args.vg, mm2px(RESONANCE_KNOB_X), mm2px(RESONANCE_KNOB_Y - 6.0f), "Reso", nullptr);
+        nvgText(args.vg, mm2px(DRIVE_KNOB_X), mm2px(DRIVE_KNOB_Y - 6.0f), "Drive", nullptr);
 
         // Audio I/O labels
         nvgFontSize(args.vg, 9);
         nvgFillColor(args.vg, nvgRGB(180, 180, 180));
         nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
-        nvgText(args.vg, mm2px(AUDIO_IN_X), mm2px(AUDIO_IN_Y) - mm2px(4.5f), "In", nullptr);
-        nvgText(args.vg, mm2px(AUDIO_OUT_X), mm2px(AUDIO_OUT_Y) - mm2px(4.5f), "Out", nullptr);
+        nvgText(args.vg, mm2px(AUDIO_IN_X), mm2px(AUDIO_IN_Y - 4.5f), "In", nullptr);
+        nvgText(args.vg, mm2px(AUDIO_OUT_X), mm2px(AUDIO_OUT_Y - 4.5f), "Out", nullptr);
 
         Widget::drawLayer(args, layer);
     }
 };
+} // anonymous namespace
 
 struct VortexMMWidget : ModuleWidget {
     VortexMMWidget(VortexMM* module) {
@@ -422,35 +375,25 @@ struct VortexMMWidget : ModuleWidget {
         {
             ModeDisplay* display = new ModeDisplay();
             display->module = module;
-            float modeW = PANEL_WIDTH - 20;
+            float modeW = PANEL_WIDTH - 10;
             display->box.pos = mm2px(Vec(MODE_DISPLAY_X - modeW / 2, MODE_DISPLAY_Y - 4));
             addChild(display);
         }
 
-        // Main knobs
-        addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(CUTOFF_KNOB_X, CUTOFF_KNOB_Y)), module, VortexMM::CUTOFF_PARAM));
+        // Main knobs (RoundSmallBlackKnob to match FourMM VCA knob size)
+        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(CUTOFF_KNOB_X, CUTOFF_KNOB_Y)), module, VortexMM::CUTOFF_PARAM));
         addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(RESONANCE_KNOB_X, RESONANCE_KNOB_Y)), module, VortexMM::RESONANCE_PARAM));
         addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(DRIVE_KNOB_X, DRIVE_KNOB_Y)), module, VortexMM::DRIVE_PARAM));
-        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(MIX_KNOB_X, MIX_KNOB_Y)), module, VortexMM::MIX_PARAM));
 
         // CV jacks + attenuverters
-        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_VOCT_JACK_X, CV_VOCT_JACK_Y)), module, VortexMM::VOCT_CV_INPUT));
-        addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_VOCT_ATTEN_X, CV_VOCT_ATTEN_Y)), module, VortexMM::VOCT_CV_ATTEN_PARAM));
-
-        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_FM_JACK_X, CV_FM_JACK_Y)), module, VortexMM::FM_CV_INPUT));
-        addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_FM_ATTEN_X, CV_FM_ATTEN_Y)), module, VortexMM::FM_CV_ATTEN_PARAM));
+        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_CUTOFF_JACK_X, CV_CUTOFF_JACK_Y)), module, VortexMM::CUTOFF_CV_INPUT));
+        addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_CUTOFF_ATTEN_X, CV_CUTOFF_ATTEN_Y)), module, VortexMM::CUTOFF_CV_ATTEN_PARAM));
 
         addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_RESONANCE_JACK_X, CV_RESONANCE_JACK_Y)), module, VortexMM::RESONANCE_CV_INPUT));
         addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_RESONANCE_ATTEN_X, CV_RESONANCE_ATTEN_Y)), module, VortexMM::RESONANCE_CV_ATTEN_PARAM));
 
-        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_MODE_JACK_X, CV_MODE_JACK_Y)), module, VortexMM::MODE_CV_INPUT));
-        addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_MODE_ATTEN_X, CV_MODE_ATTEN_Y)), module, VortexMM::MODE_CV_ATTEN_PARAM));
-
         addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_DRIVE_JACK_X, CV_DRIVE_JACK_Y)), module, VortexMM::DRIVE_CV_INPUT));
         addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_DRIVE_ATTEN_X, CV_DRIVE_ATTEN_Y)), module, VortexMM::DRIVE_CV_ATTEN_PARAM));
-
-        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_MIX_JACK_X, CV_MIX_JACK_Y)), module, VortexMM::MIX_CV_INPUT));
-        addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_MIX_ATTEN_X, CV_MIX_ATTEN_Y)), module, VortexMM::MIX_CV_ATTEN_PARAM));
 
         // Audio I/O
         addInput(createInputCentered<PJ301MPort>(mm2px(Vec(AUDIO_IN_X, AUDIO_IN_Y)), module, VortexMM::AUDIO_INPUT));

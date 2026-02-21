@@ -13,7 +13,7 @@ constexpr float OP_HEADER_Y   = 46.0f;
 
 // Global controls
 constexpr float ALGO_DISPLAY_X = 66.0f;
-constexpr float ALGO_DISPLAY_Y = 15.0f;
+constexpr float ALGO_DISPLAY_Y = 16.0f;
 constexpr float VOCT_JACK_X = 20.0f;
 constexpr float VOCT_JACK_Y = 26.0f;
 constexpr float FINE_TUNE_KNOB_X = 66.0f;
