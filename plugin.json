@@ -23,7 +23,7 @@
     {
       "slug": "VortexMM",
       "name": "VortexMM",
-      "description": "12-mode multi-mode filter with drive, mix, and full CV control",
+      "description": "12-mode multi-mode filter with drive and CV control. Filter DSP by Yuriy Ivantsov (ivantsov-filters)",
       "tags": [
         "Filter",
         "Effect"
