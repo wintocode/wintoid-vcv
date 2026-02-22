@@ -16,7 +16,7 @@
       "description": "4-operator FM/PM synthesizer with waveshaping, wavefolding, and feedback",
       "tags": [
         "Oscillator",
-        "FM",
+        "Digital",
         "Waveshaper"
       ]
     },
