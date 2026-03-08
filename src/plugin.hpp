@@ -5,5 +5,5 @@ using namespace rack;
 
 extern Plugin* pluginInstance;
 
-extern Model* modelFourMM;
-extern Model* modelVortexMM;
+extern Model* modelFour;
+extern Model* modelVortex;

@@ -30,7 +30,7 @@ static int tests_passed = 0;
         exit(1); \
     } } while(0)
 
-#include "../src/FourMM/engine.h"
+#include "../src/Four/engine.h"
 
 // --- Single operator sine tests ---
 
@@ -39,8 +39,8 @@ static int tests_passed = 0;
 
 TEST(single_op_sine_produces_output)
 {
-    fourmm::EngineState state;
-    fourmm::EngineParams params;
+    four::EngineState state;
+    four::EngineParams params;
 
     // All defaults: algo 0, baseFreq 261.63, all levels 1.0, all warp/fold/fb 0
     // Algo 0: 4->3->2->1, carrier is op 1 only
@@ -52,7 +52,7 @@ TEST(single_op_sine_produces_output)
     // Run a few samples — output should be non-zero after first sample
     float out = 0.f;
     for ( int i = 0; i < 100; i++ )
-        out = fourmm::engine_process( state, params, sampleTime, 0.f );
+        out = four::engine_process( state, params, sampleTime, 0.f );
 
     ASSERT( fabsf(out) > 0.001f );
 }
@@ -62,8 +62,8 @@ TEST(single_op_sine_frequency)
     // Run engine for one full cycle of 261.63 Hz at 48kHz.
     // One cycle = 48000/261.63 ≈ 183.5 samples.
     // Count zero crossings (positive→negative transitions) — expect ~1 per cycle.
-    fourmm::EngineState state;
-    fourmm::EngineParams params;
+    four::EngineState state;
+    four::EngineParams params;
     params.modMaster = 0.f;
     params.algorithm = 7; // All carriers, no modulation
     // Zero out levels for ops 2-4 so only op 1 sounds
@@ -78,7 +78,7 @@ TEST(single_op_sine_frequency)
     // Run 48000 samples = 1 second
     for ( int i = 0; i < 48000; i++ )
     {
-        float out = fourmm::engine_process( state, params, sampleTime, 0.f );
+        float out = four::engine_process( state, params, sampleTime, 0.f );
         if ( prev > 0.f && out <= 0.f )
             zeroCrossings++;
         prev = out;
@@ -91,14 +91,14 @@ TEST(single_op_sine_frequency)
 
 TEST(single_op_vca_zero)
 {
-    fourmm::EngineState state;
-    fourmm::EngineParams params;
+    four::EngineState state;
+    four::EngineParams params;
     params.globalVCA = 0.f;
     float sampleTime = 1.f / 48000.f;
 
     for ( int i = 0; i < 100; i++ )
     {
-        float out = fourmm::engine_process( state, params, sampleTime, 0.f );
+        float out = four::engine_process( state, params, sampleTime, 0.f );
         ASSERT_NEAR( out, 0.f, 1e-10f );
     }
 }
@@ -106,8 +106,8 @@ TEST(single_op_vca_zero)
 TEST(single_op_coarse_ratio_2x)
 {
     // Op 1 at coarse ratio 2.0 should produce double the base frequency
-    fourmm::EngineState state;
-    fourmm::EngineParams params;
+    four::EngineState state;
+    four::EngineParams params;
     params.algorithm = 7;
     params.opLevel[1] = 0.f;
     params.opLevel[2] = 0.f;
@@ -121,7 +121,7 @@ TEST(single_op_coarse_ratio_2x)
 
     for ( int i = 0; i < 48000; i++ )
     {
-        float out = fourmm::engine_process( state, params, sampleTime, 0.f );
+        float out = four::engine_process( state, params, sampleTime, 0.f );
         if ( prev > 0.f && out <= 0.f )
             zeroCrossings++;
         prev = out;
@@ -139,14 +139,14 @@ TEST(warp_changes_timbre)
     // With warp > 0, output should differ from pure sine.
     // Run two engines: one with warp=0, one with warp=0.5.
     // Compare RMS — they should be measurably different.
-    fourmm::EngineState state0, state1;
-    fourmm::EngineParams params;
+    four::EngineState state0, state1;
+    four::EngineParams params;
     params.algorithm = 7;
     params.opLevel[1] = 0.f;
     params.opLevel[2] = 0.f;
     params.opLevel[3] = 0.f;
     params.modMaster = 0.f;
-    fourmm::EngineParams paramsWarp = params;
+    four::EngineParams paramsWarp = params;
     paramsWarp.opWarp[0] = 0.5f;
 
     float sampleTime = 1.f / 48000.f;
@@ -154,8 +154,8 @@ TEST(warp_changes_timbre)
 
     for ( int i = 0; i < 4800; i++ )
     {
-        float a = fourmm::engine_process( state0, params, sampleTime, 0.f );
-        float b = fourmm::engine_process( state1, paramsWarp, sampleTime, 0.f );
+        float a = four::engine_process( state0, params, sampleTime, 0.f );
+        float b = four::engine_process( state1, paramsWarp, sampleTime, 0.f );
         float d = a - b;
         sumDiff2 += d * d;
     }
@@ -167,14 +167,14 @@ TEST(warp_changes_timbre)
 TEST(fold_increases_harmonics)
 {
     // Fold should increase RMS (driven signal has more energy).
-    fourmm::EngineState state0, state1;
-    fourmm::EngineParams params;
+    four::EngineState state0, state1;
+    four::EngineParams params;
     params.algorithm = 7;
     params.opLevel[1] = 0.f;
     params.opLevel[2] = 0.f;
     params.opLevel[3] = 0.f;
     params.modMaster = 0.f;
-    fourmm::EngineParams paramsFold = params;
+    four::EngineParams paramsFold = params;
     paramsFold.opFold[0] = 0.8f;
 
     float sampleTime = 1.f / 48000.f;
@@ -182,8 +182,8 @@ TEST(fold_increases_harmonics)
 
     for ( int i = 0; i < 4800; i++ )
     {
-        float a = fourmm::engine_process( state0, params, sampleTime, 0.f );
-        float b = fourmm::engine_process( state1, paramsFold, sampleTime, 0.f );
+        float a = four::engine_process( state0, params, sampleTime, 0.f );
+        float b = four::engine_process( state1, paramsFold, sampleTime, 0.f );
         rms0 += a * a;
         rms1 += b * b;
     }
@@ -197,14 +197,14 @@ TEST(fold_increases_harmonics)
 TEST(feedback_modulates_phase)
 {
     // Feedback should change the timbre compared to no feedback.
-    fourmm::EngineState state0, state1;
-    fourmm::EngineParams params;
+    four::EngineState state0, state1;
+    four::EngineParams params;
     params.algorithm = 7;
     params.opLevel[1] = 0.f;
     params.opLevel[2] = 0.f;
     params.opLevel[3] = 0.f;
     params.modMaster = 0.f;
-    fourmm::EngineParams paramsFb = params;
+    four::EngineParams paramsFb = params;
     paramsFb.opFeedback[0] = 0.5f;
 
     float sampleTime = 1.f / 48000.f;
@@ -212,8 +212,8 @@ TEST(feedback_modulates_phase)
 
     for ( int i = 0; i < 4800; i++ )
     {
-        float a = fourmm::engine_process( state0, params, sampleTime, 0.f );
-        float b = fourmm::engine_process( state1, paramsFb, sampleTime, 0.f );
+        float a = four::engine_process( state0, params, sampleTime, 0.f );
+        float b = four::engine_process( state1, paramsFb, sampleTime, 0.f );
         float d = a - b;
         sumDiff2 += d * d;
     }
@@ -225,15 +225,15 @@ TEST(feedback_modulates_phase)
 // --- Algorithm routing tests ---
 
 // Helper: count zero crossings over 1 second
-static int count_zero_crossings( fourmm::EngineParams& params )
+static int count_zero_crossings( four::EngineParams& params )
 {
-    fourmm::EngineState state;
+    four::EngineState state;
     float sampleTime = 1.f / 48000.f;
     int zc = 0;
     float prev = 0.f;
     for ( int i = 0; i < 48000; i++ )
     {
-        float out = fourmm::engine_process( state, params, sampleTime, 0.f );
+        float out = four::engine_process( state, params, sampleTime, 0.f );
         if ( prev > 0.f && out <= 0.f ) zc++;
         prev = out;
     }
@@ -243,22 +243,22 @@ static int count_zero_crossings( fourmm::EngineParams& params )
 TEST(algo0_deep_chain_has_fm_character)
 {
     // Algo 0: 4->3->2->1. With xm > 0, output should differ from pure sine.
-    fourmm::EngineParams params;
+    four::EngineParams params;
     params.algorithm = 0;
     params.modMaster = 0.5f;
 
-    fourmm::EngineParams paramsClean;
+    four::EngineParams paramsClean;
     paramsClean.algorithm = 0;
     paramsClean.modMaster = 0.f;
 
-    fourmm::EngineState s0, s1;
+    four::EngineState s0, s1;
     float sampleTime = 1.f / 48000.f;
     float sumDiff2 = 0.f;
 
     for ( int i = 0; i < 4800; i++ )
     {
-        float a = fourmm::engine_process( s0, paramsClean, sampleTime, 0.f );
-        float b = fourmm::engine_process( s1, params, sampleTime, 0.f );
+        float a = four::engine_process( s0, paramsClean, sampleTime, 0.f );
+        float b = four::engine_process( s1, params, sampleTime, 0.f );
         float d = a - b;
         sumDiff2 += d * d;
     }
@@ -270,12 +270,12 @@ TEST(algo7_additive_four_carriers)
 {
     // Algo 7: 1+2+3+4, all carriers, no modulation.
     // With all ops at same freq and level, output should be ~4x a single op.
-    fourmm::EngineState stateAll, stateOne;
-    fourmm::EngineParams paramsAll;
+    four::EngineState stateAll, stateOne;
+    four::EngineParams paramsAll;
     paramsAll.algorithm = 7;
     paramsAll.modMaster = 0.f;
 
-    fourmm::EngineParams paramsOne;
+    four::EngineParams paramsOne;
     paramsOne.algorithm = 7;
     paramsOne.modMaster = 0.f;
     paramsOne.opLevel[1] = 0.f;
@@ -286,12 +286,12 @@ TEST(algo7_additive_four_carriers)
     // Skip transient
     for ( int i = 0; i < 100; i++ )
     {
-        fourmm::engine_process( stateAll, paramsAll, sampleTime, 0.f );
-        fourmm::engine_process( stateOne, paramsOne, sampleTime, 0.f );
+        four::engine_process( stateAll, paramsAll, sampleTime, 0.f );
+        four::engine_process( stateOne, paramsOne, sampleTime, 0.f );
     }
 
-    float outAll = fourmm::engine_process( stateAll, paramsAll, sampleTime, 0.f );
-    float outOne = fourmm::engine_process( stateOne, paramsOne, sampleTime, 0.f );
+    float outAll = four::engine_process( stateAll, paramsAll, sampleTime, 0.f );
+    float outOne = four::engine_process( stateOne, paramsOne, sampleTime, 0.f );
 
     // All 4 carriers at same freq/phase should sum to ~4x one carrier
     ASSERT_NEAR( outAll, outOne * 4.f, 0.05f );
@@ -302,26 +302,26 @@ TEST(algo4_two_carrier_pairs)
     // Algo 4: (4->3) + (2->1), carriers: {1, 3}
     // With xm=0, carriers 1 and 3 should both contribute.
     // Muting op 3 should halve the output.
-    fourmm::EngineParams paramsFull;
+    four::EngineParams paramsFull;
     paramsFull.algorithm = 4;
     paramsFull.modMaster = 0.f;
 
-    fourmm::EngineParams paramsNoOp3;
+    four::EngineParams paramsNoOp3;
     paramsNoOp3.algorithm = 4;
     paramsNoOp3.modMaster = 0.f;
     paramsNoOp3.opLevel[2] = 0.f;  // Mute op 3 (index 2)
 
-    fourmm::EngineState s0, s1;
+    four::EngineState s0, s1;
     float sampleTime = 1.f / 48000.f;
 
     for ( int i = 0; i < 100; i++ )
     {
-        fourmm::engine_process( s0, paramsFull, sampleTime, 0.f );
-        fourmm::engine_process( s1, paramsNoOp3, sampleTime, 0.f );
+        four::engine_process( s0, paramsFull, sampleTime, 0.f );
+        four::engine_process( s1, paramsNoOp3, sampleTime, 0.f );
     }
 
-    float full = fourmm::engine_process( s0, paramsFull, sampleTime, 0.f );
-    float half = fourmm::engine_process( s1, paramsNoOp3, sampleTime, 0.f );
+    float full = four::engine_process( s0, paramsFull, sampleTime, 0.f );
+    float half = four::engine_process( s1, paramsNoOp3, sampleTime, 0.f );
 
     // Full should be ~2x half (two carriers vs one)
     ASSERT_NEAR( fabsf(full), fabsf(half) * 2.f, 0.1f );
@@ -334,15 +334,15 @@ TEST(all_algorithms_produce_output)
 
     for ( int a = 0; a < 11; a++ )
     {
-        fourmm::EngineState state;
-        fourmm::EngineParams params;
+        four::EngineState state;
+        four::EngineParams params;
         params.algorithm = a;
         params.modMaster = 0.f;
 
         float maxAbs = 0.f;
         for ( int i = 0; i < 200; i++ )
         {
-            float out = fourmm::engine_process( state, params, sampleTime, 0.f );
+            float out = four::engine_process( state, params, sampleTime, 0.f );
             if ( fabsf(out) > maxAbs ) maxAbs = fabsf(out);
         }
 
@@ -360,16 +360,16 @@ TEST(fm_modulation_changes_spectrum)
     for ( int ai = 0; ai < 10; ai++ )
     {
         int a = algosWithMod[ai];
-        fourmm::EngineState s0, s1;
-        fourmm::EngineParams p0, p1;
+        four::EngineState s0, s1;
+        four::EngineParams p0, p1;
         p0.algorithm = a; p0.modMaster = 0.f;
         p1.algorithm = a; p1.modMaster = 0.8f;
 
         float sumDiff2 = 0.f;
         for ( int i = 0; i < 4800; i++ )
         {
-            float a0 = fourmm::engine_process( s0, p0, sampleTime, 0.f );
-            float a1 = fourmm::engine_process( s1, p1, sampleTime, 0.f );
+            float a0 = four::engine_process( s0, p0, sampleTime, 0.f );
+            float a1 = four::engine_process( s1, p1, sampleTime, 0.f );
             float d = a0 - a1;
             sumDiff2 += d * d;
         }
@@ -384,7 +384,7 @@ TEST(fm_modulation_changes_spectrum)
 TEST(fixed_freq_mode)
 {
     // Op 1 in fixed mode at 440 Hz should produce 440 Hz regardless of baseFreq.
-    fourmm::EngineParams params;
+    four::EngineParams params;
     params.algorithm = 7;
     params.opLevel[1] = 0.f;
     params.opLevel[2] = 0.f;
@@ -405,7 +405,7 @@ TEST(fixed_freq_mode)
 TEST(fine_tune_shifts_pitch)
 {
     // Fine = +100 cents (1 semitone up) on 261.63 Hz -> ~277.18 Hz
-    fourmm::EngineParams params;
+    four::EngineParams params;
     params.algorithm = 7;
     params.opLevel[1] = 0.f;
     params.opLevel[2] = 0.f;
@@ -427,8 +427,8 @@ TEST(dc_blocker_removes_offset)
 {
     // Asymmetric fold + feedback can introduce DC offset.
     // After DC blocker, mean should be near zero.
-    fourmm::EngineState state;
-    fourmm::EngineParams params;
+    four::EngineState state;
+    four::EngineParams params;
     params.algorithm = 7;
     params.opLevel[1] = 0.f;
     params.opLevel[2] = 0.f;
@@ -443,7 +443,7 @@ TEST(dc_blocker_removes_offset)
     int N = 48000;
 
     for ( int i = 0; i < N; i++ )
-        sum += fourmm::engine_process( state, params, sampleTime, 0.f );
+        sum += four::engine_process( state, params, sampleTime, 0.f );
 
     float mean = sum / (float)N;
     ASSERT( fabsf(mean) < 0.05f );
@@ -452,8 +452,8 @@ TEST(dc_blocker_removes_offset)
 TEST(output_bounded)
 {
     // Even with extreme settings, output should stay bounded.
-    fourmm::EngineState state;
-    fourmm::EngineParams params;
+    four::EngineState state;
+    four::EngineParams params;
     params.algorithm = 0;
     params.modMaster = 1.0f;
     params.opFeedback[0] = 1.0f;
@@ -468,7 +468,7 @@ TEST(output_bounded)
 
     for ( int i = 0; i < 48000; i++ )
     {
-        float out = fourmm::engine_process( state, params, sampleTime, 0.f );
+        float out = four::engine_process( state, params, sampleTime, 0.f );
         if ( fabsf(out) > maxAbs ) maxAbs = fabsf(out);
     }
 

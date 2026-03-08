@@ -4,7 +4,7 @@
 #include "dsp.h"
 #include <algorithm>
 
-namespace fourmm {
+namespace four {
 
 struct OperatorState
 {
@@ -109,6 +109,6 @@ inline float engine_process( EngineState& state, const EngineParams& params, flo
     return out;
 }
 
-} // namespace fourmm
+} // namespace four
 
 #endif // FOURMM_ENGINE_H

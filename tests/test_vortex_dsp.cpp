@@ -30,7 +30,7 @@ static int tests_passed = 0;
         exit(1); \
     } } while(0)
 
-#include "../src/VortexMM/dsp.h"
+#include "../src/Vortex/dsp.h"
 
 // --- Utility tests ---
 

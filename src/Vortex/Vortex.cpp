@@ -10,7 +10,7 @@ struct CutoffParamQuantity : ParamQuantity {
     }
 };
 
-struct VortexMM : Module {
+struct Vortex : Module {
     enum ParamId {
         MODE_PARAM,
         CUTOFF_PARAM,
@@ -46,7 +46,7 @@ struct VortexMM : Module {
     vortex::Filter2 f2a, f2b;
     int lastMode = -1;
 
-    VortexMM() {
+    Vortex() {
         config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 
         // Main params
@@ -216,10 +216,10 @@ static const char* modeStrings[] = {
 };
 
 struct ModeDisplay : Widget {
-    VortexMM* module = nullptr;
+    Vortex* module = nullptr;
 
     ModeDisplay() {
-        using namespace vortexmm_layout;
+        using namespace vortex_layout;
         float w = PANEL_WIDTH - 10;
         box.size = mm2px(Vec(w, 8));
     }
@@ -239,7 +239,7 @@ struct ModeDisplay : Widget {
         // Text
         int mode = 0;
         if (module)
-            mode = (int)module->params[VortexMM::MODE_PARAM].getValue();
+            mode = (int)module->params[Vortex::MODE_PARAM].getValue();
 
         const char* text = modeStrings[mode];
         nvgFontSize(args.vg, 14);
@@ -254,9 +254,9 @@ struct ModeDisplay : Widget {
         if (!module) return;
 
         if (e.action == GLFW_PRESS && e.button == GLFW_MOUSE_BUTTON_LEFT) {
-            int mode = (int)module->params[VortexMM::MODE_PARAM].getValue();
+            int mode = (int)module->params[Vortex::MODE_PARAM].getValue();
             mode = (mode + 1) % 12;
-            module->params[VortexMM::MODE_PARAM].setValue((float)mode);
+            module->params[Vortex::MODE_PARAM].setValue((float)mode);
             e.consume(this);
         }
         else if (e.action == GLFW_PRESS && e.button == GLFW_MOUSE_BUTTON_RIGHT) {
@@ -265,7 +265,7 @@ struct ModeDisplay : Widget {
             for (int i = 0; i < 12; i++) {
                 int modeIdx = i;
                 menu->addChild(createMenuItem(modeStrings[i], "",
-                    [=]() { module->params[VortexMM::MODE_PARAM].setValue((float)modeIdx); }));
+                    [=]() { module->params[Vortex::MODE_PARAM].setValue((float)modeIdx); }));
             }
             e.consume(this);
         }
@@ -275,14 +275,14 @@ struct ModeDisplay : Widget {
 namespace {
 struct PanelLabels : Widget {
     PanelLabels() {
-        using namespace vortexmm_layout;
+        using namespace vortex_layout;
         box.size = mm2px(Vec(PANEL_WIDTH, PANEL_HEIGHT));
     }
 
     void drawLayer(const DrawArgs& args, int layer) override {
         if (layer != 1) return;
 
-        using namespace vortexmm_layout;
+        using namespace vortex_layout;
 
         std::shared_ptr<Font> font = APP->window->loadFont(
             asset::system("res/fonts/DejaVuSans.ttf"));
@@ -293,7 +293,7 @@ struct PanelLabels : Widget {
         nvgFontSize(args.vg, 14);
         nvgFillColor(args.vg, nvgRGB(220, 220, 220));
         nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        nvgText(args.vg, mm2px(PANEL_WIDTH / 2), mm2px(8.0f), "VortexMM", nullptr);
+        nvgText(args.vg, mm2px(PANEL_WIDTH / 2), mm2px(8.0f), "Vortex", nullptr);
 
         // wintoid logo (bottom center, between screws)
         nvgFontSize(args.vg, 10);
@@ -352,10 +352,10 @@ struct PanelLabels : Widget {
 };
 } // anonymous namespace
 
-struct VortexMMWidget : ModuleWidget {
-    VortexMMWidget(VortexMM* module) {
+struct VortexWidget : ModuleWidget {
+    VortexWidget(Vortex* module) {
         setModule(module);
-        setPanel(createPanel(asset::plugin(pluginInstance, "res/VortexMM.svg")));
+        setPanel(createPanel(asset::plugin(pluginInstance, "res/Vortex.svg")));
 
         // Screws
         addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
@@ -363,7 +363,7 @@ struct VortexMMWidget : ModuleWidget {
         addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
         addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-        using namespace vortexmm_layout;
+        using namespace vortex_layout;
 
         // Panel labels
         {
@@ -380,25 +380,25 @@ struct VortexMMWidget : ModuleWidget {
             addChild(display);
         }
 
-        // Main knobs (RoundSmallBlackKnob to match FourMM VCA knob size)
-        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(CUTOFF_KNOB_X, CUTOFF_KNOB_Y)), module, VortexMM::CUTOFF_PARAM));
-        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(RESONANCE_KNOB_X, RESONANCE_KNOB_Y)), module, VortexMM::RESONANCE_PARAM));
-        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(DRIVE_KNOB_X, DRIVE_KNOB_Y)), module, VortexMM::DRIVE_PARAM));
+        // Main knobs (RoundSmallBlackKnob to match Four VCA knob size)
+        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(CUTOFF_KNOB_X, CUTOFF_KNOB_Y)), module, Vortex::CUTOFF_PARAM));
+        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(RESONANCE_KNOB_X, RESONANCE_KNOB_Y)), module, Vortex::RESONANCE_PARAM));
+        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(DRIVE_KNOB_X, DRIVE_KNOB_Y)), module, Vortex::DRIVE_PARAM));
 
         // CV jacks + attenuverters
-        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_CUTOFF_JACK_X, CV_CUTOFF_JACK_Y)), module, VortexMM::CUTOFF_CV_INPUT));
-        addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_CUTOFF_ATTEN_X, CV_CUTOFF_ATTEN_Y)), module, VortexMM::CUTOFF_CV_ATTEN_PARAM));
+        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_CUTOFF_JACK_X, CV_CUTOFF_JACK_Y)), module, Vortex::CUTOFF_CV_INPUT));
+        addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_CUTOFF_ATTEN_X, CV_CUTOFF_ATTEN_Y)), module, Vortex::CUTOFF_CV_ATTEN_PARAM));
 
-        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_RESONANCE_JACK_X, CV_RESONANCE_JACK_Y)), module, VortexMM::RESONANCE_CV_INPUT));
-        addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_RESONANCE_ATTEN_X, CV_RESONANCE_ATTEN_Y)), module, VortexMM::RESONANCE_CV_ATTEN_PARAM));
+        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_RESONANCE_JACK_X, CV_RESONANCE_JACK_Y)), module, Vortex::RESONANCE_CV_INPUT));
+        addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_RESONANCE_ATTEN_X, CV_RESONANCE_ATTEN_Y)), module, Vortex::RESONANCE_CV_ATTEN_PARAM));
 
-        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_DRIVE_JACK_X, CV_DRIVE_JACK_Y)), module, VortexMM::DRIVE_CV_INPUT));
-        addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_DRIVE_ATTEN_X, CV_DRIVE_ATTEN_Y)), module, VortexMM::DRIVE_CV_ATTEN_PARAM));
+        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(CV_DRIVE_JACK_X, CV_DRIVE_JACK_Y)), module, Vortex::DRIVE_CV_INPUT));
+        addParam(createParamCentered<Trimpot>(mm2px(Vec(CV_DRIVE_ATTEN_X, CV_DRIVE_ATTEN_Y)), module, Vortex::DRIVE_CV_ATTEN_PARAM));
 
         // Audio I/O
-        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(AUDIO_IN_X, AUDIO_IN_Y)), module, VortexMM::AUDIO_INPUT));
-        addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(AUDIO_OUT_X, AUDIO_OUT_Y)), module, VortexMM::AUDIO_OUTPUT));
+        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(AUDIO_IN_X, AUDIO_IN_Y)), module, Vortex::AUDIO_INPUT));
+        addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(AUDIO_OUT_X, AUDIO_OUT_Y)), module, Vortex::AUDIO_OUTPUT));
     }
 };
 
-Model* modelVortexMM = createModel<VortexMM, VortexMMWidget>("VortexMM");
+Model* modelVortex = createModel<Vortex, VortexWidget>("VortexMM");

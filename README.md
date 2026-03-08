@@ -4,7 +4,7 @@ VCV Rack plugin — FM synthesizer and multi-mode filter.
 
 ## Modules
 
-### FourMM
+### Four
 4-operator FM/PM synthesizer (26HP)
 
 - **11 algorithms** — classic 4-op routing from serial chain to full parallel
@@ -17,7 +17,7 @@ VCV Rack plugin — FM synthesizer and multi-mode filter.
 - **V/OCT** input
 - **2× internal oversampling** with DC blocking
 
-### VortexMM
+### Vortex
 12-mode multi-mode filter (6HP)
 
 - **Filter modes**: LP 6/12/24dB, HP 6/12/24dB, BP, BP+, Notch, Notch+, AP, AP+

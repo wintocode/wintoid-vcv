@@ -1,13 +1,13 @@
 #ifndef FOURMM_DSP_H
 #define FOURMM_DSP_H
 
-// Pure DSP functions for FourMM FM synthesizer.
+// Pure DSP functions for Four FM synthesizer.
 // No VCV Rack API dependencies — testable on desktop.
 
 #include <math.h>
 #include <stdint.h>
 
-namespace fourmm {
+namespace four {
 
 static constexpr float TWO_PI = 6.283185307179586f;
 
@@ -381,6 +381,6 @@ static const char* algorithmStrings[11] = {
     "(2+3+4) => 1",
 };
 
-} // namespace fourmm
+} // namespace four
 
 #endif // FOURMM_DSP_H

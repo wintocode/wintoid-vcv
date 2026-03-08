@@ -1,8 +1,8 @@
 Rack-SDK/
 *.zip
-tests/test_fourmm_dsp
-tests/test_fourmm_engine
-tests/test_vortexmm_dsp
+tests/test_four_dsp
+tests/test_four_engine
+tests/test_vortex_dsp
 *.dSYM/
 .claude/
 build/

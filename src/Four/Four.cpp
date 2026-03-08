@@ -9,21 +9,21 @@ struct CoarseParamQuantity : ParamQuantity {
         if (module) {
             int freqMode = (int)module->params[freqModeParamId].getValue();
             if (freqMode == 1) {
-                float hz = fourmm::coarse_fixed_from_param(val);
+                float hz = four::coarse_fixed_from_param(val);
                 if (hz >= 1000.f)
                     return string::f("%.1f kHz", hz / 1000.f);
                 return string::f("%.1f Hz", hz);
             }
         }
         int idx = (int)roundf(val);
-        float ratio = fourmm::coarse_ratio_from_index(idx);
+        float ratio = four::coarse_ratio_from_index(idx);
         if (ratio == (float)(int)ratio)
             return string::f("%d:1", (int)ratio);
         return string::f("%.2g:1", ratio);
     }
 };
 
-struct FourMM : Module {
+struct Four : Module {
     enum ParamId {
         // Global
         ALGO_PARAM,
@@ -77,9 +77,9 @@ struct FourMM : Module {
         LIGHTS_LEN
     };
 
-    fourmm::EngineState engineState;
+    four::EngineState engineState;
 
-    FourMM() {
+    Four() {
         config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 
         // Global params
@@ -151,7 +151,7 @@ struct FourMM : Module {
     }
 
     void process(const ProcessArgs& args) override {
-        fourmm::EngineParams ep;
+        four::EngineParams ep;
 
         // --- Global params ---
         ep.algorithm = (int)params[ALGO_PARAM].getValue();
@@ -162,7 +162,7 @@ struct FourMM : Module {
 
         // V/OCT: base voltage
         float voct = inputs[VOCT_INPUT].getVoltage();
-        ep.baseFreq = fourmm::voct_to_freq( voct ) * globalFineMult;
+        ep.baseFreq = four::voct_to_freq( voct ) * globalFineMult;
 
         // Mod: knob + attenuated CV
         float modCv = inputs[XM_CV_INPUT].getVoltage() * params[XM_CV_ATTEN_PARAM].getValue() / 10.f;
@@ -201,9 +201,9 @@ struct FourMM : Module {
             // Coarse: index->ratio in ratio mode, index->Hz in fixed mode
             float coarseParam = params[coarseIds[i]].getValue();
             if ( freqMode == 0 )
-                ep.opCoarse[i] = fourmm::coarse_ratio_from_index( (int)roundf(coarseParam) );
+                ep.opCoarse[i] = four::coarse_ratio_from_index( (int)roundf(coarseParam) );
             else
-                ep.opCoarse[i] = fourmm::coarse_fixed_from_param( coarseParam );
+                ep.opCoarse[i] = four::coarse_fixed_from_param( coarseParam );
 
             // Fine: cents -> multiplier
             ep.opFine[i] = exp2f( params[fineIds[i]].getValue() / 1200.f );
@@ -227,7 +227,7 @@ struct FourMM : Module {
 
         // --- Run engine ---
         float extPm = inputs[EXT_PM_CV_INPUT].getVoltage();  // Audio-rate PM input
-        float out = fourmm::engine_process( engineState, ep, args.sampleTime, extPm );
+        float out = four::engine_process( engineState, ep, args.sampleTime, extPm );
 
         // Scale to +/-5V
         outputs[MAIN_OUTPUT].setVoltage( out * 5.f );
@@ -238,10 +238,10 @@ struct FourMM : Module {
 #include "layout.h"
 
 struct AlgoDisplay : Widget {
-    FourMM* module = nullptr;
+    Four* module = nullptr;
 
     AlgoDisplay() {
-        using namespace fourmm_layout;
+        using namespace four_layout;
         float w = PANEL_WIDTH - 32;
         box.size = mm2px(Vec(w, 8));
     }
@@ -261,9 +261,9 @@ struct AlgoDisplay : Widget {
         // Text
         int algo = 0;
         if ( module )
-            algo = (int)module->params[FourMM::ALGO_PARAM].getValue();
+            algo = (int)module->params[Four::ALGO_PARAM].getValue();
 
-        const char* text = fourmm::algorithmStrings[algo];
+        const char* text = four::algorithmStrings[algo];
         nvgFontSize(args.vg, 14);
         nvgFillColor(args.vg, nvgRGB(128, 255, 128));
         nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
@@ -277,9 +277,9 @@ struct AlgoDisplay : Widget {
 
         if ( e.action == GLFW_PRESS && e.button == GLFW_MOUSE_BUTTON_LEFT )
         {
-            int algo = (int)module->params[FourMM::ALGO_PARAM].getValue();
+            int algo = (int)module->params[Four::ALGO_PARAM].getValue();
             algo = ( algo + 1 ) % 11;
-            module->params[FourMM::ALGO_PARAM].setValue( (float)algo );
+            module->params[Four::ALGO_PARAM].setValue( (float)algo );
             e.consume(this);
         }
         else if ( e.action == GLFW_PRESS && e.button == GLFW_MOUSE_BUTTON_RIGHT )
@@ -289,8 +289,8 @@ struct AlgoDisplay : Widget {
             for ( int i = 0; i < 11; i++ )
             {
                 int algoIdx = i;
-                menu->addChild(createMenuItem(fourmm::algorithmStrings[i], "",
-                    [=]() { module->params[FourMM::ALGO_PARAM].setValue((float)algoIdx); }));
+                menu->addChild(createMenuItem(four::algorithmStrings[i], "",
+                    [=]() { module->params[Four::ALGO_PARAM].setValue((float)algoIdx); }));
             }
             e.consume(this);
         }
@@ -298,7 +298,7 @@ struct AlgoDisplay : Widget {
 };
 
 struct FoldTypeDisplay : Widget {
-    FourMM* module = nullptr;
+    Four* module = nullptr;
     int opIndex = 0;  // 0-3
 
     static constexpr float W_MM = 8.0f;
@@ -313,15 +313,15 @@ struct FoldTypeDisplay : Widget {
 
     int getFoldType() {
         if ( !module ) return 0;
-        const int ids[] = { FourMM::OP1_FOLD_TYPE_PARAM, FourMM::OP2_FOLD_TYPE_PARAM,
-                            FourMM::OP3_FOLD_TYPE_PARAM, FourMM::OP4_FOLD_TYPE_PARAM };
+        const int ids[] = { Four::OP1_FOLD_TYPE_PARAM, Four::OP2_FOLD_TYPE_PARAM,
+                            Four::OP3_FOLD_TYPE_PARAM, Four::OP4_FOLD_TYPE_PARAM };
         return (int)module->params[ids[opIndex]].getValue();
     }
 
     void setFoldType(int v) {
         if ( !module ) return;
-        const int ids[] = { FourMM::OP1_FOLD_TYPE_PARAM, FourMM::OP2_FOLD_TYPE_PARAM,
-                            FourMM::OP3_FOLD_TYPE_PARAM, FourMM::OP4_FOLD_TYPE_PARAM };
+        const int ids[] = { Four::OP1_FOLD_TYPE_PARAM, Four::OP2_FOLD_TYPE_PARAM,
+                            Four::OP3_FOLD_TYPE_PARAM, Four::OP4_FOLD_TYPE_PARAM };
         module->params[ids[opIndex]].setValue((float)v);
     }
 
@@ -413,14 +413,14 @@ const char* FoldTypeDisplay::longNames[3] = { "Symmetric", "Asymmetric", "Soft C
 namespace {
 struct PanelLabels : Widget {
     PanelLabels() {
-        using namespace fourmm_layout;
+        using namespace four_layout;
         box.size = mm2px(Vec(PANEL_WIDTH, PANEL_HEIGHT));
     }
 
     void drawLayer(const DrawArgs& args, int layer) override {
         if ( layer != 1 ) return;
 
-        using namespace fourmm_layout;
+        using namespace four_layout;
 
         std::shared_ptr<Font> font = APP->window->loadFont(
             asset::system("res/fonts/DejaVuSans.ttf"));
@@ -431,7 +431,7 @@ struct PanelLabels : Widget {
         nvgFontSize(args.vg, 14);
         nvgFillColor(args.vg, nvgRGB(220, 220, 220));
         nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        nvgText(args.vg, mm2px(PANEL_WIDTH / 2), mm2px(8.0f), "FourMM", nullptr);
+        nvgText(args.vg, mm2px(PANEL_WIDTH / 2), mm2px(8.0f), "Four", nullptr);
 
         // ── wintoid logo (bottom center, between screws) ──
         nvgFontFaceId(args.vg, font->handle);
@@ -511,10 +511,10 @@ struct PanelLabels : Widget {
 };
 } // anonymous namespace
 
-struct FourMMWidget : ModuleWidget {
-    FourMMWidget(FourMM* module) {
+struct FourWidget : ModuleWidget {
+    FourWidget(Four* module) {
         setModule(module);
-        setPanel(createPanel(asset::plugin(pluginInstance, "res/FourMM.svg")));
+        setPanel(createPanel(asset::plugin(pluginInstance, "res/Four.svg")));
 
         // Screws
         addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
@@ -522,7 +522,7 @@ struct FourMMWidget : ModuleWidget {
         addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
         addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-        using namespace fourmm_layout;
+        using namespace four_layout;
 
         // Panel labels (NanoVG-drawn text overlay)
         {
@@ -540,21 +540,21 @@ struct FourMMWidget : ModuleWidget {
         }
 
         // --- Global controls ---
-        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(VOCT_JACK_X, VOCT_JACK_Y)), module, FourMM::VOCT_INPUT));
-        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(FINE_TUNE_KNOB_X, FINE_TUNE_KNOB_Y)), module, FourMM::FINE_TUNE_PARAM));
-        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(VCA_KNOB_X, VCA_KNOB_Y)), module, FourMM::VCA_PARAM));
-        addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(MAIN_OUTPUT_X, MAIN_OUTPUT_Y)), module, FourMM::MAIN_OUTPUT));
+        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(VOCT_JACK_X, VOCT_JACK_Y)), module, Four::VOCT_INPUT));
+        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(FINE_TUNE_KNOB_X, FINE_TUNE_KNOB_Y)), module, Four::FINE_TUNE_PARAM));
+        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(VCA_KNOB_X, VCA_KNOB_Y)), module, Four::VCA_PARAM));
+        addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(MAIN_OUTPUT_X, MAIN_OUTPUT_Y)), module, Four::MAIN_OUTPUT));
 
-        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(XM_KNOB_X, XM_KNOB_Y)), module, FourMM::XM_PARAM));
-        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(XM_CV_JACK_X, XM_CV_JACK_Y)), module, FourMM::XM_CV_INPUT));
-        addParam(createParamCentered<Trimpot>(mm2px(Vec(XM_CV_ATTEN_X, XM_CV_ATTEN_Y)), module, FourMM::XM_CV_ATTEN_PARAM));
-        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(FM_CV_JACK_X, FM_CV_JACK_Y)), module, FourMM::EXT_PM_CV_INPUT));
-        addParam(createParamCentered<Trimpot>(mm2px(Vec(FM_CV_ATTEN_X, FM_CV_ATTEN_Y)), module, FourMM::EXT_PM_CV_ATTEN_PARAM));
+        addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(XM_KNOB_X, XM_KNOB_Y)), module, Four::XM_PARAM));
+        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(XM_CV_JACK_X, XM_CV_JACK_Y)), module, Four::XM_CV_INPUT));
+        addParam(createParamCentered<Trimpot>(mm2px(Vec(XM_CV_ATTEN_X, XM_CV_ATTEN_Y)), module, Four::XM_CV_ATTEN_PARAM));
+        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(FM_CV_JACK_X, FM_CV_JACK_Y)), module, Four::EXT_PM_CV_INPUT));
+        addParam(createParamCentered<Trimpot>(mm2px(Vec(FM_CV_ATTEN_X, FM_CV_ATTEN_Y)), module, Four::EXT_PM_CV_ATTEN_PARAM));
 
         // --- Per-operator: Row 0 = Coarse + Toggle + Fine ---
-        const int coarseIds[] = { FourMM::OP1_COARSE_PARAM, FourMM::OP2_COARSE_PARAM, FourMM::OP3_COARSE_PARAM, FourMM::OP4_COARSE_PARAM };
-        const int fineIds[]   = { FourMM::OP1_FINE_PARAM, FourMM::OP2_FINE_PARAM, FourMM::OP3_FINE_PARAM, FourMM::OP4_FINE_PARAM };
-        const int freqToggleIds[] = { FourMM::OP1_FREQ_MODE_PARAM, FourMM::OP2_FREQ_MODE_PARAM, FourMM::OP3_FREQ_MODE_PARAM, FourMM::OP4_FREQ_MODE_PARAM };
+        const int coarseIds[] = { Four::OP1_COARSE_PARAM, Four::OP2_COARSE_PARAM, Four::OP3_COARSE_PARAM, Four::OP4_COARSE_PARAM };
+        const int fineIds[]   = { Four::OP1_FINE_PARAM, Four::OP2_FINE_PARAM, Four::OP3_FINE_PARAM, Four::OP4_FINE_PARAM };
+        const int freqToggleIds[] = { Four::OP1_FREQ_MODE_PARAM, Four::OP2_FREQ_MODE_PARAM, Four::OP3_FREQ_MODE_PARAM, Four::OP4_FREQ_MODE_PARAM };
 
         const float coarseX[4] = { OP1_KNOB0_X, OP2_KNOB0_X, OP3_KNOB0_X, OP4_KNOB0_X };
         const float toggleX[4] = { OP1_TOGGLE_X, OP2_TOGGLE_X, OP3_TOGGLE_X, OP4_TOGGLE_X };
@@ -572,10 +572,10 @@ struct FourMMWidget : ModuleWidget {
         }
 
         // --- Per-operator: Rows 1-4 = Level, Warp, Fold, FB knobs ---
-        const int levelIds[]  = { FourMM::OP1_LEVEL_PARAM, FourMM::OP2_LEVEL_PARAM, FourMM::OP3_LEVEL_PARAM, FourMM::OP4_LEVEL_PARAM };
-        const int warpIds[]   = { FourMM::OP1_WARP_PARAM, FourMM::OP2_WARP_PARAM, FourMM::OP3_WARP_PARAM, FourMM::OP4_WARP_PARAM };
-        const int foldIds[]   = { FourMM::OP1_FOLD_PARAM, FourMM::OP2_FOLD_PARAM, FourMM::OP3_FOLD_PARAM, FourMM::OP4_FOLD_PARAM };
-        const int fbIds[]     = { FourMM::OP1_FB_PARAM, FourMM::OP2_FB_PARAM, FourMM::OP3_FB_PARAM, FourMM::OP4_FB_PARAM };
+        const int levelIds[]  = { Four::OP1_LEVEL_PARAM, Four::OP2_LEVEL_PARAM, Four::OP3_LEVEL_PARAM, Four::OP4_LEVEL_PARAM };
+        const int warpIds[]   = { Four::OP1_WARP_PARAM, Four::OP2_WARP_PARAM, Four::OP3_WARP_PARAM, Four::OP4_WARP_PARAM };
+        const int foldIds[]   = { Four::OP1_FOLD_PARAM, Four::OP2_FOLD_PARAM, Four::OP3_FOLD_PARAM, Four::OP4_FOLD_PARAM };
+        const int fbIds[]     = { Four::OP1_FB_PARAM, Four::OP2_FB_PARAM, Four::OP3_FB_PARAM, Four::OP4_FB_PARAM };
 
         const float knobX[4] = { OP1_KNOB0_X, OP2_KNOB0_X, OP3_KNOB0_X, OP4_KNOB0_X };
         const float knobY[4] = { OP1_KNOB1_Y, OP1_KNOB2_Y, OP1_KNOB3_Y, OP1_KNOB4_Y };
@@ -591,16 +591,16 @@ struct FourMMWidget : ModuleWidget {
         }
 
         // --- Per-operator CV jacks + attenuverters (beside knob rows 1-4) ---
-        const int levelCvIds[] = { FourMM::OP1_LEVEL_CV_INPUT, FourMM::OP2_LEVEL_CV_INPUT, FourMM::OP3_LEVEL_CV_INPUT, FourMM::OP4_LEVEL_CV_INPUT };
-        const int warpCvIds[]  = { FourMM::OP1_WARP_CV_INPUT, FourMM::OP2_WARP_CV_INPUT, FourMM::OP3_WARP_CV_INPUT, FourMM::OP4_WARP_CV_INPUT };
-        const int foldCvIds[]  = { FourMM::OP1_FOLD_CV_INPUT, FourMM::OP2_FOLD_CV_INPUT, FourMM::OP3_FOLD_CV_INPUT, FourMM::OP4_FOLD_CV_INPUT };
-        const int fbCvIds[]    = { FourMM::OP1_FB_CV_INPUT, FourMM::OP2_FB_CV_INPUT, FourMM::OP3_FB_CV_INPUT, FourMM::OP4_FB_CV_INPUT };
+        const int levelCvIds[] = { Four::OP1_LEVEL_CV_INPUT, Four::OP2_LEVEL_CV_INPUT, Four::OP3_LEVEL_CV_INPUT, Four::OP4_LEVEL_CV_INPUT };
+        const int warpCvIds[]  = { Four::OP1_WARP_CV_INPUT, Four::OP2_WARP_CV_INPUT, Four::OP3_WARP_CV_INPUT, Four::OP4_WARP_CV_INPUT };
+        const int foldCvIds[]  = { Four::OP1_FOLD_CV_INPUT, Four::OP2_FOLD_CV_INPUT, Four::OP3_FOLD_CV_INPUT, Four::OP4_FOLD_CV_INPUT };
+        const int fbCvIds[]    = { Four::OP1_FB_CV_INPUT, Four::OP2_FB_CV_INPUT, Four::OP3_FB_CV_INPUT, Four::OP4_FB_CV_INPUT };
         const int* cvInputIds[] = { levelCvIds, warpCvIds, foldCvIds, fbCvIds };
 
-        const int levelCvAIds[] = { FourMM::OP1_LEVEL_CV_ATTEN_PARAM, FourMM::OP2_LEVEL_CV_ATTEN_PARAM, FourMM::OP3_LEVEL_CV_ATTEN_PARAM, FourMM::OP4_LEVEL_CV_ATTEN_PARAM };
-        const int warpCvAIds[]  = { FourMM::OP1_WARP_CV_ATTEN_PARAM, FourMM::OP2_WARP_CV_ATTEN_PARAM, FourMM::OP3_WARP_CV_ATTEN_PARAM, FourMM::OP4_WARP_CV_ATTEN_PARAM };
-        const int foldCvAIds[]  = { FourMM::OP1_FOLD_CV_ATTEN_PARAM, FourMM::OP2_FOLD_CV_ATTEN_PARAM, FourMM::OP3_FOLD_CV_ATTEN_PARAM, FourMM::OP4_FOLD_CV_ATTEN_PARAM };
-        const int fbCvAIds[]    = { FourMM::OP1_FB_CV_ATTEN_PARAM, FourMM::OP2_FB_CV_ATTEN_PARAM, FourMM::OP3_FB_CV_ATTEN_PARAM, FourMM::OP4_FB_CV_ATTEN_PARAM };
+        const int levelCvAIds[] = { Four::OP1_LEVEL_CV_ATTEN_PARAM, Four::OP2_LEVEL_CV_ATTEN_PARAM, Four::OP3_LEVEL_CV_ATTEN_PARAM, Four::OP4_LEVEL_CV_ATTEN_PARAM };
+        const int warpCvAIds[]  = { Four::OP1_WARP_CV_ATTEN_PARAM, Four::OP2_WARP_CV_ATTEN_PARAM, Four::OP3_WARP_CV_ATTEN_PARAM, Four::OP4_WARP_CV_ATTEN_PARAM };
+        const int foldCvAIds[]  = { Four::OP1_FOLD_CV_ATTEN_PARAM, Four::OP2_FOLD_CV_ATTEN_PARAM, Four::OP3_FOLD_CV_ATTEN_PARAM, Four::OP4_FOLD_CV_ATTEN_PARAM };
+        const int fbCvAIds[]    = { Four::OP1_FB_CV_ATTEN_PARAM, Four::OP2_FB_CV_ATTEN_PARAM, Four::OP3_FB_CV_ATTEN_PARAM, Four::OP4_FB_CV_ATTEN_PARAM };
         const int* cvAttenIds[] = { levelCvAIds, warpCvAIds, foldCvAIds, fbCvAIds };
 
         const float cvJackX[4]  = { OP1_CV0_JACK_X, OP2_CV0_JACK_X, OP3_CV0_JACK_X, OP4_CV0_JACK_X };
@@ -634,4 +634,4 @@ struct FourMMWidget : ModuleWidget {
     }
 };
 
-Model* modelFourMM = createModel<FourMM, FourMMWidget>("FourMM");
+Model* modelFour = createModel<Four, FourWidget>("FourMM");

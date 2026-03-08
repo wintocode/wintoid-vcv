@@ -1,23 +1,23 @@
 CC := c++
 CFLAGS := -std=c++11 -Wall -Wextra -g -fsanitize=address,undefined
 
-all: test_fourmm_dsp test_fourmm_engine test_vortexmm_dsp
+all: test_four_dsp test_four_engine test_vortex_dsp
 
-test_fourmm_dsp: test_fourmm_dsp.cpp ../src/FourMM/dsp.h
+test_four_dsp: test_four_dsp.cpp ../src/Four/dsp.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
-test_fourmm_engine: test_fourmm_engine.cpp ../src/FourMM/engine.h ../src/FourMM/dsp.h
+test_four_engine: test_four_engine.cpp ../src/Four/engine.h ../src/Four/dsp.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
-test_vortexmm_dsp: test_vortexmm_dsp.cpp ../src/VortexMM/dsp.h
+test_vortex_dsp: test_vortex_dsp.cpp ../src/Vortex/dsp.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
-run: test_fourmm_dsp test_fourmm_engine test_vortexmm_dsp
-	./test_fourmm_dsp
-	./test_fourmm_engine
-	./test_vortexmm_dsp
+run: test_four_dsp test_four_engine test_vortex_dsp
+	./test_four_dsp
+	./test_four_engine
+	./test_vortex_dsp
 
 clean:
-	rm -f test_fourmm_dsp test_fourmm_engine test_vortexmm_dsp
+	rm -f test_four_dsp test_four_engine test_vortex_dsp
 
 .PHONY: all run clean

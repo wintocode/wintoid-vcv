@@ -4,6 +4,6 @@ Plugin* pluginInstance;
 
 void init(Plugin* p) {
     pluginInstance = p;
-    p->addModel(modelFourMM);
-    p->addModel(modelVortexMM);
+    p->addModel(modelFour);
+    p->addModel(modelVortex);
 }
