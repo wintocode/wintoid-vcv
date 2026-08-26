@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../polyphony.h"
 #include <cmath>
 
 namespace brink {
@@ -7,7 +8,7 @@ namespace brink {
 static const float MIN_WIDTH = 0.001f;
 static const float MAX_WIDTH = 20.f;
 static const float HYSTERESIS = 0.001f;
-static const int MAX_CHANNELS = 16;
+static const int MAX_CHANNELS = wintoid::polyphony::MAX_CHANNELS;
 
 enum Region { BELOW = 0, INSIDE, ABOVE };
 
@@ -192,8 +193,7 @@ inline LogicOutput process_logic(LogicState& state, bool a, bool b)
 
 inline int effective_channels(int channels)
 {
-    if (channels < 1) return 1;
-    return channels > MAX_CHANNELS ? MAX_CHANNELS : channels;
+    return wintoid::polyphony::effective_channels(channels);
 }
 
 inline int logic_channels(int aChannels, int bChannels)
@@ -205,9 +205,7 @@ inline int logic_channels(int aChannels, int bChannels)
 
 inline int broadcast_lane(int lane, int channels)
 {
-    int count = effective_channels(channels);
-    if (count == 1 || lane >= count) return 0;
-    return lane;
+    return wintoid::polyphony::broadcast_lane(lane, channels);
 }
 
 } // namespace brink

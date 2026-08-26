@@ -173,6 +173,11 @@ TEST(logic_reset_clears_toggle)
 
 TEST(polyphony_channel_rules)
 {
+    ASSERT(brink::MAX_CHANNELS == wintoid::polyphony::MAX_CHANNELS);
+    ASSERT(brink::effective_channels(0)
+           == wintoid::polyphony::effective_channels(0));
+    ASSERT(brink::broadcast_lane(9, 8)
+           == wintoid::polyphony::broadcast_lane(9, 8));
     ASSERT(brink::effective_channels(0) == 1);
     ASSERT(brink::effective_channels(22) == 16);
     ASSERT(brink::logic_channels(1, 8) == 8);
