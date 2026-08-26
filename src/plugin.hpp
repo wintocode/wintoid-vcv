@@ -7,3 +7,4 @@ extern Plugin* pluginInstance;
 
 extern Model* modelFour;
 extern Model* modelVortex;
+extern Model* modelBrink;

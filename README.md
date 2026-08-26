@@ -1,6 +1,6 @@
 # wintoid
 
-VCV Rack plugin — FM synthesizer and multi-mode filter.
+VCV Rack plugin — synthesizer, filter, and CV/logic utilities.
 
 ## Modules
 
@@ -25,6 +25,16 @@ VCV Rack plugin — FM synthesizer and multi-mode filter.
 - **Drive stage** — soft-clip saturation before the filter
 - **Mode selector** — click display to cycle, right-click for menu
 - **Filter DSP** by Yuriy Ivantsov ([ivantsov-filters](https://github.com/yIvantsov/ivantsov-filters)) — state-space design with Sigma frequency warping
+
+### Brink
+Dual voltage-window processor (12HP)
+
+- **Two comparison windows** with CENTER and WIDTH controls, each with CV attenuverters
+- **INSIDE**, **OUTSIDE**, and bipolar **POSITION** outputs for each channel
+- **Four directional boundary triggers** per channel: low up, high up, low down, and high down
+- **A-to-B normalization** for signal and CV inputs
+- **Shared logic outputs**: AND, OR, XOR, and toggle state
+- **Sample-accurate CV/audio processing** with 16-channel polyphony
 
 ## Building
 

@@ -1,7 +1,7 @@
 {
   "slug": "wintoid",
   "name": "wintoid",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "license": "MIT",
   "brand": "wintoid",
   "author": "wintoid",
@@ -30,6 +30,17 @@
       "tags": [
         "Filter",
         "Effect"
+      ]
+    },
+    {
+      "slug": "Brink",
+      "name": "Brink",
+      "description": "Polyphonic dual-window utility with bipolar position, directional boundary events, and shared logic",
+      "manualUrl": "https://github.com/wintocode/wintoid-vcv#brink",
+      "tags": [
+        "Logic",
+        "Polyphonic",
+        "Utility"
       ]
     }
   ]
