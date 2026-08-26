@@ -1,4 +1,5 @@
 #include "../plugin.hpp"
+#include "../polyphony.h"
 #include "dsp.h"
 
 struct CutoffParamQuantity : ParamQuantity {
@@ -41,10 +42,45 @@ struct Vortex : Module {
         LIGHTS_LEN
     };
 
-    // Filter state
-    vortex::Filter1 f1;
-    vortex::Filter2 f2a, f2b;
+    vortex::VoiceState voiceStates[wintoid::polyphony::MAX_CHANNELS];
     int lastMode = -1;
+    int previousChannels = 0;
+    float previousSampleRate = 0.f;
+
+    void resetAllVoiceStates()
+    {
+        for (int lane = 0; lane < wintoid::polyphony::MAX_CHANNELS; ++lane)
+            voiceStates[lane].reset();
+    }
+
+    void clearRuntimeState()
+    {
+        resetAllVoiceStates();
+        lastMode = -1;
+        previousChannels = 0;
+        previousSampleRate = 0.f;
+    }
+
+    void onReset() override
+    {
+        clearRuntimeState();
+    }
+
+    static float readBroadcast(Input& input, int lane)
+    {
+        const int channels = input.getChannels();
+        if (channels <= 0) return 0.f;
+        return input.getVoltage(
+            wintoid::polyphony::broadcast_lane(lane, channels));
+    }
+
+    void prepareLanes(int channels)
+    {
+        wintoid::polyphony::reset_changed_lanes(
+            previousChannels, channels,
+            [&](int lane) { voiceStates[lane].reset(); });
+        previousChannels = channels;
+    }
 
     Vortex() {
         config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -65,143 +101,161 @@ struct Vortex : Module {
         configParam(DRIVE_CV_ATTEN_PARAM, -1.f, 1.f, 0.f, "Drive CV", "%", 0.f, 100.f);
 
         // Inputs
-        configInput(AUDIO_INPUT, "Audio");
+        configInput(AUDIO_INPUT,
+                    "Audio (polyphonic voice count, 1 to 16 channels)");
         configInput(CUTOFF_CV_INPUT, "Cutoff CV");
         configInput(RESONANCE_CV_INPUT, "Resonance CV");
         configInput(DRIVE_CV_INPUT, "Drive CV");
 
         // Output
         configOutput(AUDIO_OUTPUT, "Audio");
+        clearRuntimeState();
     }
 
-    void process(const ProcessArgs& args) override {
-        float fs = args.sampleRate;
+    void process(const ProcessArgs& args) override
+    {
+        if (args.sampleRate != previousSampleRate) {
+            clearRuntimeState();
+            previousSampleRate = args.sampleRate;
+        }
 
-        // --- Read input ---
-        float input = inputs[AUDIO_INPUT].getVoltage() / 5.f;  // normalize to ~+/-1
-
-        // --- Mode ---
-        int mode = (int)params[MODE_PARAM].getValue();
-
-        // Reset filter state when mode changes
+        const int mode = (int)params[MODE_PARAM].getValue();
         if (mode != lastMode) {
-            f1.reset();
-            f2a.reset();
-            f2b.reset();
+            resetAllVoiceStates();
             lastMode = mode;
         }
 
-        // --- Cutoff ---
-        float cutoff = params[CUTOFF_PARAM].getValue();
+        const int channels = wintoid::polyphony::effective_channels(
+            inputs[AUDIO_INPUT].getChannels());
+        prepareLanes(channels);
+        outputs[AUDIO_OUTPUT].setChannels(channels);
 
-        if (inputs[CUTOFF_CV_INPUT].isConnected()) {
-            float cutoffCv = inputs[CUTOFF_CV_INPUT].getVoltage()
-                           * params[CUTOFF_CV_ATTEN_PARAM].getValue();
-            cutoff *= vortex::voct_to_mult(cutoffCv);
+        const float cutoffKnob = params[CUTOFF_PARAM].getValue();
+        const float resonance = params[RESONANCE_PARAM].getValue();
+        const float baseDamping =
+            0.707f * (1.f - resonance) + 0.01f * resonance;
+        const float driveKnob = params[DRIVE_PARAM].getValue();
+        const bool cutoffCvConnected = inputs[CUTOFF_CV_INPUT].isConnected();
+        const bool resonanceCvConnected =
+            inputs[RESONANCE_CV_INPUT].isConnected();
+        const bool driveCvConnected = inputs[DRIVE_CV_INPUT].isConnected();
+
+        for (int lane = 0; lane < channels; ++lane) {
+            vortex::VoiceState& voice = voiceStates[lane];
+            float signal = readBroadcast(inputs[AUDIO_INPUT], lane) / 5.f;
+
+            float cutoff = cutoffKnob;
+            if (cutoffCvConnected) {
+                const float cutoffCv =
+                    readBroadcast(inputs[CUTOFF_CV_INPUT], lane)
+                    * params[CUTOFF_CV_ATTEN_PARAM].getValue();
+                cutoff *= vortex::voct_to_mult(cutoffCv);
+            }
+            cutoff = clamp(cutoff, 20.f, 20000.f);
+
+            float damping = baseDamping;
+            if (resonanceCvConnected) {
+                const float resonanceCv =
+                    readBroadcast(inputs[RESONANCE_CV_INPUT], lane)
+                    * params[RESONANCE_CV_ATTEN_PARAM].getValue() * 0.2f;
+                damping = clamp(damping - resonanceCv, 0.01f, 0.707f);
+            }
+
+            float drive = driveKnob;
+            if (driveCvConnected) {
+                const float driveCv = readBroadcast(inputs[DRIVE_CV_INPUT], lane)
+                    * params[DRIVE_CV_ATTEN_PARAM].getValue() / 10.f;
+                drive = clamp(drive + driveCv, 0.f, 1.f);
+            }
+            if (drive > 0.f)
+                signal = vortex::soft_clip(signal * (1.f + drive * 9.f));
+
+            float wet = 0.f;
+            switch (mode) {
+            case 0:
+                vortex::filter1_configure_lp(voice.f1, args.sampleRate, cutoff);
+                wet = voice.f1.process_lp(signal);
+                break;
+            case 1:
+                vortex::filter2_configure(
+                    voice.f2a, args.sampleRate, cutoff, damping, vortex::F2_LP);
+                wet = vortex::filter2_process(voice.f2a, signal, vortex::F2_LP);
+                break;
+            case 2:
+                vortex::filter2_configure(
+                    voice.f2a, args.sampleRate, cutoff, damping, vortex::F2_LP);
+                vortex::filter2_configure(
+                    voice.f2b, args.sampleRate, cutoff, damping, vortex::F2_LP);
+                wet = vortex::filter2_process(voice.f2a, signal, vortex::F2_LP);
+                wet = vortex::filter2_process(voice.f2b, wet, vortex::F2_LP);
+                break;
+            case 3:
+                vortex::filter1_configure_hp(voice.f1, args.sampleRate, cutoff);
+                wet = voice.f1.process_hp(signal);
+                break;
+            case 4:
+                vortex::filter2_configure(
+                    voice.f2a, args.sampleRate, cutoff, damping, vortex::F2_HP);
+                wet = vortex::filter2_process(voice.f2a, signal, vortex::F2_HP);
+                break;
+            case 5:
+                vortex::filter2_configure(
+                    voice.f2a, args.sampleRate, cutoff, damping, vortex::F2_HP);
+                vortex::filter2_configure(
+                    voice.f2b, args.sampleRate, cutoff, damping, vortex::F2_HP);
+                wet = vortex::filter2_process(voice.f2a, signal, vortex::F2_HP);
+                wet = vortex::filter2_process(voice.f2b, wet, vortex::F2_HP);
+                break;
+            case 6:
+                vortex::filter2_configure(
+                    voice.f2a, args.sampleRate, cutoff, damping, vortex::F2_BP);
+                wet = vortex::filter2_process(voice.f2a, signal, vortex::F2_BP);
+                break;
+            case 7:
+                vortex::filter2_configure(
+                    voice.f2a, args.sampleRate, cutoff, damping, vortex::F2_BP);
+                vortex::filter2_configure(
+                    voice.f2b, args.sampleRate, cutoff, damping, vortex::F2_BP);
+                wet = vortex::filter2_process(voice.f2a, signal, vortex::F2_BP);
+                wet = vortex::filter2_process(voice.f2b, wet, vortex::F2_BP);
+                break;
+            case 8:
+                vortex::filter2_configure(
+                    voice.f2a, args.sampleRate, cutoff, damping, vortex::F2_NOTCH);
+                wet = vortex::filter2_process(
+                    voice.f2a, signal, vortex::F2_NOTCH);
+                break;
+            case 9:
+                vortex::filter2_configure(
+                    voice.f2a, args.sampleRate, cutoff, damping, vortex::F2_NOTCH);
+                vortex::filter2_configure(
+                    voice.f2b, args.sampleRate, cutoff, damping, vortex::F2_NOTCH);
+                wet = vortex::filter2_process(
+                    voice.f2a, signal, vortex::F2_NOTCH);
+                wet = vortex::filter2_process(voice.f2b, wet, vortex::F2_NOTCH);
+                break;
+            case 10:
+                vortex::filter2_configure(
+                    voice.f2a, args.sampleRate, cutoff, damping, vortex::F2_AP);
+                wet = vortex::filter2_process(voice.f2a, signal, vortex::F2_AP);
+                break;
+            case 11:
+                vortex::filter2_configure(
+                    voice.f2a, args.sampleRate, cutoff, damping, vortex::F2_AP);
+                vortex::filter2_configure(
+                    voice.f2b, args.sampleRate, cutoff, damping, vortex::F2_AP);
+                wet = vortex::filter2_process(voice.f2a, signal, vortex::F2_AP);
+                wet = vortex::filter2_process(voice.f2b, wet, vortex::F2_AP);
+                break;
+            }
+
+            voice.f1.z = vortex::flush_denormal(voice.f1.z);
+            voice.f2a.z0 = vortex::flush_denormal(voice.f2a.z0);
+            voice.f2a.z1 = vortex::flush_denormal(voice.f2a.z1);
+            voice.f2b.z0 = vortex::flush_denormal(voice.f2b.z0);
+            voice.f2b.z1 = vortex::flush_denormal(voice.f2b.z1);
+            outputs[AUDIO_OUTPUT].setVoltage(wet * 5.f, lane);
         }
-
-        cutoff = clamp(cutoff, 20.f, 20000.f);
-
-        // --- Resonance ---
-        // Map knob 0-1 to damping 0.707-0.01
-        float resoParam = params[RESONANCE_PARAM].getValue();
-        float damping = 0.707f * (1.f - resoParam) + 0.01f * resoParam;
-
-        if (inputs[RESONANCE_CV_INPUT].isConnected()) {
-            float resoCv = inputs[RESONANCE_CV_INPUT].getVoltage()
-                         * params[RESONANCE_CV_ATTEN_PARAM].getValue() * 0.2f;
-            damping -= resoCv;
-            damping = clamp(damping, 0.01f, 0.707f);
-        }
-
-        // --- Drive ---
-        float drv = params[DRIVE_PARAM].getValue();
-        if (inputs[DRIVE_CV_INPUT].isConnected()) {
-            float driveCv = inputs[DRIVE_CV_INPUT].getVoltage()
-                          * params[DRIVE_CV_ATTEN_PARAM].getValue() / 10.f;
-            drv = clamp(drv + driveCv, 0.f, 1.f);
-        }
-
-        // --- Drive stage ---
-        float signal = input;
-        if (drv > 0.f) {
-            float driveGain = 1.f + drv * 9.f;
-            signal = vortex::soft_clip(signal * driveGain);
-        }
-
-        // --- Filter ---
-        float wet = 0.f;
-
-        switch (mode) {
-        case 0: // LP 6dB
-            vortex::filter1_configure_lp(f1, fs, cutoff);
-            wet = f1.process_lp(signal);
-            break;
-        case 1: // LP 12dB
-            vortex::filter2_configure(f2a, fs, cutoff, damping, vortex::F2_LP);
-            wet = vortex::filter2_process(f2a, signal, vortex::F2_LP);
-            break;
-        case 2: // LP 24dB
-            vortex::filter2_configure(f2a, fs, cutoff, damping, vortex::F2_LP);
-            vortex::filter2_configure(f2b, fs, cutoff, damping, vortex::F2_LP);
-            wet = vortex::filter2_process(f2a, signal, vortex::F2_LP);
-            wet = vortex::filter2_process(f2b, wet, vortex::F2_LP);
-            break;
-        case 3: // HP 6dB
-            vortex::filter1_configure_hp(f1, fs, cutoff);
-            wet = f1.process_hp(signal);
-            break;
-        case 4: // HP 12dB
-            vortex::filter2_configure(f2a, fs, cutoff, damping, vortex::F2_HP);
-            wet = vortex::filter2_process(f2a, signal, vortex::F2_HP);
-            break;
-        case 5: // HP 24dB
-            vortex::filter2_configure(f2a, fs, cutoff, damping, vortex::F2_HP);
-            vortex::filter2_configure(f2b, fs, cutoff, damping, vortex::F2_HP);
-            wet = vortex::filter2_process(f2a, signal, vortex::F2_HP);
-            wet = vortex::filter2_process(f2b, wet, vortex::F2_HP);
-            break;
-        case 6: // BP
-            vortex::filter2_configure(f2a, fs, cutoff, damping, vortex::F2_BP);
-            wet = vortex::filter2_process(f2a, signal, vortex::F2_BP);
-            break;
-        case 7: // BP+
-            vortex::filter2_configure(f2a, fs, cutoff, damping, vortex::F2_BP);
-            vortex::filter2_configure(f2b, fs, cutoff, damping, vortex::F2_BP);
-            wet = vortex::filter2_process(f2a, signal, vortex::F2_BP);
-            wet = vortex::filter2_process(f2b, wet, vortex::F2_BP);
-            break;
-        case 8: // Notch
-            vortex::filter2_configure(f2a, fs, cutoff, damping, vortex::F2_NOTCH);
-            wet = vortex::filter2_process(f2a, signal, vortex::F2_NOTCH);
-            break;
-        case 9: // Notch+
-            vortex::filter2_configure(f2a, fs, cutoff, damping, vortex::F2_NOTCH);
-            vortex::filter2_configure(f2b, fs, cutoff, damping, vortex::F2_NOTCH);
-            wet = vortex::filter2_process(f2a, signal, vortex::F2_NOTCH);
-            wet = vortex::filter2_process(f2b, wet, vortex::F2_NOTCH);
-            break;
-        case 10: // AP
-            vortex::filter2_configure(f2a, fs, cutoff, damping, vortex::F2_AP);
-            wet = vortex::filter2_process(f2a, signal, vortex::F2_AP);
-            break;
-        case 11: // AP+
-            vortex::filter2_configure(f2a, fs, cutoff, damping, vortex::F2_AP);
-            vortex::filter2_configure(f2b, fs, cutoff, damping, vortex::F2_AP);
-            wet = vortex::filter2_process(f2a, signal, vortex::F2_AP);
-            wet = vortex::filter2_process(f2b, wet, vortex::F2_AP);
-            break;
-        }
-
-        // Flush denormals
-        f1.z = vortex::flush_denormal(f1.z);
-        f2a.z0 = vortex::flush_denormal(f2a.z0);
-        f2a.z1 = vortex::flush_denormal(f2a.z1);
-        f2b.z0 = vortex::flush_denormal(f2b.z0);
-        f2b.z1 = vortex::flush_denormal(f2b.z1);
-
-        // Output at +/-5V
-        outputs[AUDIO_OUTPUT].setVoltage(wet * 5.f);
     }
 };
 
