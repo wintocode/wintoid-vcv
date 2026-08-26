@@ -185,7 +185,7 @@ res/Brink.svg
 tests/test_brink_dsp.cpp
 ```
 
-The implementation also updates the existing plugin registration, plugin manifest, README module list, and test Makefile. No repository file, identifier, comment, description, or asset metadata will name or advertise an external inspiration.
+The implementation also updates the existing plugin registration, plugin manifest, README module list, and test Makefile. Repository files, identifiers, comments, descriptions, and asset metadata will use Brink's own product identity.
 
 ## Reset and Exceptional Cases
 
