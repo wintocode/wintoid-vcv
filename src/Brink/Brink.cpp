@@ -1,0 +1,657 @@
+#include "../plugin.hpp"
+#include "dsp.h"
+#include "layout.h"
+
+#include <algorithm>
+#include <cmath>
+
+struct Brink : Module {
+    enum ParamId {
+        A_CENTER_PARAM, A_WIDTH_PARAM, A_CENTER_ATTEN_PARAM, A_WIDTH_ATTEN_PARAM,
+        B_CENTER_PARAM, B_WIDTH_PARAM, B_CENTER_ATTEN_PARAM, B_WIDTH_ATTEN_PARAM,
+        PARAMS_LEN
+    };
+
+    enum InputId {
+        A_SIGNAL_INPUT, A_CENTER_CV_INPUT, A_WIDTH_CV_INPUT,
+        B_SIGNAL_INPUT, B_CENTER_CV_INPUT, B_WIDTH_CV_INPUT,
+        INPUTS_LEN
+    };
+
+    enum OutputId {
+        A_INSIDE_OUTPUT, A_OUTSIDE_OUTPUT, A_POSITION_OUTPUT,
+        A_LOW_UP_OUTPUT, A_HIGH_UP_OUTPUT, A_LOW_DOWN_OUTPUT, A_HIGH_DOWN_OUTPUT,
+        B_INSIDE_OUTPUT, B_OUTSIDE_OUTPUT, B_POSITION_OUTPUT,
+        B_LOW_UP_OUTPUT, B_HIGH_UP_OUTPUT, B_LOW_DOWN_OUTPUT, B_HIGH_DOWN_OUTPUT,
+        AND_OUTPUT, OR_OUTPUT, XOR_OUTPUT, STATE_OUTPUT,
+        OUTPUTS_LEN
+    };
+
+    enum LightId {
+        A_INSIDE_LIGHT, A_OUTSIDE_LIGHT, A_LOW_UP_LIGHT, A_HIGH_UP_LIGHT,
+        A_LOW_DOWN_LIGHT, A_HIGH_DOWN_LIGHT,
+        B_INSIDE_LIGHT, B_OUTSIDE_LIGHT, B_LOW_UP_LIGHT, B_HIGH_UP_LIGHT,
+        B_LOW_DOWN_LIGHT, B_HIGH_DOWN_LIGHT,
+        AND_LIGHT, OR_LIGHT, XOR_LIGHT, STATE_LIGHT,
+        LIGHTS_LEN
+    };
+
+    brink::WindowState windowStates[2][brink::MAX_CHANNELS];
+    brink::LogicState logicStates[brink::MAX_CHANNELS];
+    bool insideStates[2][brink::MAX_CHANNELS];
+    float displayPosition[2];
+    int previousSignalChannels[2];
+    int previousLogicChannels;
+    float previousSampleRate;
+
+    Brink() {
+        config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
+
+        const int centerParams[] = {A_CENTER_PARAM, B_CENTER_PARAM};
+        const int widthParams[] = {A_WIDTH_PARAM, B_WIDTH_PARAM};
+        const int centerAttenParams[] = {A_CENTER_ATTEN_PARAM, B_CENTER_ATTEN_PARAM};
+        const int widthAttenParams[] = {A_WIDTH_ATTEN_PARAM, B_WIDTH_ATTEN_PARAM};
+
+        configParam(centerParams[0], -5.f, 5.f, 0.f, "Channel A center", " V");
+        configParam(widthParams[0], 0.f, 10.f, 5.f, "Channel A width", " V");
+        configParam(centerAttenParams[0], -1.f, 1.f, 0.f,
+                    "Channel A center CV attenuverter", "%", 0.f, 100.f);
+        configParam(widthAttenParams[0], -1.f, 1.f, 0.f,
+                    "Channel A width CV attenuverter", "%", 0.f, 100.f);
+        configParam(centerParams[1], -5.f, 5.f, 0.f, "Channel B center", " V");
+        configParam(widthParams[1], 0.f, 10.f, 5.f, "Channel B width", " V");
+        configParam(centerAttenParams[1], -1.f, 1.f, 0.f,
+                    "Channel B center CV attenuverter", "%", 0.f, 100.f);
+        configParam(widthAttenParams[1], -1.f, 1.f, 0.f,
+                    "Channel B width CV attenuverter", "%", 0.f, 100.f);
+
+        configInput(A_SIGNAL_INPUT, "Channel A signal");
+        configInput(A_CENTER_CV_INPUT, "Channel A center CV");
+        configInput(A_WIDTH_CV_INPUT, "Channel A width CV");
+        configInput(B_SIGNAL_INPUT, "Channel B signal");
+        configInput(B_CENTER_CV_INPUT, "Channel B center CV");
+        configInput(B_WIDTH_CV_INPUT, "Channel B width CV");
+
+        const char* channelNames[] = {"A", "B"};
+        const int channelOutputIds[2][brink::EVENT_COUNT + 3] = {
+            {A_INSIDE_OUTPUT, A_OUTSIDE_OUTPUT, A_POSITION_OUTPUT,
+             A_LOW_UP_OUTPUT, A_HIGH_UP_OUTPUT, A_LOW_DOWN_OUTPUT, A_HIGH_DOWN_OUTPUT},
+            {B_INSIDE_OUTPUT, B_OUTSIDE_OUTPUT, B_POSITION_OUTPUT,
+             B_LOW_UP_OUTPUT, B_HIGH_UP_OUTPUT, B_LOW_DOWN_OUTPUT, B_HIGH_DOWN_OUTPUT}
+        };
+        const char* outputDescriptions[] = {
+            "inside gate", "outside gate", "position voltage",
+            "low boundary upward crossing", "high boundary upward crossing",
+            "low boundary downward crossing", "high boundary downward crossing"
+        };
+        for (int channel = 0; channel < 2; ++channel) {
+            for (int output = 0; output < brink::EVENT_COUNT + 3; ++output) {
+                configOutput(channelOutputIds[channel][output],
+                             std::string("Channel ") + channelNames[channel] + " " + outputDescriptions[output]);
+            }
+        }
+        configOutput(AND_OUTPUT, "A and B inside logical AND");
+        configOutput(OR_OUTPUT, "A or B inside logical OR");
+        configOutput(XOR_OUTPUT, "A and B inside exclusive OR");
+        configOutput(STATE_OUTPUT, "A/B XOR rising-edge state");
+
+        const int channelLightIds[2][brink::EVENT_COUNT + 2] = {
+            {A_INSIDE_LIGHT, A_OUTSIDE_LIGHT, A_LOW_UP_LIGHT, A_HIGH_UP_LIGHT,
+             A_LOW_DOWN_LIGHT, A_HIGH_DOWN_LIGHT},
+            {B_INSIDE_LIGHT, B_OUTSIDE_LIGHT, B_LOW_UP_LIGHT, B_HIGH_UP_LIGHT,
+             B_LOW_DOWN_LIGHT, B_HIGH_DOWN_LIGHT}
+        };
+        const char* lightDescriptions[] = {
+            "inside activity", "outside activity",
+            "low boundary upward crossing activity", "high boundary upward crossing activity",
+            "low boundary downward crossing activity", "high boundary downward crossing activity"
+        };
+        for (int channel = 0; channel < 2; ++channel) {
+            for (int light = 0; light < brink::EVENT_COUNT + 2; ++light) {
+                configLight(channelLightIds[channel][light],
+                            std::string("Channel ") + channelNames[channel] + " " + lightDescriptions[light]);
+            }
+        }
+        configLight(AND_LIGHT, "AND activity");
+        configLight(OR_LIGHT, "OR activity");
+        configLight(XOR_LIGHT, "XOR activity");
+        configLight(STATE_LIGHT, "state activity");
+
+        clearRuntimeState();
+    }
+
+    void clearRuntimeState() {
+        for (int channel = 0; channel < 2; ++channel) {
+            displayPosition[channel] = 0.f;
+            previousSignalChannels[channel] = 0;
+            for (int lane = 0; lane < brink::MAX_CHANNELS; ++lane) {
+                brink::reset(windowStates[channel][lane]);
+                insideStates[channel][lane] = false;
+            }
+        }
+        for (int lane = 0; lane < brink::MAX_CHANNELS; ++lane)
+            brink::reset(logicStates[lane]);
+        previousLogicChannels = 0;
+        previousSampleRate = 0.f;
+    }
+
+    void onReset() override {
+        clearRuntimeState();
+    }
+
+    static float readBroadcast(const Input& input, int lane)
+    {
+        // Rack's voltage accessors are read-only in practice but retain a
+        // non-const signature in the supported SDK API.
+        Input& mutableInput = const_cast<Input&>(input);
+        int channels = mutableInput.getChannels();
+        if (channels <= 0) return 0.f;
+        int sourceLane = brink::broadcast_lane(lane, channels);
+        return mutableInput.getVoltage(sourceLane);
+    }
+
+    static void resetWindowLane(brink::WindowState& state, bool& inside)
+    {
+        brink::reset(state);
+        inside = false;
+    }
+
+    void prepareWindowLanes(int channel, int channels) {
+        int previous = previousSignalChannels[channel];
+        if (channels < previous) {
+            for (int lane = channels; lane < previous; ++lane)
+                resetWindowLane(windowStates[channel][lane], insideStates[channel][lane]);
+        }
+        else if (channels > previous) {
+            for (int lane = previous; lane < channels; ++lane)
+                resetWindowLane(windowStates[channel][lane], insideStates[channel][lane]);
+        }
+        previousSignalChannels[channel] = channels;
+    }
+
+    void prepareLogicLanes(int channels) {
+        int previous = previousLogicChannels;
+        if (channels < previous) {
+            for (int lane = channels; lane < previous; ++lane)
+                brink::reset(logicStates[lane]);
+        }
+        else if (channels > previous) {
+            for (int lane = previous; lane < channels; ++lane)
+                brink::reset(logicStates[lane]);
+        }
+        previousLogicChannels = channels;
+    }
+
+    void process(const ProcessArgs& args) override {
+        if (args.sampleRate != previousSampleRate) {
+            clearRuntimeState();
+            previousSampleRate = args.sampleRate;
+        }
+
+        const Input& aSignal = inputs[A_SIGNAL_INPUT];
+        const Input& aCenterCv = inputs[A_CENTER_CV_INPUT];
+        const Input& aWidthCv = inputs[A_WIDTH_CV_INPUT];
+        const Input& bSignal = inputs[B_SIGNAL_INPUT].isConnected()
+            ? inputs[B_SIGNAL_INPUT] : inputs[A_SIGNAL_INPUT];
+        const Input& bCenterCv = inputs[B_CENTER_CV_INPUT].isConnected()
+            ? inputs[B_CENTER_CV_INPUT] : inputs[A_CENTER_CV_INPUT];
+        const Input& bWidthCv = inputs[B_WIDTH_CV_INPUT].isConnected()
+            ? inputs[B_WIDTH_CV_INPUT] : inputs[A_WIDTH_CV_INPUT];
+
+        const Input* signalPorts[] = {&aSignal, &bSignal};
+        const Input* centerCvPorts[] = {&aCenterCv, &bCenterCv};
+        const Input* widthCvPorts[] = {&aWidthCv, &bWidthCv};
+        const int centerParams[] = {A_CENTER_PARAM, B_CENTER_PARAM};
+        const int widthParams[] = {A_WIDTH_PARAM, B_WIDTH_PARAM};
+        const int centerAttenParams[] = {A_CENTER_ATTEN_PARAM, B_CENTER_ATTEN_PARAM};
+        const int widthAttenParams[] = {A_WIDTH_ATTEN_PARAM, B_WIDTH_ATTEN_PARAM};
+        const int channelOutputIds[2][brink::EVENT_COUNT + 3] = {
+            {A_INSIDE_OUTPUT, A_OUTSIDE_OUTPUT, A_POSITION_OUTPUT,
+             A_LOW_UP_OUTPUT, A_HIGH_UP_OUTPUT, A_LOW_DOWN_OUTPUT, A_HIGH_DOWN_OUTPUT},
+            {B_INSIDE_OUTPUT, B_OUTSIDE_OUTPUT, B_POSITION_OUTPUT,
+             B_LOW_UP_OUTPUT, B_HIGH_UP_OUTPUT, B_LOW_DOWN_OUTPUT, B_HIGH_DOWN_OUTPUT}
+        };
+        const int channelLightIds[2][brink::EVENT_COUNT + 2] = {
+            {A_INSIDE_LIGHT, A_OUTSIDE_LIGHT, A_LOW_UP_LIGHT, A_HIGH_UP_LIGHT,
+             A_LOW_DOWN_LIGHT, A_HIGH_DOWN_LIGHT},
+            {B_INSIDE_LIGHT, B_OUTSIDE_LIGHT, B_LOW_UP_LIGHT, B_HIGH_UP_LIGHT,
+             B_LOW_DOWN_LIGHT, B_HIGH_DOWN_LIGHT}
+        };
+
+        int signalChannels[2];
+        bool gateActivity[2][2] = {{false, false}, {false, false}};
+        bool eventActivity[2][brink::EVENT_COUNT] = {};
+        for (int channel = 0; channel < 2; ++channel) {
+            Input& signalInput = const_cast<Input&>(*signalPorts[channel]);
+            signalChannels[channel] = brink::effective_channels(signalInput.getChannels());
+            prepareWindowLanes(channel, signalChannels[channel]);
+
+            for (int output = 0; output < brink::EVENT_COUNT + 3; ++output)
+                outputs[channelOutputIds[channel][output]].setChannels(signalChannels[channel]);
+
+            for (int lane = 0; lane < signalChannels[channel]; ++lane) {
+                float signal = readBroadcast(*signalPorts[channel], lane);
+                float center = params[centerParams[channel]].getValue()
+                    + readBroadcast(*centerCvPorts[channel], lane)
+                    * params[centerAttenParams[channel]].getValue();
+                float width = params[widthParams[channel]].getValue()
+                    + readBroadcast(*widthCvPorts[channel], lane)
+                    * params[widthAttenParams[channel]].getValue();
+                brink::WindowOutput out = brink::process_window(
+                    windowStates[channel][lane], signal, center, width, args.sampleTime);
+
+                outputs[channelOutputIds[channel][0]].setVoltage(out.inside ? 10.f : 0.f, lane);
+                outputs[channelOutputIds[channel][1]].setVoltage(out.inside ? 0.f : 10.f, lane);
+                outputs[channelOutputIds[channel][2]].setVoltage(out.position, lane);
+                for (int event = 0; event < brink::EVENT_COUNT; ++event) {
+                    bool active = out.eventHigh[event];
+                    outputs[channelOutputIds[channel][event + 3]].setVoltage(active ? 10.f : 0.f, lane);
+                    eventActivity[channel][event] = eventActivity[channel][event] || active;
+                }
+
+                insideStates[channel][lane] = out.inside;
+                gateActivity[channel][0] = gateActivity[channel][0] || out.inside;
+                gateActivity[channel][1] = gateActivity[channel][1] || !out.inside;
+                if (lane == 0)
+                    displayPosition[channel] = out.position;
+            }
+
+            lights[channelLightIds[channel][0]].setBrightness(gateActivity[channel][0] ? 1.f : 0.f);
+            lights[channelLightIds[channel][1]].setBrightness(gateActivity[channel][1] ? 1.f : 0.f);
+            for (int event = 0; event < brink::EVENT_COUNT; ++event) {
+                lights[channelLightIds[channel][event + 2]].setSmoothBrightness(
+                    eventActivity[channel][event] ? 1.f : 0.f, args.sampleTime);
+            }
+        }
+
+        int logicChannels = brink::logic_channels(
+            const_cast<Input&>(aSignal).getChannels(),
+            const_cast<Input&>(bSignal).getChannels());
+        prepareLogicLanes(logicChannels);
+        const int logicOutputIds[] = {AND_OUTPUT, OR_OUTPUT, XOR_OUTPUT, STATE_OUTPUT};
+        for (int output = 0; output < 4; ++output)
+            outputs[logicOutputIds[output]].setChannels(logicChannels);
+
+        bool logicActivity[4] = {false, false, false, false};
+        for (int lane = 0; lane < logicChannels; ++lane) {
+            bool aInside = insideStates[0][brink::broadcast_lane(lane, signalChannels[0])];
+            bool bInside = insideStates[1][brink::broadcast_lane(lane, signalChannels[1])];
+            brink::LogicOutput out = brink::process_logic(logicStates[lane], aInside, bInside);
+            const bool values[] = {out.andGate, out.orGate, out.xorGate, out.stateGate};
+            for (int output = 0; output < 4; ++output) {
+                outputs[logicOutputIds[output]].setVoltage(values[output] ? 10.f : 0.f, lane);
+                logicActivity[output] = logicActivity[output] || values[output];
+            }
+        }
+        lights[AND_LIGHT].setBrightness(logicActivity[0] ? 1.f : 0.f);
+        lights[OR_LIGHT].setBrightness(logicActivity[1] ? 1.f : 0.f);
+        lights[XOR_LIGHT].setBrightness(logicActivity[2] ? 1.f : 0.f);
+        lights[STATE_LIGHT].setBrightness(logicActivity[3] ? 1.f : 0.f);
+    }
+};
+
+struct BrinkTealLight : SmallSimpleLight<GrayModuleLightWidget> {
+    BrinkTealLight() {
+        addBaseColor(nvgRGB(45, 190, 180));
+    }
+};
+
+struct BrinkOrangeLight : SmallSimpleLight<GrayModuleLightWidget> {
+    BrinkOrangeLight() {
+        addBaseColor(nvgRGB(238, 135, 54));
+    }
+};
+
+struct BrinkVioletLight : SmallSimpleLight<GrayModuleLightWidget> {
+    BrinkVioletLight() {
+        addBaseColor(nvgRGB(172, 117, 230));
+    }
+};
+
+struct PositionRail : Widget {
+    Brink* module = nullptr;
+    int channel = 0;
+
+    PositionRail() {
+        box.size = mm2px(Vec(8.f, brink_layout::POSITION_RAIL_HEIGHT));
+    }
+
+    void drawLayer(const DrawArgs& args, int layer) override {
+        if (layer != 1) {
+            Widget::drawLayer(args, layer);
+            return;
+        }
+
+        const float centreX = box.size.x / 2.f;
+        const float trackWidth = mm2px(2.f);
+        const float markerSize = mm2px(2.f);
+        const float position = module
+            ? std::max(-5.f, std::min(5.f, module->displayPosition[channel]))
+            : 0.f;
+        const float normalized = (position + 5.f) / 10.f;
+        const float markerY = box.size.y - normalized * box.size.y;
+        const NVGcolor accent = channel == 0
+            ? nvgRGB(45, 190, 180)
+            : nvgRGB(238, 135, 54);
+
+        nvgSave(args.vg);
+        nvgBeginPath(args.vg);
+        nvgRoundedRect(args.vg, centreX - trackWidth / 2.f, 0.f,
+                       trackWidth, box.size.y, mm2px(0.8f));
+        nvgFillColor(args.vg, nvgRGB(17, 21, 37));
+        nvgFill(args.vg);
+        nvgStrokeColor(args.vg, nvgRGB(59, 70, 104));
+        nvgStrokeWidth(args.vg, mm2px(0.3f));
+        nvgStroke(args.vg);
+
+        nvgStrokeColor(args.vg, nvgRGBA(170, 180, 205, 190));
+        nvgStrokeWidth(args.vg, mm2px(0.25f));
+        const float tickHalfWidth = mm2px(2.f);
+        const float tickY[] = {0.f, box.size.y / 2.f, box.size.y};
+        for (int tick = 0; tick < 3; ++tick) {
+            nvgBeginPath(args.vg);
+            nvgMoveTo(args.vg, centreX - tickHalfWidth, tickY[tick]);
+            nvgLineTo(args.vg, centreX + tickHalfWidth, tickY[tick]);
+            nvgStroke(args.vg);
+        }
+
+        nvgBeginPath(args.vg);
+        nvgRoundedRect(args.vg, centreX - markerSize / 2.f,
+                       markerY - markerSize / 2.f, markerSize, markerSize,
+                       mm2px(0.5f));
+        nvgFillColor(args.vg, accent);
+        nvgFill(args.vg);
+        nvgRestore(args.vg);
+    }
+};
+
+namespace {
+
+static void drawDirectionArrow(NVGcontext* vg, float x, float y, bool up) {
+    const float width = mm2px(1.2f);
+    const float height = mm2px(1.5f);
+    const float direction = up ? -1.f : 1.f;
+    nvgBeginPath(vg);
+    nvgMoveTo(vg, x - width, y + direction * height / 2.f);
+    nvgLineTo(vg, x, y - direction * height / 2.f);
+    nvgLineTo(vg, x + width, y + direction * height / 2.f);
+    nvgStroke(vg);
+}
+
+struct PanelLabels : Widget {
+    PanelLabels() {
+        box.size = mm2px(Vec(brink_layout::PANEL_WIDTH, brink_layout::PANEL_HEIGHT));
+    }
+
+    void drawLayer(const DrawArgs& args, int layer) override {
+        if (layer != 1) {
+            Widget::drawLayer(args, layer);
+            return;
+        }
+
+        std::shared_ptr<Font> font = APP->window->loadFont(
+            asset::system("res/fonts/DejaVuSans.ttf"));
+        if (!font) {
+            Widget::drawLayer(args, layer);
+            return;
+        }
+        nvgFontFaceId(args.vg, font->handle);
+
+        // Title.
+        nvgFontSize(args.vg, 14);
+        nvgFillColor(args.vg, nvgRGB(220, 220, 220));
+        nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        nvgText(args.vg, mm2px(brink_layout::PANEL_WIDTH / 2.f),
+                mm2px(brink_layout::TITLE_Y), "Brink", nullptr);
+
+        // Channel headers and control labels.
+        const float channelX[] = {15.24f, 45.72f};
+        const char* channelNames[] = {"CHANNEL A", "CHANNEL B"};
+        nvgFontSize(args.vg, 8);
+        nvgFillColor(args.vg, nvgRGB(190, 198, 216));
+        for (int channel = 0; channel < 2; ++channel)
+            nvgText(args.vg, mm2px(channelX[channel]), mm2px(15.f), channelNames[channel], nullptr);
+
+        nvgFontSize(args.vg, 6.5f);
+        nvgFillColor(args.vg, nvgRGB(172, 182, 201));
+        const float knobX[2][2] = {{8.f, 22.48f}, {38.48f, 52.96f}};
+        const char* knobLabels[] = {"CENTER", "WIDTH"};
+        for (int channel = 0; channel < 2; ++channel) {
+            for (int knob = 0; knob < 2; ++knob) {
+                nvgText(args.vg, mm2px(knobX[channel][knob]), mm2px(19.5f),
+                        knobLabels[knob], nullptr);
+            }
+        }
+
+        const float labelX[2][7] = {
+            {8.f, 22.48f, 8.f, 22.48f, 8.f, 22.48f, 22.48f},
+            {38.48f, 52.96f, 38.48f, 52.96f, 38.48f, 52.96f, 52.96f}
+        };
+        const float labelY[] = {34.f, 34.f, 46.f, 46.f, 58.f, 58.f, 70.f};
+        const char* labelNames[] = {"SIGNAL", "POSITION", "CENTER CV", "", "WIDTH CV", "", ""};
+        for (int channel = 0; channel < 2; ++channel) {
+            for (int label = 0; label < 7; ++label) {
+                if (labelNames[label][0] != '\0')
+                    nvgText(args.vg, mm2px(labelX[channel][label]), mm2px(labelY[label]),
+                            labelNames[label], nullptr);
+            }
+        }
+
+        const float gateX[2][2] = {{8.f, 22.48f}, {38.48f, 52.96f}};
+        const char* gateLabels[] = {"INSIDE", "OUTSIDE"};
+        for (int channel = 0; channel < 2; ++channel) {
+            for (int gate = 0; gate < 2; ++gate)
+                nvgText(args.vg, mm2px(gateX[channel][gate]), mm2px(70.f),
+                        gateLabels[gate], nullptr);
+        }
+
+        const float eventX[2][4] = {
+            {8.f, 22.48f, 8.f, 22.48f},
+            {38.48f, 52.96f, 38.48f, 52.96f}
+        };
+        const float eventY[] = {84.f, 84.f, 96.f, 96.f};
+        const char* eventLabels[] = {"LOW", "HIGH", "LOW", "HIGH"};
+        const bool eventUp[] = {true, true, false, false};
+        nvgFontSize(args.vg, 6.f);
+        for (int channel = 0; channel < 2; ++channel) {
+            for (int event = 0; event < 4; ++event) {
+                nvgText(args.vg, mm2px(eventX[channel][event]), mm2px(eventY[event]),
+                        eventLabels[event], nullptr);
+                nvgStrokeColor(args.vg, nvgRGB(170, 180, 205));
+                nvgStrokeWidth(args.vg, mm2px(0.25f));
+                drawDirectionArrow(args.vg, mm2px(eventX[channel][event] + 4.f),
+                                    mm2px(eventY[event]), eventUp[event]);
+            }
+        }
+
+        // Shared logic labels.
+        nvgFontSize(args.vg, 7.f);
+        const float logicX[] = {8.f, 23.f, 38.f, 53.f};
+        const char* logicLabels[] = {"AND", "OR", "XOR", "STATE"};
+        nvgFillColor(args.vg, nvgRGB(190, 198, 216));
+        for (int logic = 0; logic < 4; ++logic)
+            nvgText(args.vg, mm2px(logicX[logic]), mm2px(108.f), logicLabels[logic], nullptr);
+
+        // Subtle A-to-B normalisation marks.
+        nvgStrokeColor(args.vg, nvgRGB(86, 98, 125));
+        nvgStrokeWidth(args.vg, mm2px(0.3f));
+        for (int mark = 0; mark < 3; ++mark) {
+            const float y[] = {38.f, 50.f, 62.f};
+            nvgBeginPath(args.vg);
+            nvgMoveTo(args.vg, mm2px(24.48f), mm2px(y[mark]));
+            nvgLineTo(args.vg, mm2px(36.48f), mm2px(y[mark]));
+            nvgStroke(args.vg);
+            nvgBeginPath(args.vg);
+            nvgMoveTo(args.vg, mm2px(35.28f), mm2px(y[mark] - 1.f));
+            nvgLineTo(args.vg, mm2px(36.48f), mm2px(y[mark]));
+            nvgLineTo(args.vg, mm2px(35.28f), mm2px(y[mark] + 1.f));
+            nvgStroke(args.vg);
+        }
+
+        // The portfolio logo uses the exact measured two-colour treatment.
+        nvgFontSize(args.vg, 10);
+        nvgFillColor(args.vg, nvgRGB(255, 255, 255));
+        nvgTextAlign(args.vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        float wintBounds[4];
+        nvgTextBounds(args.vg, 0, 0, "wint", nullptr, wintBounds);
+        float wintWidth = wintBounds[2] - wintBounds[0];
+        float oidBounds[4];
+        nvgTextBounds(args.vg, 0, 0, "oid", nullptr, oidBounds);
+        float oidWidth = oidBounds[2] - oidBounds[0];
+        float totalWidth = wintWidth + oidWidth;
+        float logoX = mm2px(brink_layout::PANEL_WIDTH / 2.f) - totalWidth / 2.f;
+        float logoY = mm2px(brink_layout::LOGO_BASELINE_Y);
+
+        nvgFillColor(args.vg, nvgRGB(255, 255, 255));
+        nvgText(args.vg, logoX, logoY, "wint", nullptr);
+        nvgFillColor(args.vg, nvgRGB(255, 77, 0));
+        nvgText(args.vg, logoX + wintWidth, logoY, "oid", nullptr);
+
+        float lineY = mm2px(brink_layout::LOGO_UNDERLINE_Y);
+        nvgStrokeWidth(args.vg, 1.0f);
+        nvgStrokeColor(args.vg, nvgRGBA(255, 255, 255, 200));
+        nvgBeginPath(args.vg);
+        nvgMoveTo(args.vg, logoX, lineY);
+        nvgLineTo(args.vg, logoX + wintWidth, lineY);
+        nvgStroke(args.vg);
+        nvgStrokeColor(args.vg, nvgRGB(255, 77, 0));
+        nvgBeginPath(args.vg);
+        nvgMoveTo(args.vg, logoX + wintWidth, lineY);
+        nvgLineTo(args.vg, logoX + totalWidth, lineY);
+        nvgStroke(args.vg);
+
+        Widget::drawLayer(args, layer);
+    }
+};
+
+} // anonymous namespace
+
+struct BrinkWidget : ModuleWidget {
+    BrinkWidget(Brink* module) {
+        setModule(module);
+        setPanel(createPanel(asset::plugin(pluginInstance, "res/Brink.svg")));
+
+        addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+        addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+        addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+        addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH,
+                                               RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+
+        PanelLabels* labels = new PanelLabels();
+        addChild(labels);
+
+        const float railX[] = {brink_layout::A_POSITION_RAIL_X, brink_layout::B_POSITION_RAIL_X};
+        for (int channel = 0; channel < 2; ++channel) {
+            PositionRail* rail = new PositionRail();
+            rail->module = module;
+            rail->channel = channel;
+            rail->box.pos = mm2px(Vec(railX[channel] - 4.f,
+                                      brink_layout::A_POSITION_RAIL_Y
+                                      - brink_layout::POSITION_RAIL_HEIGHT / 2.f));
+            addChild(rail);
+        }
+
+        const int centerParams[] = {Brink::A_CENTER_PARAM, Brink::B_CENTER_PARAM};
+        const int widthParams[] = {Brink::A_WIDTH_PARAM, Brink::B_WIDTH_PARAM};
+        const int centerAttenParams[] = {Brink::A_CENTER_ATTEN_PARAM, Brink::B_CENTER_ATTEN_PARAM};
+        const int widthAttenParams[] = {Brink::A_WIDTH_ATTEN_PARAM, Brink::B_WIDTH_ATTEN_PARAM};
+        const int signalInputs[] = {Brink::A_SIGNAL_INPUT, Brink::B_SIGNAL_INPUT};
+        const int centerCvInputs[] = {Brink::A_CENTER_CV_INPUT, Brink::B_CENTER_CV_INPUT};
+        const int widthCvInputs[] = {Brink::A_WIDTH_CV_INPUT, Brink::B_WIDTH_CV_INPUT};
+        const int channelOutputs[2][brink::EVENT_COUNT + 3] = {
+            {Brink::A_INSIDE_OUTPUT, Brink::A_OUTSIDE_OUTPUT, Brink::A_POSITION_OUTPUT,
+             Brink::A_LOW_UP_OUTPUT, Brink::A_HIGH_UP_OUTPUT, Brink::A_LOW_DOWN_OUTPUT, Brink::A_HIGH_DOWN_OUTPUT},
+            {Brink::B_INSIDE_OUTPUT, Brink::B_OUTSIDE_OUTPUT, Brink::B_POSITION_OUTPUT,
+             Brink::B_LOW_UP_OUTPUT, Brink::B_HIGH_UP_OUTPUT, Brink::B_LOW_DOWN_OUTPUT, Brink::B_HIGH_DOWN_OUTPUT}
+        };
+        const float channelX[2][2] = {{8.f, 22.48f}, {38.48f, 52.96f}};
+        const float rowY[] = {24.f, 38.f, 50.f, 62.f, 74.f, 88.f, 100.f};
+
+        for (int channel = 0; channel < 2; ++channel) {
+            addParam(createParamCentered<RoundSmallBlackKnob>(
+                mm2px(Vec(channelX[channel][0], rowY[0])), module, centerParams[channel]));
+            addParam(createParamCentered<RoundSmallBlackKnob>(
+                mm2px(Vec(channelX[channel][1], rowY[0])), module, widthParams[channel]));
+
+            addInput(createInputCentered<PJ301MPort>(
+                mm2px(Vec(channelX[channel][0], rowY[1])), module, signalInputs[channel]));
+            addOutput(createOutputCentered<PJ301MPort>(
+                mm2px(Vec(channelX[channel][1], rowY[1])), module, channelOutputs[channel][2]));
+
+            addInput(createInputCentered<PJ301MPort>(
+                mm2px(Vec(channelX[channel][0], rowY[2])), module, centerCvInputs[channel]));
+            addParam(createParamCentered<Trimpot>(
+                mm2px(Vec(channelX[channel][1], rowY[2])), module, centerAttenParams[channel]));
+            addInput(createInputCentered<PJ301MPort>(
+                mm2px(Vec(channelX[channel][0], rowY[3])), module, widthCvInputs[channel]));
+            addParam(createParamCentered<Trimpot>(
+                mm2px(Vec(channelX[channel][1], rowY[3])), module, widthAttenParams[channel]));
+
+            addOutput(createOutputCentered<PJ301MPort>(
+                mm2px(Vec(channelX[channel][0], rowY[4])), module, channelOutputs[channel][0]));
+            addOutput(createOutputCentered<PJ301MPort>(
+                mm2px(Vec(channelX[channel][1], rowY[4])), module, channelOutputs[channel][1]));
+            addOutput(createOutputCentered<PJ301MPort>(
+                mm2px(Vec(channelX[channel][0], rowY[5])), module, channelOutputs[channel][3]));
+            addOutput(createOutputCentered<PJ301MPort>(
+                mm2px(Vec(channelX[channel][1], rowY[5])), module, channelOutputs[channel][4]));
+            addOutput(createOutputCentered<PJ301MPort>(
+                mm2px(Vec(channelX[channel][0], rowY[6])), module, channelOutputs[channel][5]));
+            addOutput(createOutputCentered<PJ301MPort>(
+                mm2px(Vec(channelX[channel][1], rowY[6])), module, channelOutputs[channel][6]));
+        }
+
+        const float logicX[] = {8.f, 23.f, 38.f, 53.f};
+        const int logicOutputs[] = {Brink::AND_OUTPUT, Brink::OR_OUTPUT,
+                                    Brink::XOR_OUTPUT, Brink::STATE_OUTPUT};
+        for (int logic = 0; logic < 4; ++logic)
+            addOutput(createOutputCentered<PJ301MPort>(
+                mm2px(Vec(logicX[logic], 114.f)), module, logicOutputs[logic]));
+
+        const int gateLights[2][2] = {
+            {Brink::A_INSIDE_LIGHT, Brink::A_OUTSIDE_LIGHT},
+            {Brink::B_INSIDE_LIGHT, Brink::B_OUTSIDE_LIGHT}
+        };
+        const int eventLights[2][brink::EVENT_COUNT] = {
+            {Brink::A_LOW_UP_LIGHT, Brink::A_HIGH_UP_LIGHT, Brink::A_LOW_DOWN_LIGHT, Brink::A_HIGH_DOWN_LIGHT},
+            {Brink::B_LOW_UP_LIGHT, Brink::B_HIGH_UP_LIGHT, Brink::B_LOW_DOWN_LIGHT, Brink::B_HIGH_DOWN_LIGHT}
+        };
+        for (int channel = 0; channel < 2; ++channel) {
+            for (int gate = 0; gate < 2; ++gate) {
+                const float lightX = gate == 0 ? channelX[channel][gate] + 4.f
+                                               : channelX[channel][gate] - 4.f;
+                if (channel == 0) {
+                    addChild(createLightCentered<BrinkTealLight>(
+                        mm2px(Vec(lightX, rowY[4])), module, gateLights[channel][gate]));
+                }
+                else {
+                    addChild(createLightCentered<BrinkOrangeLight>(
+                        mm2px(Vec(lightX, rowY[4])), module, gateLights[channel][gate]));
+                }
+            }
+            for (int event = 0; event < brink::EVENT_COUNT; ++event) {
+                const int side = event % 2;
+                const float lightX = side == 0 ? channelX[channel][side] + 4.f
+                                               : channelX[channel][side] - 4.f;
+                if (channel == 0) {
+                    addChild(createLightCentered<BrinkTealLight>(
+                        mm2px(Vec(lightX, event < 2 ? rowY[5] : rowY[6])), module,
+                        eventLights[channel][event]));
+                }
+                else {
+                    addChild(createLightCentered<BrinkOrangeLight>(
+                        mm2px(Vec(lightX, event < 2 ? rowY[5] : rowY[6])), module,
+                        eventLights[channel][event]));
+                }
+            }
+        }
+
+        const int logicLights[] = {Brink::AND_LIGHT, Brink::OR_LIGHT,
+                                   Brink::XOR_LIGHT, Brink::STATE_LIGHT};
+        for (int logic = 0; logic < 4; ++logic)
+            addChild(createLightCentered<BrinkVioletLight>(
+                mm2px(Vec(logicX[logic] + 4.f, 114.f)), module, logicLights[logic]));
+    }
+};
+
+Model* modelBrink = createModel<Brink, BrinkWidget>("Brink");
