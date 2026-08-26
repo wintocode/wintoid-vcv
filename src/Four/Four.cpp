@@ -285,41 +285,65 @@ struct Four : Module {
                 params[fineIds[op]].getValue() / 1200.f);
         }
 
+        const float xmCvAtten = params[XM_CV_ATTEN_PARAM].getValue();
+        const float xmParam = params[XM_PARAM].getValue();
+        const float extPmCvAtten =
+            params[EXT_PM_CV_ATTEN_PARAM].getValue();
+        float levelCvAttens[4];
+        float levelParams[4];
+        float warpCvAttens[4];
+        float warpParams[4];
+        float foldCvAttens[4];
+        float foldParams[4];
+        float feedbackCvAttens[4];
+        float feedbackParams[4];
+        for (int op = 0; op < 4; ++op) {
+            levelCvAttens[op] =
+                params[levelCvAIds[op]].getValue();
+            levelParams[op] = params[levelIds[op]].getValue();
+            warpCvAttens[op] = params[warpCvAIds[op]].getValue();
+            warpParams[op] = params[warpIds[op]].getValue();
+            foldCvAttens[op] = params[foldCvAIds[op]].getValue();
+            foldParams[op] = params[foldIds[op]].getValue();
+            feedbackCvAttens[op] = params[fbCvAIds[op]].getValue();
+            feedbackParams[op] = params[fbIds[op]].getValue();
+        }
+
         for (int lane = 0; lane < channels; ++lane) {
             four::EngineParams ep = common;
             ep.baseFreq = four::voct_to_freq(
                 readBroadcast(inputs[VOCT_INPUT], lane)) * globalFineMult;
 
             const float modCv = readBroadcast(inputs[XM_CV_INPUT], lane)
-                * params[XM_CV_ATTEN_PARAM].getValue() / 10.f;
+                * xmCvAtten / 10.f;
             ep.modMaster = clamp(
-                params[XM_PARAM].getValue() + modCv, 0.f, 1.f);
+                xmParam + modCv, 0.f, 1.f);
 
             const float extPm = readBroadcast(inputs[EXT_PM_CV_INPUT], lane);
             ep.extPmDepth = clamp(
-                extPm * params[EXT_PM_CV_ATTEN_PARAM].getValue(),
+                extPm * extPmCvAtten,
                 0.f, 1.f);
 
             for (int op = 0; op < 4; ++op) {
                 const float levelCv = readBroadcast(inputs[levelCvIds[op]], lane)
-                    * params[levelCvAIds[op]].getValue() / 10.f;
+                    * levelCvAttens[op] / 10.f;
                 ep.opLevel[op] = clamp(
-                    params[levelIds[op]].getValue() + levelCv, 0.f, 1.f);
+                    levelParams[op] + levelCv, 0.f, 1.f);
 
                 const float warpCv = readBroadcast(inputs[warpCvIds[op]], lane)
-                    * params[warpCvAIds[op]].getValue() / 10.f;
+                    * warpCvAttens[op] / 10.f;
                 ep.opWarp[op] = clamp(
-                    params[warpIds[op]].getValue() + warpCv, 0.f, 1.f);
+                    warpParams[op] + warpCv, 0.f, 1.f);
 
                 const float foldCv = readBroadcast(inputs[foldCvIds[op]], lane)
-                    * params[foldCvAIds[op]].getValue() / 10.f;
+                    * foldCvAttens[op] / 10.f;
                 ep.opFold[op] = clamp(
-                    params[foldIds[op]].getValue() + foldCv, 0.f, 1.f);
+                    foldParams[op] + foldCv, 0.f, 1.f);
 
                 const float feedbackCv = readBroadcast(inputs[fbCvIds[op]], lane)
-                    * params[fbCvAIds[op]].getValue() / 10.f;
+                    * feedbackCvAttens[op] / 10.f;
                 ep.opFeedback[op] = clamp(
-                    params[fbIds[op]].getValue() + feedbackCv, 0.f, 1.f);
+                    feedbackParams[op] + feedbackCv, 0.f, 1.f);
             }
 
             const float out = four::engine_process(
