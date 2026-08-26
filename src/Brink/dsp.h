@@ -68,4 +68,89 @@ inline Region advance_region(Region previous, const WindowFrame& f)
     return ABOVE;
 }
 
+enum EventId { LOW_UP = 0, HIGH_UP, LOW_DOWN, HIGH_DOWN, EVENT_COUNT };
+
+struct WindowState {
+    bool initialized;
+    Region region;
+    float pulseRemaining[EVENT_COUNT];
+
+    WindowState() : initialized(false), region(INSIDE)
+    {
+        for (int i = 0; i < EVENT_COUNT; ++i) pulseRemaining[i] = 0.f;
+    }
+};
+
+struct WindowOutput {
+    Region region;
+    bool inside;
+    float position;
+    bool eventHigh[EVENT_COUNT];
+};
+
+inline void reset(WindowState& state)
+{
+    state = WindowState();
+}
+
+inline void start_pulse(WindowState& state, EventId event)
+{
+    state.pulseRemaining[event] = 0.001f;
+}
+
+inline void start_transition_pulses(WindowState& state, Region previous, Region current)
+{
+    if (previous == BELOW) {
+        if (current == INSIDE) {
+            start_pulse(state, LOW_UP);
+        } else if (current == ABOVE) {
+            start_pulse(state, LOW_UP);
+            start_pulse(state, HIGH_UP);
+        }
+    } else if (previous == INSIDE) {
+        if (current == BELOW) {
+            start_pulse(state, LOW_DOWN);
+        } else if (current == ABOVE) {
+            start_pulse(state, HIGH_UP);
+        }
+    } else if (previous == ABOVE) {
+        if (current == INSIDE) {
+            start_pulse(state, HIGH_DOWN);
+        } else if (current == BELOW) {
+            start_pulse(state, HIGH_DOWN);
+            start_pulse(state, LOW_DOWN);
+        }
+    }
+}
+
+inline WindowOutput process_window(WindowState& state,
+                                   float signal,
+                                   float center,
+                                   float width,
+                                   float sampleTime)
+{
+    const float dt = std::isfinite(sampleTime) && sampleTime >= 0.f ? sampleTime : 0.f;
+    const WindowFrame frame = make_window(signal, center, width);
+
+    if (!state.initialized) {
+        state.region = classify_initial(frame);
+        state.initialized = true;
+    } else {
+        const Region previous = state.region;
+        state.region = advance_region(previous, frame);
+        start_transition_pulses(state, previous, state.region);
+    }
+
+    WindowOutput output;
+    output.region = state.region;
+    output.inside = state.region == INSIDE;
+    output.position = frame.position;
+    for (int i = 0; i < EVENT_COUNT; ++i) {
+        output.eventHigh[i] = state.pulseRemaining[i] > 0.f;
+        state.pulseRemaining[i] -= dt;
+        if (state.pulseRemaining[i] < 0.f) state.pulseRemaining[i] = 0.f;
+    }
+    return output;
+}
+
 } // namespace brink

@@ -78,6 +78,69 @@ TEST(non_finite_signal_and_center_are_safe)
     ASSERT_NEAR(f.center, 0.f, 1e-6f);
 }
 
+TEST(initial_sample_is_silent)
+{
+    brink::WindowState s;
+    brink::WindowOutput o = brink::process_window(s, -2.f, 0.f, 2.f, 1.f / 48000.f);
+    ASSERT(o.region == brink::BELOW);
+    for (int i = 0; i < brink::EVENT_COUNT; ++i) ASSERT(!o.eventHigh[i]);
+}
+
+TEST(all_four_directional_events)
+{
+    brink::WindowState s;
+    const float dt = 0.002f;
+    brink::process_window(s, -2.f, 0.f, 2.f, dt);
+    brink::WindowOutput lowUp = brink::process_window(s, 0.f, 0.f, 2.f, dt);
+    ASSERT(lowUp.eventHigh[brink::LOW_UP] && !lowUp.eventHigh[brink::HIGH_UP]);
+    brink::WindowOutput highUp = brink::process_window(s, 2.f, 0.f, 2.f, dt);
+    ASSERT(highUp.eventHigh[brink::HIGH_UP] && !highUp.eventHigh[brink::LOW_UP]);
+    brink::WindowOutput highDown = brink::process_window(s, 0.f, 0.f, 2.f, dt);
+    ASSERT(highDown.eventHigh[brink::HIGH_DOWN] && !highDown.eventHigh[brink::LOW_DOWN]);
+    brink::WindowOutput lowDown = brink::process_window(s, -2.f, 0.f, 2.f, dt);
+    ASSERT(lowDown.eventHigh[brink::LOW_DOWN] && !lowDown.eventHigh[brink::HIGH_DOWN]);
+}
+
+TEST(full_window_jump_fires_both_boundaries)
+{
+    brink::WindowState s;
+    brink::process_window(s, -2.f, 0.f, 2.f, 1.f / 48000.f);
+    brink::WindowOutput up = brink::process_window(s, 2.f, 0.f, 2.f, 1.f / 48000.f);
+    ASSERT(up.eventHigh[brink::LOW_UP]);
+    ASSERT(up.eventHigh[brink::HIGH_UP]);
+    brink::WindowOutput down = brink::process_window(s, -2.f, 0.f, 2.f, 1.f / 48000.f);
+    ASSERT(down.eventHigh[brink::HIGH_DOWN]);
+    ASSERT(down.eventHigh[brink::LOW_DOWN]);
+}
+
+TEST(window_motion_generates_relative_crossing)
+{
+    brink::WindowState s;
+    brink::process_window(s, 0.f, 2.f, 2.f, 1.f / 48000.f);
+    brink::WindowOutput o = brink::process_window(s, 0.f, 0.f, 2.f, 1.f / 48000.f);
+    ASSERT(o.eventHigh[brink::LOW_UP]);
+}
+
+TEST(event_pulse_lasts_one_millisecond)
+{
+    brink::WindowState s;
+    const float dt = 0.0005f;
+    brink::process_window(s, -2.f, 0.f, 2.f, dt);
+    ASSERT(brink::process_window(s, 0.f, 0.f, 2.f, dt).eventHigh[brink::LOW_UP]);
+    ASSERT(brink::process_window(s, 0.f, 0.f, 2.f, dt).eventHigh[brink::LOW_UP]);
+    ASSERT(!brink::process_window(s, 0.f, 0.f, 2.f, dt).eventHigh[brink::LOW_UP]);
+}
+
+TEST(reset_silences_and_reinitializes)
+{
+    brink::WindowState s;
+    brink::process_window(s, -2.f, 0.f, 2.f, 1.f / 48000.f);
+    brink::process_window(s, 0.f, 0.f, 2.f, 1.f / 48000.f);
+    brink::reset(s);
+    brink::WindowOutput o = brink::process_window(s, 2.f, 0.f, 2.f, 1.f / 48000.f);
+    for (int i = 0; i < brink::EVENT_COUNT; ++i) ASSERT(!o.eventHigh[i]);
+}
+
 int main()
 {
     run_window_frame_nominal();
@@ -86,6 +149,12 @@ int main()
     run_initial_region_includes_exact_boundaries();
     run_region_has_one_millivolt_hysteresis();
     run_non_finite_signal_and_center_are_safe();
+    run_initial_sample_is_silent();
+    run_all_four_directional_events();
+    run_full_window_jump_fires_both_boundaries();
+    run_window_motion_generates_relative_crossing();
+    run_event_pulse_lasts_one_millisecond();
+    run_reset_silences_and_reinitializes();
     printf("%d/%d tests passed\n", tests_passed, tests_run);
     return tests_passed == tests_run ? 0 : 1;
 }
