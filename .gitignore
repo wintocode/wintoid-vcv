@@ -5,6 +5,7 @@ tests/test_four_engine
 tests/test_vortex_dsp
 *.dSYM/
 .claude/
+.worktrees/
 build/
 dist/
 plugin.dylib
