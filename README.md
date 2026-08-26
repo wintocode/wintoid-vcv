@@ -34,7 +34,9 @@ Dual voltage-window processor (12HP)
 - **INSIDE**, **OUTSIDE**, and bipolar **POSITION** outputs for each channel
 - **Four directional boundary triggers** per channel: low up, high up, low down, and high down
 - **A-to-B normalization** for signal and CV inputs
-- **Shared logic outputs**: AND, OR, XOR, and toggle state
+- **Shared logic outputs**: AND, OR, XOR, and TOGGLE. TOGGLE flips between
+  0 V and 10 V whenever XOR rises—when A and B change from the same
+  inside/outside state to different states.
 - **Sample-accurate CV/audio processing** with 16-channel polyphony
 
 ## Building

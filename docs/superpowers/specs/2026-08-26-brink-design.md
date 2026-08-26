@@ -31,15 +31,15 @@ Brink occupies 12 HP. Its panel contains two mirrored vertical columns, Channel 
 
 1. `CENTER` and `WIDTH` knobs.
 2. `SIGNAL` input and `POSITION` output.
-3. `CENTER CV` and `WIDTH CV` inputs with bipolar attenuverters.
+3. `CTR CV` and `WID CV` inputs with bipolar attenuverters. Rack tooltips use the full centre and width names.
 4. `INSIDE` and `OUTSIDE` gate outputs.
 5. A 2-by-2 boundary-event matrix: `LOW UP`, `HIGH UP`, `LOW DOWN`, and `HIGH DOWN`.
 
-The shared `AND`, `OR`, `XOR`, and `STATE` outputs span the bottom of the panel. Labels may use arrow glyphs where they remain legible, but Rack parameter and port names use the full words for accessibility and tooltips.
+The shared `AND`, `OR`, `XOR`, and `TOGGLE` outputs span the bottom of the panel, outside the two channel outlines. Labels may use arrow glyphs where they remain legible, but Rack parameter and port names use the full words for accessibility and tooltips.
 
 ### Position indication
 
-Each channel has a slim vertical position rail. It shows the first polyphonic lane's clamped position relative to the lower boundary, centre, and upper boundary. It must not imitate a large multicolour status lamp. Output lights use Rack's standard low-cost light widgets and illuminate when any polyphonic lane is active.
+Each channel has a slim vertical window rail covering a fixed -10 V to +10 V range. It extends from the top of the centre/width knobs to the bottom of the width-CV socket. For the first polyphonic lane, a translucent channel-coloured band shows the lower-to-upper window, a channel-coloured line shows its centre, and a 2.0 mm wide by 0.35 mm deep cool-white line shows the raw signal. Values beyond the rail's range clamp to its ends. It must not imitate a large multicolour status lamp. Output lights use Rack's standard low-cost light widgets and illuminate when any polyphonic lane is active.
 
 ### Portfolio styling
 
@@ -146,9 +146,9 @@ The logic section operates on the two `INSIDE` states for each polyphonic lane:
 - `AND` is high when A and B are both inside.
 - `OR` is high when A or B is inside.
 - `XOR` is high when exactly one of A or B is inside.
-- `STATE` toggles on each rising edge of `XOR`.
+- `TOGGLE` flips on each rising edge of `XOR`, when A and B move from the same inside/outside state to different states.
 
-All high states are +10 V and all low states are 0 V. `STATE` starts low after construction, patch loading, or module reset. It is runtime state and is not serialised.
+All high states are +10 V and all low states are 0 V. `TOGGLE` starts low after construction, patch loading, or module reset. It is runtime state and is not serialised.
 
 ## Polyphony
 

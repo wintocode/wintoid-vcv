@@ -8,6 +8,8 @@ namespace brink {
 static const float MIN_WIDTH = 0.001f;
 static const float MAX_WIDTH = 20.f;
 static const float HYSTERESIS = 0.001f;
+static const float DISPLAY_MIN_VOLTAGE = -10.f;
+static const float DISPLAY_MAX_VOLTAGE = 10.f;
 static const int MAX_CHANNELS = wintoid::polyphony::MAX_CHANNELS;
 
 enum Region { BELOW = 0, INSIDE, ABOVE };
@@ -30,6 +32,14 @@ inline float sanitize(float value, float fallback)
 inline float clampf(float value, float low, float high)
 {
     return value < low ? low : (value > high ? high : value);
+}
+
+inline float normalize_display_voltage(float voltage)
+{
+    const float safeVoltage = clampf(
+        sanitize(voltage, 0.f), DISPLAY_MIN_VOLTAGE, DISPLAY_MAX_VOLTAGE);
+    return (safeVoltage - DISPLAY_MIN_VOLTAGE)
+        / (DISPLAY_MAX_VOLTAGE - DISPLAY_MIN_VOLTAGE);
 }
 
 inline WindowFrame make_window(float signal, float center, float rawWidth)
@@ -83,6 +93,7 @@ struct WindowState {
 };
 
 struct WindowOutput {
+    WindowFrame frame;
     Region region;
     bool inside;
     float position;
@@ -143,6 +154,7 @@ inline WindowOutput process_window(WindowState& state,
     }
 
     WindowOutput output;
+    output.frame = frame;
     output.region = state.region;
     output.inside = state.region == INSIDE;
     output.position = frame.position;

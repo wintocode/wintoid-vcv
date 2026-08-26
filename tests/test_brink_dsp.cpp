@@ -78,6 +78,27 @@ TEST(non_finite_signal_and_center_are_safe)
     ASSERT_NEAR(f.center, 0.f, 1e-6f);
 }
 
+TEST(display_voltage_uses_fixed_bipolar_range)
+{
+    ASSERT_NEAR(brink::normalize_display_voltage(-10.f), 0.f, 1e-6f);
+    ASSERT_NEAR(brink::normalize_display_voltage(0.f), 0.5f, 1e-6f);
+    ASSERT_NEAR(brink::normalize_display_voltage(10.f), 1.f, 1e-6f);
+    ASSERT_NEAR(brink::normalize_display_voltage(-20.f), 0.f, 1e-6f);
+    ASSERT_NEAR(brink::normalize_display_voltage(20.f), 1.f, 1e-6f);
+    ASSERT_NEAR(brink::normalize_display_voltage(NAN), 0.5f, 1e-6f);
+}
+
+TEST(window_output_exposes_window_for_display)
+{
+    brink::WindowState s;
+    brink::WindowOutput o = brink::process_window(s, 7.f, 1.f, 4.f,
+                                                   1.f / 48000.f);
+    ASSERT_NEAR(o.frame.signal, 7.f, 1e-6f);
+    ASSERT_NEAR(o.frame.center, 1.f, 1e-6f);
+    ASSERT_NEAR(o.frame.lower, -1.f, 1e-6f);
+    ASSERT_NEAR(o.frame.upper, 3.f, 1e-6f);
+}
+
 TEST(initial_sample_is_silent)
 {
     brink::WindowState s;
@@ -194,6 +215,8 @@ int main()
     run_initial_region_includes_exact_boundaries();
     run_region_has_one_millivolt_hysteresis();
     run_non_finite_signal_and_center_are_safe();
+    run_display_voltage_uses_fixed_bipolar_range();
+    run_window_output_exposes_window_for_display();
     run_initial_sample_is_silent();
     run_all_four_directional_events();
     run_full_window_jump_fires_both_boundaries();

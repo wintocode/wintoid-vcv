@@ -39,7 +39,7 @@ struct Brink : Module {
     brink::WindowState windowStates[2][brink::MAX_CHANNELS];
     brink::LogicState logicStates[brink::MAX_CHANNELS];
     bool insideStates[2][brink::MAX_CHANNELS];
-    float displayPosition[2];
+    brink::WindowFrame displayFrames[2];
     int previousSignalChannels[2];
     int previousLogicChannels;
     float previousSampleRate;
@@ -93,7 +93,8 @@ struct Brink : Module {
         configOutput(AND_OUTPUT, "A and B inside logical AND");
         configOutput(OR_OUTPUT, "A or B inside logical OR");
         configOutput(XOR_OUTPUT, "A and B inside exclusive OR");
-        configOutput(STATE_OUTPUT, "A/B XOR rising-edge state");
+        configOutput(STATE_OUTPUT,
+                     "Toggle: flips on each A/B XOR rising edge");
 
         const int channelLightIds[2][brink::EVENT_COUNT + 2] = {
             {A_INSIDE_LIGHT, A_OUTSIDE_LIGHT, A_LOW_UP_LIGHT, A_HIGH_UP_LIGHT,
@@ -115,14 +116,14 @@ struct Brink : Module {
         configLight(AND_LIGHT, "AND activity");
         configLight(OR_LIGHT, "OR activity");
         configLight(XOR_LIGHT, "XOR activity");
-        configLight(STATE_LIGHT, "state activity");
+        configLight(STATE_LIGHT, "Toggle activity");
 
         clearRuntimeState();
     }
 
     void clearRuntimeState() {
         for (int channel = 0; channel < 2; ++channel) {
-            displayPosition[channel] = 0.f;
+            displayFrames[channel] = brink::make_window(0.f, 0.f, 5.f);
             previousSignalChannels[channel] = 0;
             for (int lane = 0; lane < brink::MAX_CHANNELS; ++lane) {
                 brink::reset(windowStates[channel][lane]);
@@ -253,7 +254,7 @@ struct Brink : Module {
                 gateActivity[channel][0] = gateActivity[channel][0] || out.inside;
                 gateActivity[channel][1] = gateActivity[channel][1] || !out.inside;
                 if (lane == 0)
-                    displayPosition[channel] = out.position;
+                    displayFrames[channel] = out.frame;
             }
 
             lights[channelLightIds[channel][0]].setBrightness(gateActivity[channel][0] ? 1.f : 0.f);
@@ -375,11 +376,11 @@ static const BrinkPoint brinkLogicLayout[4] = {
     {brink_layout::STATE_OUTPUT_X, brink_layout::STATE_OUTPUT_Y}
 };
 
-struct PositionRail : Widget {
+struct WindowRail : Widget {
     Brink* module = nullptr;
     int channel = 0;
 
-    PositionRail() {
+    WindowRail() {
         box.size = mm2px(Vec(8.f, brink_layout::POSITION_RAIL_HEIGHT));
     }
 
@@ -391,17 +392,42 @@ struct PositionRail : Widget {
 
         const float centreX = box.size.x / 2.f;
         const float trackWidth = mm2px(2.f);
-        const float markerSize = mm2px(2.f);
-        float position = module ? module->displayPosition[channel] : 0.f;
-        if (!std::isfinite(position))
-            position = 0.f;
-        position = std::max(-5.f, std::min(5.f, position));
-        const float normalized = (position + 5.f) / 10.f;
-        const float markerY = box.size.y - markerSize / 2.f
-            - normalized * (box.size.y - markerSize);
-        const NVGcolor accent = channel == 0
-            ? nvgRGB(45, 190, 180)
-            : nvgRGB(238, 135, 54);
+        const float markerPathWidth = mm2px(
+            brink_layout::SIGNAL_MARKER_PATH_WIDTH);
+        const float markerStrokeWidth = mm2px(
+            brink_layout::SIGNAL_MARKER_STROKE_WIDTH);
+        brink::WindowFrame frame = module
+            ? module->displayFrames[channel]
+            : brink::make_window(0.f, 0.f, 5.f);
+        const float signalY = box.size.y
+            * (1.f - brink::normalize_display_voltage(frame.signal));
+        const float centerY = box.size.y
+            * (1.f - brink::normalize_display_voltage(frame.center));
+        const float lowerY = box.size.y
+            * (1.f - brink::normalize_display_voltage(frame.lower));
+        const float upperY = box.size.y
+            * (1.f - brink::normalize_display_voltage(frame.upper));
+        const float markerY = std::max(markerStrokeWidth / 2.f,
+            std::min(box.size.y - markerStrokeWidth / 2.f, signalY));
+        const float bandTop = std::min(lowerY, upperY);
+        const float bandBottom = std::max(lowerY, upperY);
+        const int accentR = channel == 0
+            ? brink_layout::CHANNEL_A_ACCENT_R
+            : brink_layout::CHANNEL_B_ACCENT_R;
+        const int accentG = channel == 0
+            ? brink_layout::CHANNEL_A_ACCENT_G
+            : brink_layout::CHANNEL_B_ACCENT_G;
+        const int accentB = channel == 0
+            ? brink_layout::CHANNEL_A_ACCENT_B
+            : brink_layout::CHANNEL_B_ACCENT_B;
+        const NVGcolor accent = nvgRGB(accentR, accentG, accentB);
+        const NVGcolor bandColor = nvgRGBA(accentR, accentG, accentB, 75);
+        const NVGcolor boundaryColor = nvgRGBA(
+            accentR, accentG, accentB, 155);
+        const NVGcolor markerColor = nvgRGB(
+            brink_layout::SIGNAL_MARKER_R,
+            brink_layout::SIGNAL_MARKER_G,
+            brink_layout::SIGNAL_MARKER_B);
 
         nvgSave(args.vg);
         nvgBeginPath(args.vg);
@@ -412,6 +438,12 @@ struct PositionRail : Widget {
         nvgStrokeColor(args.vg, nvgRGB(59, 70, 104));
         nvgStrokeWidth(args.vg, mm2px(0.3f));
         nvgStroke(args.vg);
+
+        nvgBeginPath(args.vg);
+        nvgRect(args.vg, centreX - trackWidth / 2.f, bandTop,
+                trackWidth, bandBottom - bandTop);
+        nvgFillColor(args.vg, bandColor);
+        nvgFill(args.vg);
 
         nvgStrokeColor(args.vg, nvgRGBA(170, 180, 205, 190));
         nvgStrokeWidth(args.vg, mm2px(0.25f));
@@ -424,12 +456,34 @@ struct PositionRail : Widget {
             nvgStroke(args.vg);
         }
 
+        nvgStrokeColor(args.vg, boundaryColor);
+        nvgStrokeWidth(args.vg, mm2px(0.3f));
+        const float boundaryHalfWidth = mm2px(1.5f);
+        const float boundaryY[] = {lowerY, upperY};
+        for (int boundary = 0; boundary < 2; ++boundary) {
+            nvgBeginPath(args.vg);
+            nvgMoveTo(args.vg, centreX - boundaryHalfWidth,
+                      boundaryY[boundary]);
+            nvgLineTo(args.vg, centreX + boundaryHalfWidth,
+                      boundaryY[boundary]);
+            nvgStroke(args.vg);
+        }
+
+        nvgStrokeColor(args.vg, accent);
+        nvgStrokeWidth(args.vg, mm2px(0.35f));
+        const float centerHalfWidth = mm2px(2.f);
         nvgBeginPath(args.vg);
-        nvgRoundedRect(args.vg, centreX - markerSize / 2.f,
-                       markerY - markerSize / 2.f, markerSize, markerSize,
-                       mm2px(0.5f));
-        nvgFillColor(args.vg, accent);
-        nvgFill(args.vg);
+        nvgMoveTo(args.vg, centreX - centerHalfWidth, centerY);
+        nvgLineTo(args.vg, centreX + centerHalfWidth, centerY);
+        nvgStroke(args.vg);
+
+        nvgStrokeColor(args.vg, markerColor);
+        nvgStrokeWidth(args.vg, markerStrokeWidth);
+        nvgLineCap(args.vg, NVG_ROUND);
+        nvgBeginPath(args.vg);
+        nvgMoveTo(args.vg, centreX - markerPathWidth / 2.f, markerY);
+        nvgLineTo(args.vg, centreX + markerPathWidth / 2.f, markerY);
+        nvgStroke(args.vg);
         nvgRestore(args.vg);
     }
 };
@@ -439,11 +493,14 @@ namespace {
 static void drawDirectionArrow(NVGcontext* vg, float x, float y, bool up) {
     const float width = mm2px(1.2f);
     const float height = mm2px(1.5f);
-    const float direction = up ? -1.f : 1.f;
+    const float baseFactor = up ? brink_layout::ARROW_UP_BASE_FACTOR
+                                : brink_layout::ARROW_DOWN_BASE_FACTOR;
+    const float tipFactor = up ? brink_layout::ARROW_UP_TIP_FACTOR
+                               : brink_layout::ARROW_DOWN_TIP_FACTOR;
     nvgBeginPath(vg);
-    nvgMoveTo(vg, x - width, y + direction * height / 2.f);
-    nvgLineTo(vg, x, y - direction * height / 2.f);
-    nvgLineTo(vg, x + width, y + direction * height / 2.f);
+    nvgMoveTo(vg, x - width, y + baseFactor * height);
+    nvgLineTo(vg, x, y + tipFactor * height);
+    nvgLineTo(vg, x + width, y + baseFactor * height);
     nvgStroke(vg);
 }
 
@@ -492,21 +549,24 @@ struct PanelLabels : Widget {
             const BrinkPoint knobPoints[] = {layout.centerKnob, layout.widthKnob};
             for (int knob = 0; knob < 2; ++knob) {
                 nvgText(args.vg, mm2px(knobPoints[knob].x),
-                        mm2px(knobPoints[knob].y - 4.5f), knobLabels[knob], nullptr);
+                        mm2px(knobPoints[knob].y - brink_layout::KNOB_LABEL_OFFSET),
+                        knobLabels[knob], nullptr);
             }
         }
 
         const char* signalLabels[] = {"SIGNAL", "POSITION"};
-        const char* cvLabels[] = {"CENTER CV", "WIDTH CV"};
+        const char* cvLabels[] = {"CTR CV", "WID CV"};
         for (int channel = 0; channel < 2; ++channel) {
             const BrinkChannelLayout& layout = brinkChannelLayouts[channel];
             const BrinkPoint signalPoints[] = {layout.signal, layout.position};
             const BrinkPoint cvPoints[] = {layout.centerCv, layout.widthCv};
             for (int point = 0; point < 2; ++point) {
                 nvgText(args.vg, mm2px(signalPoints[point].x),
-                        mm2px(signalPoints[point].y - 4.f), signalLabels[point], nullptr);
+                        mm2px(signalPoints[point].y - brink_layout::PORT_LABEL_OFFSET),
+                        signalLabels[point], nullptr);
                 nvgText(args.vg, mm2px(cvPoints[point].x),
-                        mm2px(cvPoints[point].y - 4.f), cvLabels[point], nullptr);
+                        mm2px(cvPoints[point].y - brink_layout::PORT_LABEL_OFFSET),
+                        cvLabels[point], nullptr);
             }
         }
 
@@ -516,7 +576,8 @@ struct PanelLabels : Widget {
             const BrinkPoint gatePoints[] = {layout.inside, layout.outside};
             for (int gate = 0; gate < 2; ++gate) {
                 nvgText(args.vg, mm2px(gatePoints[gate].x),
-                        mm2px(gatePoints[gate].y - 4.f), gateLabels[gate], nullptr);
+                        mm2px(gatePoints[gate].y - brink_layout::PORT_LABEL_OFFSET),
+                        gateLabels[gate], nullptr);
             }
         }
 
@@ -531,18 +592,19 @@ struct PanelLabels : Widget {
             const BrinkChannelLayout& layout = brinkChannelLayouts[channel];
             for (int event = 0; event < 4; ++event) {
                 const BrinkPoint& point = layout.*eventPoints[event];
-                nvgText(args.vg, mm2px(point.x), mm2px(point.y - 4.f),
+                const float labelY = point.y - brink_layout::EVENT_LABEL_OFFSET;
+                nvgText(args.vg, mm2px(point.x), mm2px(labelY),
                         eventLabels[event], nullptr);
                 nvgStrokeColor(args.vg, nvgRGB(170, 180, 205));
                 nvgStrokeWidth(args.vg, mm2px(0.25f));
                 drawDirectionArrow(args.vg, mm2px(point.x + 4.f),
-                                    mm2px(point.y - 4.f), eventUp[event]);
+                                    mm2px(labelY), eventUp[event]);
             }
         }
 
         // Shared logic labels.
         nvgFontSize(args.vg, 7.f);
-        const char* logicLabels[] = {"AND", "OR", "XOR", "STATE"};
+        const char* logicLabels[] = {"AND", "OR", "XOR", "TOGGLE"};
         nvgFillColor(args.vg, nvgRGB(190, 198, 216));
         for (int logic = 0; logic < 4; ++logic) {
             nvgText(args.vg, mm2px(brinkLogicLayout[logic].x),
@@ -633,7 +695,7 @@ struct BrinkWidget : ModuleWidget {
             brink_layout::B_POSITION_RAIL_Y
         };
         for (int channel = 0; channel < 2; ++channel) {
-            PositionRail* rail = new PositionRail();
+            WindowRail* rail = new WindowRail();
             rail->module = module;
             rail->channel = channel;
             rail->box.pos = mm2px(Vec(brinkChannelLayouts[channel].positionRail.x - 4.f,
