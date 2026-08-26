@@ -12,7 +12,7 @@ test_four_engine: test_four_engine.cpp ../src/Four/engine.h ../src/Four/dsp.h
 test_vortex_dsp: test_vortex_dsp.cpp ../src/Vortex/dsp.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
-test_brink_dsp: test_brink_dsp.cpp ../src/Brink/dsp.h
+test_brink_dsp: test_brink_dsp.cpp ../src/Brink/dsp.h ../src/polyphony.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
 test_polyphony: test_polyphony.cpp ../src/polyphony.h
