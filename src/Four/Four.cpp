@@ -1,4 +1,5 @@
 #include "../plugin.hpp"
+#include "../polyphony.h"
 #include "engine.h"
 
 struct CoarseParamQuantity : ParamQuantity {
@@ -77,7 +78,43 @@ struct Four : Module {
         LIGHTS_LEN
     };
 
-    four::EngineState engineState;
+    four::EngineState engineStates[wintoid::polyphony::MAX_CHANNELS];
+    int previousChannels = 0;
+    float previousSampleRate = 0.f;
+
+    void resetLane(int lane)
+    {
+        four::reset(engineStates[lane]);
+    }
+
+    void clearRuntimeState()
+    {
+        for (int lane = 0; lane < wintoid::polyphony::MAX_CHANNELS; ++lane)
+            resetLane(lane);
+        previousChannels = 0;
+        previousSampleRate = 0.f;
+    }
+
+    void onReset() override
+    {
+        clearRuntimeState();
+    }
+
+    static float readBroadcast(Input& input, int lane)
+    {
+        const int channels = input.getChannels();
+        if (channels <= 0) return 0.f;
+        return input.getVoltage(
+            wintoid::polyphony::broadcast_lane(lane, channels));
+    }
+
+    void prepareLanes(int channels)
+    {
+        wintoid::polyphony::reset_changed_lanes(
+            previousChannels, channels,
+            [&](int lane) { resetLane(lane); });
+        previousChannels = channels;
+    }
 
     Four() {
         config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -142,95 +179,153 @@ struct Four : Module {
         configParam(EXT_PM_CV_ATTEN_PARAM, -1.f, 1.f, 0.f, "Ext PM CV", "%", 0.f, 100.f);
 
         // Global inputs
-        configInput(VOCT_INPUT, "V/OCT");
+        configInput(VOCT_INPUT,
+                    "V/OCT (polyphonic voice count, 1 to 16 channels)");
         configInput(EXT_PM_CV_INPUT, "Ext PM");
         configInput(XM_CV_INPUT, "Mod CV");
 
         // Output
         configOutput(MAIN_OUTPUT, "Main");
+        clearRuntimeState();
     }
 
-    void process(const ProcessArgs& args) override {
-        four::EngineParams ep;
-
-        // --- Global params ---
-        ep.algorithm = (int)params[ALGO_PARAM].getValue();
-        ep.globalVCA = params[VCA_PARAM].getValue();
-
-        float globalFineCents = params[FINE_TUNE_PARAM].getValue();
-        float globalFineMult = exp2f( globalFineCents / 1200.f );
-
-        // V/OCT: base voltage
-        float voct = inputs[VOCT_INPUT].getVoltage();
-        ep.baseFreq = four::voct_to_freq( voct ) * globalFineMult;
-
-        // Mod: knob + attenuated CV
-        float modCv = inputs[XM_CV_INPUT].getVoltage() * params[XM_CV_ATTEN_PARAM].getValue() / 10.f;
-        ep.modMaster = clamp( params[XM_PARAM].getValue() + modCv, 0.f, 1.f );
-
-        // Ext PM: attenuated CV only (no depth knob)
-        float extPmCv = inputs[EXT_PM_CV_INPUT].getVoltage() * params[EXT_PM_CV_ATTEN_PARAM].getValue();
-        ep.extPmDepth = clamp(extPmCv, 0.f, 1.f);
-
-        // --- Per-operator params ---
-        const int coarseIds[] = { OP1_COARSE_PARAM, OP2_COARSE_PARAM, OP3_COARSE_PARAM, OP4_COARSE_PARAM };
-        const int fineIds[]   = { OP1_FINE_PARAM, OP2_FINE_PARAM, OP3_FINE_PARAM, OP4_FINE_PARAM };
-        const int levelIds[]  = { OP1_LEVEL_PARAM, OP2_LEVEL_PARAM, OP3_LEVEL_PARAM, OP4_LEVEL_PARAM };
-        const int warpIds[]   = { OP1_WARP_PARAM, OP2_WARP_PARAM, OP3_WARP_PARAM, OP4_WARP_PARAM };
-        const int foldIds[]   = { OP1_FOLD_PARAM, OP2_FOLD_PARAM, OP3_FOLD_PARAM, OP4_FOLD_PARAM };
-        const int fbIds[]     = { OP1_FB_PARAM, OP2_FB_PARAM, OP3_FB_PARAM, OP4_FB_PARAM };
-        const int freqModeIds[] = { OP1_FREQ_MODE_PARAM, OP2_FREQ_MODE_PARAM, OP3_FREQ_MODE_PARAM, OP4_FREQ_MODE_PARAM };
-        const int foldTypeIds[] = { OP1_FOLD_TYPE_PARAM, OP2_FOLD_TYPE_PARAM, OP3_FOLD_TYPE_PARAM, OP4_FOLD_TYPE_PARAM };
-
-        const int levelCvIds[] = { OP1_LEVEL_CV_INPUT, OP2_LEVEL_CV_INPUT, OP3_LEVEL_CV_INPUT, OP4_LEVEL_CV_INPUT };
-        const int warpCvIds[]  = { OP1_WARP_CV_INPUT, OP2_WARP_CV_INPUT, OP3_WARP_CV_INPUT, OP4_WARP_CV_INPUT };
-        const int foldCvIds[]  = { OP1_FOLD_CV_INPUT, OP2_FOLD_CV_INPUT, OP3_FOLD_CV_INPUT, OP4_FOLD_CV_INPUT };
-        const int fbCvIds[]    = { OP1_FB_CV_INPUT, OP2_FB_CV_INPUT, OP3_FB_CV_INPUT, OP4_FB_CV_INPUT };
-
-        const int levelCvAIds[] = { OP1_LEVEL_CV_ATTEN_PARAM, OP2_LEVEL_CV_ATTEN_PARAM, OP3_LEVEL_CV_ATTEN_PARAM, OP4_LEVEL_CV_ATTEN_PARAM };
-        const int warpCvAIds[]  = { OP1_WARP_CV_ATTEN_PARAM, OP2_WARP_CV_ATTEN_PARAM, OP3_WARP_CV_ATTEN_PARAM, OP4_WARP_CV_ATTEN_PARAM };
-        const int foldCvAIds[]  = { OP1_FOLD_CV_ATTEN_PARAM, OP2_FOLD_CV_ATTEN_PARAM, OP3_FOLD_CV_ATTEN_PARAM, OP4_FOLD_CV_ATTEN_PARAM };
-        const int fbCvAIds[]    = { OP1_FB_CV_ATTEN_PARAM, OP2_FB_CV_ATTEN_PARAM, OP3_FB_CV_ATTEN_PARAM, OP4_FB_CV_ATTEN_PARAM };
-
-        for ( int i = 0; i < 4; i++ )
-        {
-            int freqMode = (int)params[freqModeIds[i]].getValue();
-            ep.opFreqMode[i] = freqMode;
-            ep.opFoldType[i] = (int)params[foldTypeIds[i]].getValue();
-
-            // Coarse: index->ratio in ratio mode, index->Hz in fixed mode
-            float coarseParam = params[coarseIds[i]].getValue();
-            if ( freqMode == 0 )
-                ep.opCoarse[i] = four::coarse_ratio_from_index( (int)roundf(coarseParam) );
-            else
-                ep.opCoarse[i] = four::coarse_fixed_from_param( coarseParam );
-
-            // Fine: cents -> multiplier
-            ep.opFine[i] = exp2f( params[fineIds[i]].getValue() / 1200.f );
-
-            // Level + CV
-            float levelCv = inputs[levelCvIds[i]].getVoltage() * params[levelCvAIds[i]].getValue() / 10.f;
-            ep.opLevel[i] = clamp( params[levelIds[i]].getValue() + levelCv, 0.f, 1.f );
-
-            // Warp + CV
-            float warpCv = inputs[warpCvIds[i]].getVoltage() * params[warpCvAIds[i]].getValue() / 10.f;
-            ep.opWarp[i] = clamp( params[warpIds[i]].getValue() + warpCv, 0.f, 1.f );
-
-            // Fold + CV
-            float foldCv = inputs[foldCvIds[i]].getVoltage() * params[foldCvAIds[i]].getValue() / 10.f;
-            ep.opFold[i] = clamp( params[foldIds[i]].getValue() + foldCv, 0.f, 1.f );
-
-            // Feedback + CV
-            float fbCv = inputs[fbCvIds[i]].getVoltage() * params[fbCvAIds[i]].getValue() / 10.f;
-            ep.opFeedback[i] = clamp( params[fbIds[i]].getValue() + fbCv, 0.f, 1.f );
+    void process(const ProcessArgs& args) override
+    {
+        if (args.sampleRate != previousSampleRate) {
+            clearRuntimeState();
+            previousSampleRate = args.sampleRate;
         }
 
-        // --- Run engine ---
-        float extPm = inputs[EXT_PM_CV_INPUT].getVoltage();  // Audio-rate PM input
-        float out = four::engine_process( engineState, ep, args.sampleTime, extPm );
+        const int channels = wintoid::polyphony::effective_channels(
+            inputs[VOCT_INPUT].getChannels());
+        prepareLanes(channels);
+        outputs[MAIN_OUTPUT].setChannels(channels);
 
-        // Scale to +/-5V
-        outputs[MAIN_OUTPUT].setVoltage( out * 5.f );
+        const int coarseIds[] = {
+            OP1_COARSE_PARAM, OP2_COARSE_PARAM,
+            OP3_COARSE_PARAM, OP4_COARSE_PARAM
+        };
+        const int fineIds[] = {
+            OP1_FINE_PARAM, OP2_FINE_PARAM,
+            OP3_FINE_PARAM, OP4_FINE_PARAM
+        };
+        const int levelIds[] = {
+            OP1_LEVEL_PARAM, OP2_LEVEL_PARAM,
+            OP3_LEVEL_PARAM, OP4_LEVEL_PARAM
+        };
+        const int warpIds[] = {
+            OP1_WARP_PARAM, OP2_WARP_PARAM,
+            OP3_WARP_PARAM, OP4_WARP_PARAM
+        };
+        const int foldIds[] = {
+            OP1_FOLD_PARAM, OP2_FOLD_PARAM,
+            OP3_FOLD_PARAM, OP4_FOLD_PARAM
+        };
+        const int fbIds[] = {
+            OP1_FB_PARAM, OP2_FB_PARAM,
+            OP3_FB_PARAM, OP4_FB_PARAM
+        };
+        const int freqModeIds[] = {
+            OP1_FREQ_MODE_PARAM, OP2_FREQ_MODE_PARAM,
+            OP3_FREQ_MODE_PARAM, OP4_FREQ_MODE_PARAM
+        };
+        const int foldTypeIds[] = {
+            OP1_FOLD_TYPE_PARAM, OP2_FOLD_TYPE_PARAM,
+            OP3_FOLD_TYPE_PARAM, OP4_FOLD_TYPE_PARAM
+        };
+        const int levelCvIds[] = {
+            OP1_LEVEL_CV_INPUT, OP2_LEVEL_CV_INPUT,
+            OP3_LEVEL_CV_INPUT, OP4_LEVEL_CV_INPUT
+        };
+        const int warpCvIds[] = {
+            OP1_WARP_CV_INPUT, OP2_WARP_CV_INPUT,
+            OP3_WARP_CV_INPUT, OP4_WARP_CV_INPUT
+        };
+        const int foldCvIds[] = {
+            OP1_FOLD_CV_INPUT, OP2_FOLD_CV_INPUT,
+            OP3_FOLD_CV_INPUT, OP4_FOLD_CV_INPUT
+        };
+        const int fbCvIds[] = {
+            OP1_FB_CV_INPUT, OP2_FB_CV_INPUT,
+            OP3_FB_CV_INPUT, OP4_FB_CV_INPUT
+        };
+        const int levelCvAIds[] = {
+            OP1_LEVEL_CV_ATTEN_PARAM, OP2_LEVEL_CV_ATTEN_PARAM,
+            OP3_LEVEL_CV_ATTEN_PARAM, OP4_LEVEL_CV_ATTEN_PARAM
+        };
+        const int warpCvAIds[] = {
+            OP1_WARP_CV_ATTEN_PARAM, OP2_WARP_CV_ATTEN_PARAM,
+            OP3_WARP_CV_ATTEN_PARAM, OP4_WARP_CV_ATTEN_PARAM
+        };
+        const int foldCvAIds[] = {
+            OP1_FOLD_CV_ATTEN_PARAM, OP2_FOLD_CV_ATTEN_PARAM,
+            OP3_FOLD_CV_ATTEN_PARAM, OP4_FOLD_CV_ATTEN_PARAM
+        };
+        const int fbCvAIds[] = {
+            OP1_FB_CV_ATTEN_PARAM, OP2_FB_CV_ATTEN_PARAM,
+            OP3_FB_CV_ATTEN_PARAM, OP4_FB_CV_ATTEN_PARAM
+        };
+
+        four::EngineParams common;
+        common.algorithm = (int)params[ALGO_PARAM].getValue();
+        common.globalVCA = params[VCA_PARAM].getValue();
+        const float globalFineMult = exp2f(
+            params[FINE_TUNE_PARAM].getValue() / 1200.f);
+
+        for (int op = 0; op < 4; ++op) {
+            const int freqMode = (int)params[freqModeIds[op]].getValue();
+            common.opFreqMode[op] = freqMode;
+            common.opFoldType[op] =
+                (int)params[foldTypeIds[op]].getValue();
+            const float coarseParam = params[coarseIds[op]].getValue();
+            common.opCoarse[op] = freqMode == 0
+                ? four::coarse_ratio_from_index((int)roundf(coarseParam))
+                : four::coarse_fixed_from_param(coarseParam);
+            common.opFine[op] = exp2f(
+                params[fineIds[op]].getValue() / 1200.f);
+        }
+
+        for (int lane = 0; lane < channels; ++lane) {
+            four::EngineParams ep = common;
+            ep.baseFreq = four::voct_to_freq(
+                readBroadcast(inputs[VOCT_INPUT], lane)) * globalFineMult;
+
+            const float modCv = readBroadcast(inputs[XM_CV_INPUT], lane)
+                * params[XM_CV_ATTEN_PARAM].getValue() / 10.f;
+            ep.modMaster = clamp(
+                params[XM_PARAM].getValue() + modCv, 0.f, 1.f);
+
+            const float extPm = readBroadcast(inputs[EXT_PM_CV_INPUT], lane);
+            ep.extPmDepth = clamp(
+                extPm * params[EXT_PM_CV_ATTEN_PARAM].getValue(),
+                0.f, 1.f);
+
+            for (int op = 0; op < 4; ++op) {
+                const float levelCv = readBroadcast(inputs[levelCvIds[op]], lane)
+                    * params[levelCvAIds[op]].getValue() / 10.f;
+                ep.opLevel[op] = clamp(
+                    params[levelIds[op]].getValue() + levelCv, 0.f, 1.f);
+
+                const float warpCv = readBroadcast(inputs[warpCvIds[op]], lane)
+                    * params[warpCvAIds[op]].getValue() / 10.f;
+                ep.opWarp[op] = clamp(
+                    params[warpIds[op]].getValue() + warpCv, 0.f, 1.f);
+
+                const float foldCv = readBroadcast(inputs[foldCvIds[op]], lane)
+                    * params[foldCvAIds[op]].getValue() / 10.f;
+                ep.opFold[op] = clamp(
+                    params[foldIds[op]].getValue() + foldCv, 0.f, 1.f);
+
+                const float feedbackCv = readBroadcast(inputs[fbCvIds[op]], lane)
+                    * params[fbCvAIds[op]].getValue() / 10.f;
+                ep.opFeedback[op] = clamp(
+                    params[fbIds[op]].getValue() + feedbackCv, 0.f, 1.f);
+            }
+
+            const float out = four::engine_process(
+                engineStates[lane], ep, args.sampleTime, extPm);
+            outputs[MAIN_OUTPUT].setVoltage(out * 5.f, lane);
+        }
     }
 
 };
