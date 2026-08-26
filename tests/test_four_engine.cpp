@@ -475,6 +475,65 @@ TEST(output_bounded)
     ASSERT( maxAbs < 10.f );
 }
 
+TEST(engine_states_remain_independent_when_interleaved)
+{
+    four::EngineParams paramsA;
+    paramsA.algorithm = 7;
+    paramsA.modMaster = 0.f;
+    paramsA.baseFreq = 220.f;
+    paramsA.opLevel[1] = 0.f;
+    paramsA.opLevel[2] = 0.f;
+    paramsA.opLevel[3] = 0.f;
+
+    four::EngineParams paramsB = paramsA;
+    paramsB.baseFreq = 659.25f;
+    paramsB.opWarp[0] = 0.35f;
+
+    four::EngineState laneA, laneB, referenceA, referenceB;
+    const float sampleTime = 1.f / 48000.f;
+    for (int sample = 0; sample < 512; ++sample) {
+        const float expectedA = four::engine_process(
+            referenceA, paramsA, sampleTime, 0.f);
+        const float expectedB = four::engine_process(
+            referenceB, paramsB, sampleTime, 0.f);
+        const float actualA = four::engine_process(
+            laneA, paramsA, sampleTime, 0.f);
+        const float actualB = four::engine_process(
+            laneB, paramsB, sampleTime, 0.f);
+        ASSERT_NEAR(actualA, expectedA, 1e-6f);
+        ASSERT_NEAR(actualB, expectedB, 1e-6f);
+    }
+
+    four::reset(laneA);
+    const float expectedB = four::engine_process(
+        referenceB, paramsB, sampleTime, 0.f);
+    const float actualB = four::engine_process(
+        laneB, paramsB, sampleTime, 0.f);
+    ASSERT_NEAR(actualB, expectedB, 1e-6f);
+}
+
+TEST(engine_state_reset_restores_clean_sequence)
+{
+    four::EngineParams params;
+    params.algorithm = 0;
+    params.modMaster = 0.8f;
+    params.opFeedback[0] = 0.5f;
+    four::EngineState used, fresh;
+    const float sampleTime = 1.f / 48000.f;
+
+    for (int sample = 0; sample < 256; ++sample)
+        four::engine_process(used, params, sampleTime, 1.f);
+
+    four::reset(used);
+    for (int sample = 0; sample < 256; ++sample) {
+        const float actual = four::engine_process(
+            used, params, sampleTime, 1.f);
+        const float expected = four::engine_process(
+            fresh, params, sampleTime, 1.f);
+        ASSERT_NEAR(actual, expected, 1e-6f);
+    }
+}
+
 int main()
 {
     printf("Engine tests:\n");
@@ -494,6 +553,8 @@ int main()
     run_fine_tune_shifts_pitch();
     run_dc_blocker_removes_offset();
     run_output_bounded();
+    run_engine_states_remain_independent_when_interleaved();
+    run_engine_state_reset_restores_clean_sequence();
 
     printf("\n%d/%d engine tests passed.\n", tests_passed, tests_run);
     return tests_passed == tests_run ? 0 : 1;

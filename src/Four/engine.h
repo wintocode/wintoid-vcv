@@ -18,6 +18,11 @@ struct EngineState
     DCBlocker dcBlocker;
 };
 
+inline void reset(EngineState& state)
+{
+    state = EngineState();
+}
+
 struct EngineParams
 {
     int algorithm = 0;          // 0-10
