@@ -1,7 +1,7 @@
 CC := c++
 CFLAGS := -std=c++11 -Wall -Wextra -g -fsanitize=address,undefined
 
-all: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_brink_panel
+all: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_brink_panel test_polyphony_metadata
 
 test_four_dsp: test_four_dsp.cpp ../src/Four/dsp.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
@@ -21,15 +21,19 @@ test_polyphony: test_polyphony.cpp ../src/polyphony.h
 test_brink_panel:
 	python3 test_brink_panel.py
 
-run: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_brink_panel
+test_polyphony_metadata:
+	python3 test_polyphony_metadata.py
+
+run: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_brink_panel test_polyphony_metadata
 	./test_four_dsp
 	./test_four_engine
 	./test_vortex_dsp
 	./test_brink_dsp
 	./test_polyphony
 	python3 test_brink_panel.py
+	python3 test_polyphony_metadata.py
 
 clean:
 	rm -f test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony
 
-.PHONY: all run clean test_brink_panel
+.PHONY: all run clean test_brink_panel test_polyphony_metadata

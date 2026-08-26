@@ -14,7 +14,7 @@ VCV Rack plugin — synthesizer, filter, and CV/logic utilities.
 - **Frequency modes** — Ratio (0.25:1 to 31.5:1) or Fixed Hz (1–9999 Hz) per operator, toggled via button
 - **Global controls**: Algorithm selector, cross-modulation depth (XM), fine tune, VCA
 - **External PM input** with attenuverter — for audio-rate phase modulation from other sources
-- **V/OCT** input
+- **16-channel polyphony** — voice count follows the **V/OCT** input; mono and shorter polyphonic modulation inputs broadcast lane 0
 - **2× internal oversampling** with DC blocking
 
 ### Vortex
@@ -24,6 +24,7 @@ VCV Rack plugin — synthesizer, filter, and CV/logic utilities.
 - **Controls**: Cutoff (20 Hz – 20 kHz), Resonance, Drive — each with CV input and attenuverter
 - **Drive stage** — soft-clip saturation before the filter
 - **Mode selector** — click display to cycle, right-click for menu
+- **16-channel polyphony** — voice count follows **AUDIO IN**; mono and shorter polyphonic CV inputs broadcast lane 0
 - **Filter DSP** by Yuriy Ivantsov ([ivantsov-filters](https://github.com/yIvantsov/ivantsov-filters)) — state-space design with Sigma frequency warping
 
 ### Brink
