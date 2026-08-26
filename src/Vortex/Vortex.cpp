@@ -135,6 +135,11 @@ struct Vortex : Module {
         const float baseDamping =
             0.707f * (1.f - resonance) + 0.01f * resonance;
         const float driveKnob = params[DRIVE_PARAM].getValue();
+        const float cutoffCvAtten =
+            params[CUTOFF_CV_ATTEN_PARAM].getValue();
+        const float resonanceCvAtten =
+            params[RESONANCE_CV_ATTEN_PARAM].getValue();
+        const float driveCvAtten = params[DRIVE_CV_ATTEN_PARAM].getValue();
         const bool cutoffCvConnected = inputs[CUTOFF_CV_INPUT].isConnected();
         const bool resonanceCvConnected =
             inputs[RESONANCE_CV_INPUT].isConnected();
@@ -148,7 +153,7 @@ struct Vortex : Module {
             if (cutoffCvConnected) {
                 const float cutoffCv =
                     readBroadcast(inputs[CUTOFF_CV_INPUT], lane)
-                    * params[CUTOFF_CV_ATTEN_PARAM].getValue();
+                    * cutoffCvAtten;
                 cutoff *= vortex::voct_to_mult(cutoffCv);
             }
             cutoff = clamp(cutoff, 20.f, 20000.f);
@@ -157,14 +162,14 @@ struct Vortex : Module {
             if (resonanceCvConnected) {
                 const float resonanceCv =
                     readBroadcast(inputs[RESONANCE_CV_INPUT], lane)
-                    * params[RESONANCE_CV_ATTEN_PARAM].getValue() * 0.2f;
+                    * resonanceCvAtten * 0.2f;
                 damping = clamp(damping - resonanceCv, 0.01f, 0.707f);
             }
 
             float drive = driveKnob;
             if (driveCvConnected) {
                 const float driveCv = readBroadcast(inputs[DRIVE_CV_INPUT], lane)
-                    * params[DRIVE_CV_ATTEN_PARAM].getValue() / 10.f;
+                    * driveCvAtten / 10.f;
                 drive = clamp(drive + driveCv, 0.f, 1.f);
             }
             if (drive > 0.f)
