@@ -330,6 +330,66 @@ TEST(filter2_reset)
     ASSERT_NEAR(f.z1, 0.0f, 1e-6f);
 }
 
+TEST(voice_state_reset_clears_all_filter_history)
+{
+    vortex::VoiceState state;
+    vortex::filter1_configure_lp(state.f1, 48000.f, 1000.f);
+    vortex::filter2_configure(
+        state.f2a, 48000.f, 1000.f, 0.2f, vortex::F2_LP);
+    vortex::filter2_configure(
+        state.f2b, 48000.f, 2000.f, 0.3f, vortex::F2_HP);
+
+    for (int sample = 0; sample < 128; ++sample) {
+        state.f1.process_lp(1.f);
+        vortex::filter2_process(state.f2a, 1.f, vortex::F2_LP);
+        vortex::filter2_process(state.f2b, 1.f, vortex::F2_HP);
+    }
+
+    state.reset();
+    ASSERT_NEAR(state.f1.z, 0.f, 1e-6f);
+    ASSERT_NEAR(state.f2a.z0, 0.f, 1e-6f);
+    ASSERT_NEAR(state.f2a.z1, 0.f, 1e-6f);
+    ASSERT_NEAR(state.f2b.z0, 0.f, 1e-6f);
+    ASSERT_NEAR(state.f2b.z1, 0.f, 1e-6f);
+}
+
+TEST(voice_states_remain_independent_when_interleaved)
+{
+    vortex::VoiceState laneA, laneB, referenceA, referenceB;
+    vortex::filter2_configure(
+        laneA.f2a, 48000.f, 400.f, 0.2f, vortex::F2_LP);
+    vortex::filter2_configure(
+        referenceA.f2a, 48000.f, 400.f, 0.2f, vortex::F2_LP);
+    vortex::filter2_configure(
+        laneB.f2a, 48000.f, 4000.f, 0.6f, vortex::F2_HP);
+    vortex::filter2_configure(
+        referenceB.f2a, 48000.f, 4000.f, 0.6f, vortex::F2_HP);
+
+    for (int sample = 0; sample < 512; ++sample) {
+        const float inputA = sinf(
+            2.f * vortex::PI * 110.f * sample / 48000.f);
+        const float inputB = sinf(
+            2.f * vortex::PI * 3300.f * sample / 48000.f);
+        const float expectedA = vortex::filter2_process(
+            referenceA.f2a, inputA, vortex::F2_LP);
+        const float expectedB = vortex::filter2_process(
+            referenceB.f2a, inputB, vortex::F2_HP);
+        const float actualA = vortex::filter2_process(
+            laneA.f2a, inputA, vortex::F2_LP);
+        const float actualB = vortex::filter2_process(
+            laneB.f2a, inputB, vortex::F2_HP);
+        ASSERT_NEAR(actualA, expectedA, 1e-6f);
+        ASSERT_NEAR(actualB, expectedB, 1e-6f);
+    }
+
+    laneA.reset();
+    const float expectedB = vortex::filter2_process(
+        referenceB.f2a, 0.25f, vortex::F2_HP);
+    const float actualB = vortex::filter2_process(
+        laneB.f2a, 0.25f, vortex::F2_HP);
+    ASSERT_NEAR(actualB, expectedB, 1e-6f);
+}
+
 int main()
 {
     printf("Vortex DSP Tests\n");
@@ -371,6 +431,8 @@ int main()
     run_filter2_resonance_peak();
     run_filter2_cascade_steeper();
     run_filter2_reset();
+    run_voice_state_reset_clears_all_filter_history();
+    run_voice_states_remain_independent_when_interleaved();
 
     printf("\n%d/%d tests passed\n", tests_passed, tests_run);
     return (tests_passed == tests_run) ? 0 : 1;

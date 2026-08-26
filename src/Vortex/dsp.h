@@ -171,6 +171,20 @@ struct Filter2
     }
 };
 
+struct VoiceState
+{
+    Filter1 f1;
+    Filter2 f2a;
+    Filter2 f2b;
+
+    void reset()
+    {
+        f1.reset();
+        f2a.reset();
+        f2b.reset();
+    }
+};
+
 // Configure second-order filter coefficients
 // Uses Sigma frequency warping for audio-rate modulation quality
 // damping = 1/(2*Q), e.g. 0.707 = Butterworth, lower = more resonant
