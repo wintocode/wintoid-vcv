@@ -153,4 +153,61 @@ inline WindowOutput process_window(WindowState& state,
     return output;
 }
 
+struct LogicState {
+    bool initialized;
+    bool previousXor;
+    bool toggle;
+    LogicState() : initialized(false), previousXor(false), toggle(false) {}
+};
+
+struct LogicOutput {
+    bool andGate;
+    bool orGate;
+    bool xorGate;
+    bool stateGate;
+};
+
+inline void reset(LogicState& state)
+{
+    state = LogicState();
+}
+
+inline LogicOutput process_logic(LogicState& state, bool a, bool b)
+{
+    LogicOutput output;
+    output.andGate = a && b;
+    output.orGate = a || b;
+    output.xorGate = a != b;
+
+    if (!state.initialized) {
+        state.initialized = true;
+        state.previousXor = output.xorGate;
+    } else {
+        if (!state.previousXor && output.xorGate) state.toggle = !state.toggle;
+        state.previousXor = output.xorGate;
+    }
+    output.stateGate = state.toggle;
+    return output;
+}
+
+inline int effective_channels(int channels)
+{
+    if (channels < 1) return 1;
+    return channels > MAX_CHANNELS ? MAX_CHANNELS : channels;
+}
+
+inline int logic_channels(int aChannels, int bChannels)
+{
+    int a = effective_channels(aChannels);
+    int b = effective_channels(bChannels);
+    return a > b ? a : b;
+}
+
+inline int broadcast_lane(int lane, int channels)
+{
+    int count = effective_channels(channels);
+    if (count == 1 || lane >= count) return 0;
+    return lane;
+}
+
 } // namespace brink

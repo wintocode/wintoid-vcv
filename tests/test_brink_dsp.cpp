@@ -141,6 +141,46 @@ TEST(reset_silences_and_reinitializes)
     for (int i = 0; i < brink::EVENT_COUNT; ++i) ASSERT(!o.eventHigh[i]);
 }
 
+TEST(logic_truth_table)
+{
+    brink::LogicState s;
+    brink::LogicOutput a = brink::process_logic(s, false, false);
+    ASSERT(!a.andGate && !a.orGate && !a.xorGate);
+    brink::LogicOutput b = brink::process_logic(s, true, false);
+    ASSERT(!b.andGate && b.orGate && b.xorGate);
+    brink::LogicOutput c = brink::process_logic(s, true, true);
+    ASSERT(c.andGate && c.orGate && !c.xorGate);
+}
+
+TEST(toggle_ignores_initial_xor_and_toggles_on_later_rises)
+{
+    brink::LogicState s;
+    ASSERT(!brink::process_logic(s, true, false).stateGate);
+    brink::process_logic(s, false, false);
+    ASSERT(brink::process_logic(s, true, false).stateGate);
+    brink::process_logic(s, false, false);
+    ASSERT(!brink::process_logic(s, false, true).stateGate);
+}
+
+TEST(logic_reset_clears_toggle)
+{
+    brink::LogicState s;
+    brink::process_logic(s, false, false);
+    brink::process_logic(s, true, false);
+    brink::reset(s);
+    ASSERT(!brink::process_logic(s, true, false).stateGate);
+}
+
+TEST(polyphony_channel_rules)
+{
+    ASSERT(brink::effective_channels(0) == 1);
+    ASSERT(brink::effective_channels(22) == 16);
+    ASSERT(brink::logic_channels(1, 8) == 8);
+    ASSERT(brink::broadcast_lane(5, 1) == 0);
+    ASSERT(brink::broadcast_lane(2, 8) == 2);
+    ASSERT(brink::broadcast_lane(9, 8) == 0);
+}
+
 int main()
 {
     run_window_frame_nominal();
@@ -155,6 +195,10 @@ int main()
     run_window_motion_generates_relative_crossing();
     run_event_pulse_lasts_one_millisecond();
     run_reset_silences_and_reinitializes();
+    run_logic_truth_table();
+    run_toggle_ignores_initial_xor_and_toggles_on_later_rises();
+    run_logic_reset_clears_toggle();
+    run_polyphony_channel_rules();
     printf("%d/%d tests passed\n", tests_passed, tests_run);
     return tests_passed == tests_run ? 0 : 1;
 }
