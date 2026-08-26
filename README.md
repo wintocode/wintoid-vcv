@@ -20,11 +20,11 @@ VCV Rack plugin — synthesizer, filter, and CV/logic utilities.
 ### Vortex
 12-mode multi-mode filter (6HP)
 
-- **Filter modes**: LP 6/12/24dB, HP 6/12/24dB, BP, BP+, Notch, Notch+, AP, AP+
 - **Controls**: Cutoff (20 Hz – 20 kHz), Resonance, Drive — each with CV input and attenuverter
+- **16-channel polyphony** — voice count follows **AUDIO IN**; mono and shorter polyphonic CV inputs broadcast lane 0
+- **Filter modes**: LP 6/12/24dB, HP 6/12/24dB, BP, BP+, Notch, Notch+, AP, AP+
 - **Drive stage** — soft-clip saturation before the filter
 - **Mode selector** — click display to cycle, right-click for menu
-- **16-channel polyphony** — voice count follows **AUDIO IN**; mono and shorter polyphonic CV inputs broadcast lane 0
 - **Filter DSP** by Yuriy Ivantsov ([ivantsov-filters](https://github.com/yIvantsov/ivantsov-filters)) — state-space design with Sigma frequency warping
 
 ### Brink
