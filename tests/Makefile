@@ -1,7 +1,7 @@
 CC := c++
 CFLAGS := -std=c++11 -Wall -Wextra -g -fsanitize=address,undefined
 
-all: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp
+all: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_brink_panel
 
 test_four_dsp: test_four_dsp.cpp ../src/Four/dsp.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
@@ -15,13 +15,17 @@ test_vortex_dsp: test_vortex_dsp.cpp ../src/Vortex/dsp.h
 test_brink_dsp: test_brink_dsp.cpp ../src/Brink/dsp.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
-run: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp
+test_brink_panel:
+	python3 test_brink_panel.py
+
+run: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_brink_panel
 	./test_four_dsp
 	./test_four_engine
 	./test_vortex_dsp
 	./test_brink_dsp
+	python3 test_brink_panel.py
 
 clean:
 	rm -f test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp
 
-.PHONY: all run clean
+.PHONY: all run clean test_brink_panel
