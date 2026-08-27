@@ -55,9 +55,8 @@ class PanelOutputStyleTest(unittest.TestCase):
             RACK_PORT_RADIUS_MM,
         )
         # Brink's existing SVG formatter rounds its radius to two decimals;
-        # its artifact envelope is therefore slightly below the source value.
-        if module is not self.brink:
-            self.assertAlmostEqual(0.725, visible_material_mm, places=3)
+        # permit the resulting half-step (0.005 mm) precision tolerance.
+        self.assertAlmostEqual(0.725, visible_material_mm, delta=0.005)
         self.assertGreaterEqual(
             visible_material_mm, MINIMUM_VISIBLE_OUTPUT_RING_MM)
 
