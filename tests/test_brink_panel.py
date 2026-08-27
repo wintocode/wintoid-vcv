@@ -23,6 +23,27 @@ class BrinkPanelTest(unittest.TestCase):
         self.assertAlmostEqual(self.panel.CHANNEL_A_X + self.panel.CHANNEL_B_X,
                                self.panel.WIDTH_MM)
 
+    def test_channel_a_columns_match_normalisation_flow(self):
+        coordinates = self.panel.COORDINATES
+        a_left = self.panel.CHANNEL_A_X - self.panel.PAIR_OFFSET
+        a_right = self.panel.CHANNEL_A_X + self.panel.PAIR_OFFSET
+        b_left = self.panel.CHANNEL_B_X - self.panel.PAIR_OFFSET
+        b_right = self.panel.CHANNEL_B_X + self.panel.PAIR_OFFSET
+
+        for name in ("A_SIGNAL", "A_CENTER_CV", "A_WIDTH_CV"):
+            with self.subTest(name=name):
+                self.assertAlmostEqual(a_right, coordinates[name][0])
+        for name in ("A_POSITION", "A_CENTER_ATTEN", "A_WIDTH_ATTEN"):
+            with self.subTest(name=name):
+                self.assertAlmostEqual(a_left, coordinates[name][0])
+
+        for name in ("B_SIGNAL", "B_CENTER_CV", "B_WIDTH_CV"):
+            with self.subTest(name=name):
+                self.assertAlmostEqual(b_left, coordinates[name][0])
+        for name in ("B_POSITION", "B_CENTER_ATTEN", "B_WIDTH_ATTEN"):
+            with self.subTest(name=name):
+                self.assertAlmostEqual(b_right, coordinates[name][0])
+
     def test_generated_outputs_have_required_identity(self):
         svg = self.panel.generate_svg()
         header = self.panel.generate_header()

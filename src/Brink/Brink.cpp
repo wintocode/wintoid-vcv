@@ -617,7 +617,7 @@ struct PanelLabels : Widget {
         const BrinkChannelLayout& channelA = brinkChannelLayouts[0];
         const BrinkChannelLayout& channelB = brinkChannelLayouts[1];
         const BrinkPoint normalisationPoints[] = {
-            channelA.position, channelA.centerAtten, channelA.widthAtten
+            channelA.signal, channelA.centerCv, channelA.widthCv
         };
         const BrinkPoint normalisationTargets[] = {
             channelB.signal, channelB.centerCv, channelB.widthCv

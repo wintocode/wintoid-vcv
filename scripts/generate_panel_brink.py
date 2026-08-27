@@ -109,15 +109,20 @@ def _channel_coordinates(prefix, channel_x):
     """Return the mirrored widget centres for one channel."""
     left = channel_x - PAIR_OFFSET
     right = channel_x + PAIR_OFFSET
+    # Put Channel A's normalled inputs nearest Channel B's inputs so the
+    # visible A-to-B paths describe the actual signal flow.  Channel B keeps
+    # the standard mirrored arrangement used by the rest of the panel.
+    input_x = right if prefix == "A" else left
+    output_x = left if prefix == "A" else right
     return (
         (f"{prefix}_CENTER_KNOB", (left, Y_KNOBS)),
         (f"{prefix}_WIDTH_KNOB", (right, Y_KNOBS)),
-        (f"{prefix}_SIGNAL", (left, Y_SIGNAL_POSITION)),
-        (f"{prefix}_POSITION", (right, Y_SIGNAL_POSITION)),
-        (f"{prefix}_CENTER_CV", (left, Y_CENTER_CV)),
-        (f"{prefix}_CENTER_ATTEN", (right, Y_CENTER_CV)),
-        (f"{prefix}_WIDTH_CV", (left, Y_WIDTH_CV)),
-        (f"{prefix}_WIDTH_ATTEN", (right, Y_WIDTH_CV)),
+        (f"{prefix}_SIGNAL", (input_x, Y_SIGNAL_POSITION)),
+        (f"{prefix}_POSITION", (output_x, Y_SIGNAL_POSITION)),
+        (f"{prefix}_CENTER_CV", (input_x, Y_CENTER_CV)),
+        (f"{prefix}_CENTER_ATTEN", (output_x, Y_CENTER_CV)),
+        (f"{prefix}_WIDTH_CV", (input_x, Y_WIDTH_CV)),
+        (f"{prefix}_WIDTH_ATTEN", (output_x, Y_WIDTH_CV)),
         (f"{prefix}_INSIDE", (left, Y_STATE_GATES)),
         (f"{prefix}_OUTSIDE", (right, Y_STATE_GATES)),
         (f"{prefix}_LOW_UP", (left, Y_EVENTS_UP)),
