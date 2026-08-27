@@ -1,7 +1,7 @@
 CC := c++
 CFLAGS := -std=c++11 -Wall -Wextra -g -fsanitize=address,undefined -pthread
 
-all: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_brink_panel test_panel_output_style test_polyphony_metadata test_repository_hygiene test_panel_labels
+all: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_ui_geometry test_brink_panel test_panel_output_style test_polyphony_metadata test_repository_hygiene test_panel_labels test_metamodule_graphics
 
 test_four_dsp: test_four_dsp.cpp ../src/Four/dsp.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
@@ -16,6 +16,9 @@ test_brink_dsp: test_brink_dsp.cpp ../src/Brink/dsp.h ../src/polyphony.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
 test_polyphony: test_polyphony.cpp ../src/polyphony.h
+	$(CC) $(CFLAGS) -o $@ $< -lm
+
+test_ui_geometry: test_ui_geometry.cpp ../src/ui_geometry.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
 test_brink_panel:
@@ -33,19 +36,24 @@ test_repository_hygiene:
 test_panel_labels:
 	python3 test_panel_labels.py
 
-run: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_brink_panel test_panel_output_style test_polyphony_metadata test_repository_hygiene test_panel_labels
+test_metamodule_graphics:
+	python3 test_metamodule_graphics.py
+
+run: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_ui_geometry test_brink_panel test_panel_output_style test_polyphony_metadata test_repository_hygiene test_panel_labels test_metamodule_graphics
 	./test_four_dsp
 	./test_four_engine
 	./test_vortex_dsp
 	./test_brink_dsp
 	./test_polyphony
+	./test_ui_geometry
 	python3 test_brink_panel.py
 	python3 test_panel_output_style.py
 	python3 test_polyphony_metadata.py
 	python3 test_repository_hygiene.py
 	python3 test_panel_labels.py
+	python3 test_metamodule_graphics.py
 
 clean:
-	rm -f test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony
+	rm -f test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_ui_geometry
 
-.PHONY: all run clean test_brink_panel test_panel_output_style test_polyphony_metadata test_repository_hygiene test_panel_labels
+.PHONY: all run clean test_brink_panel test_panel_output_style test_polyphony_metadata test_repository_hygiene test_panel_labels test_metamodule_graphics

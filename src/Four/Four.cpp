@@ -355,6 +355,7 @@ struct Four : Module {
 };
 
 #include "layout.h"
+#include "../ui_geometry.h"
 
 struct AlgoDisplay : Widget {
     Four* module = nullptr;
@@ -368,25 +369,38 @@ struct AlgoDisplay : Widget {
     void drawLayer(const DrawArgs& args, int layer) override {
         if ( layer != 1 ) return;
 
-        // Background
+        // Background: inset by the stroke so hosts that clip at the widget
+        // box (MetaModule) do not cut the outer half of the border.
+        const float strokeWidth = 0.5f;
+        const float inset = wintoid::ui::stroke_inset(strokeWidth);
         nvgBeginPath(args.vg);
-        nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, mm2px(1));
+        nvgRoundedRect(args.vg, inset, inset,
+                       wintoid::ui::inset_extent(box.size.x, strokeWidth),
+                       wintoid::ui::inset_extent(box.size.y, strokeWidth),
+                       mm2px(1));
         nvgFillColor(args.vg, nvgRGB(10, 10, 26));
         nvgFill(args.vg);
         nvgStrokeColor(args.vg, nvgRGB(64, 64, 96));
-        nvgStrokeWidth(args.vg, 0.5f);
+        nvgStrokeWidth(args.vg, strokeWidth);
         nvgStroke(args.vg);
 
-        // Text
-        int algo = 0;
-        if ( module )
-            algo = (int)module->params[Four::ALGO_PARAM].getValue();
+        // Text: select the font explicitly; if it fails to load, keep the
+        // background/border and skip the text rather than inherit another
+        // widget's font.
+        std::shared_ptr<Font> font = APP->window->loadFont(
+            asset::system("res/fonts/DejaVuSans.ttf"));
+        if ( font ) {
+            int algo = 0;
+            if ( module )
+                algo = (int)module->params[Four::ALGO_PARAM].getValue();
 
-        const char* text = four::algorithmStrings[algo];
-        nvgFontSize(args.vg, 14);
-        nvgFillColor(args.vg, nvgRGB(128, 255, 128));
-        nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        nvgText(args.vg, box.size.x / 2, box.size.y / 2, text, nullptr);
+            const char* text = four::algorithmStrings[algo];
+            nvgFontFaceId(args.vg, font->handle);
+            nvgFontSize(args.vg, 14);
+            nvgFillColor(args.vg, nvgRGB(128, 255, 128));
+            nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            nvgText(args.vg, box.size.x / 2, box.size.y / 2, text, nullptr);
+        }
 
         Widget::drawLayer(args, layer);
     }
@@ -447,12 +461,17 @@ struct FoldTypeDisplay : Widget {
     void drawLayer(const DrawArgs& args, int layer) override {
         if ( layer != 1 ) return;
 
+        const float strokeWidth = 0.5f;
+        const float inset = wintoid::ui::stroke_inset(strokeWidth);
         nvgBeginPath(args.vg);
-        nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, mm2px(0.5f));
+        nvgRoundedRect(args.vg, inset, inset,
+                       wintoid::ui::inset_extent(box.size.x, strokeWidth),
+                       wintoid::ui::inset_extent(box.size.y, strokeWidth),
+                       mm2px(0.5f));
         nvgFillColor(args.vg, nvgRGB(10, 10, 26));
         nvgFill(args.vg);
         nvgStrokeColor(args.vg, nvgRGB(64, 64, 96));
-        nvgStrokeWidth(args.vg, 0.5f);
+        nvgStrokeWidth(args.vg, strokeWidth);
         nvgStroke(args.vg);
 
         int ft = getFoldType();

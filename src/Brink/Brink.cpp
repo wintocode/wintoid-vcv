@@ -1,6 +1,7 @@
 #include "../plugin.hpp"
 #include "dsp.h"
 #include "layout.h"
+#include "../ui_geometry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -412,8 +413,8 @@ struct WindowRail : Widget {
             * (1.f - brink::normalize_display_voltage(frame.lower));
         const float upperY = box.size.y
             * (1.f - brink::normalize_display_voltage(frame.upper));
-        const float markerY = std::max(markerStrokeWidth / 2.f,
-            std::min(box.size.y - markerStrokeWidth / 2.f, signalY));
+        const float markerY = wintoid::ui::clamp_stroke_center(
+            signalY, box.size.y, markerStrokeWidth);
         const float bandTop = std::min(lowerY, upperY);
         const float bandBottom = std::max(lowerY, upperY);
         const int accentR = channel == 0
@@ -434,14 +435,20 @@ struct WindowRail : Widget {
             brink_layout::SIGNAL_MARKER_G,
             brink_layout::SIGNAL_MARKER_B);
 
+        // Stroked primitives are clamped inside the widget box so hosts
+        // that clip at the box edge (MetaModule) do not cut half a stroke.
+        const float trackStroke = mm2px(0.3f);
         nvgSave(args.vg);
         nvgBeginPath(args.vg);
-        nvgRoundedRect(args.vg, centreX - trackWidth / 2.f, 0.f,
-                       trackWidth, box.size.y, mm2px(0.8f));
+        nvgRoundedRect(args.vg, centreX - trackWidth / 2.f,
+                       wintoid::ui::stroke_inset(trackStroke),
+                       trackWidth,
+                       wintoid::ui::inset_extent(box.size.y, trackStroke),
+                       mm2px(0.8f));
         nvgFillColor(args.vg, nvgRGB(17, 21, 37));
         nvgFill(args.vg);
         nvgStrokeColor(args.vg, nvgRGB(59, 70, 104));
-        nvgStrokeWidth(args.vg, mm2px(0.3f));
+        nvgStrokeWidth(args.vg, trackStroke);
         nvgStroke(args.vg);
 
         nvgBeginPath(args.vg);
@@ -451,35 +458,42 @@ struct WindowRail : Widget {
         nvgFill(args.vg);
 
         nvgStrokeColor(args.vg, nvgRGBA(170, 180, 205, 190));
-        nvgStrokeWidth(args.vg, mm2px(0.25f));
+        const float tickStroke = mm2px(0.25f);
+        nvgStrokeWidth(args.vg, tickStroke);
         const float tickHalfWidth = mm2px(2.f);
         const float tickY[] = {0.f, box.size.y / 2.f, box.size.y};
         for (int tick = 0; tick < 3; ++tick) {
+            const float y = wintoid::ui::clamp_stroke_center(
+                tickY[tick], box.size.y, tickStroke);
             nvgBeginPath(args.vg);
-            nvgMoveTo(args.vg, centreX - tickHalfWidth, tickY[tick]);
-            nvgLineTo(args.vg, centreX + tickHalfWidth, tickY[tick]);
+            nvgMoveTo(args.vg, centreX - tickHalfWidth, y);
+            nvgLineTo(args.vg, centreX + tickHalfWidth, y);
             nvgStroke(args.vg);
         }
 
         nvgStrokeColor(args.vg, boundaryColor);
-        nvgStrokeWidth(args.vg, mm2px(0.3f));
+        const float boundaryStroke = mm2px(0.3f);
+        nvgStrokeWidth(args.vg, boundaryStroke);
         const float boundaryHalfWidth = mm2px(1.5f);
         const float boundaryY[] = {lowerY, upperY};
         for (int boundary = 0; boundary < 2; ++boundary) {
+            const float y = wintoid::ui::clamp_stroke_center(
+                boundaryY[boundary], box.size.y, boundaryStroke);
             nvgBeginPath(args.vg);
-            nvgMoveTo(args.vg, centreX - boundaryHalfWidth,
-                      boundaryY[boundary]);
-            nvgLineTo(args.vg, centreX + boundaryHalfWidth,
-                      boundaryY[boundary]);
+            nvgMoveTo(args.vg, centreX - boundaryHalfWidth, y);
+            nvgLineTo(args.vg, centreX + boundaryHalfWidth, y);
             nvgStroke(args.vg);
         }
 
         nvgStrokeColor(args.vg, accent);
-        nvgStrokeWidth(args.vg, mm2px(0.35f));
+        const float centerStroke = mm2px(0.35f);
+        nvgStrokeWidth(args.vg, centerStroke);
+        const float centerYClamped = wintoid::ui::clamp_stroke_center(
+            centerY, box.size.y, centerStroke);
         const float centerHalfWidth = mm2px(2.f);
         nvgBeginPath(args.vg);
-        nvgMoveTo(args.vg, centreX - centerHalfWidth, centerY);
-        nvgLineTo(args.vg, centreX + centerHalfWidth, centerY);
+        nvgMoveTo(args.vg, centreX - centerHalfWidth, centerYClamped);
+        nvgLineTo(args.vg, centreX + centerHalfWidth, centerYClamped);
         nvgStroke(args.vg);
 
         nvgStrokeColor(args.vg, markerColor);

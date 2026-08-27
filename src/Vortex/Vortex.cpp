@@ -265,6 +265,7 @@ struct Vortex : Module {
 };
 
 #include "layout.h"
+#include "../ui_geometry.h"
 
 static const char* modeStrings[] = {
     "LP 6dB", "LP 12dB", "LP 24dB",
@@ -286,25 +287,38 @@ struct ModeDisplay : Widget {
     void drawLayer(const DrawArgs& args, int layer) override {
         if (layer != 1) return;
 
-        // Background
+        // Background: inset by the stroke so hosts that clip at the widget
+        // box (MetaModule) do not cut the outer half of the border.
+        const float strokeWidth = 0.5f;
+        const float inset = wintoid::ui::stroke_inset(strokeWidth);
         nvgBeginPath(args.vg);
-        nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, mm2px(1));
+        nvgRoundedRect(args.vg, inset, inset,
+                       wintoid::ui::inset_extent(box.size.x, strokeWidth),
+                       wintoid::ui::inset_extent(box.size.y, strokeWidth),
+                       mm2px(1));
         nvgFillColor(args.vg, nvgRGB(10, 10, 26));
         nvgFill(args.vg);
         nvgStrokeColor(args.vg, nvgRGB(64, 64, 96));
-        nvgStrokeWidth(args.vg, 0.5f);
+        nvgStrokeWidth(args.vg, strokeWidth);
         nvgStroke(args.vg);
 
-        // Text
-        int mode = 0;
-        if (module)
-            mode = (int)module->params[Vortex::MODE_PARAM].getValue();
+        // Text: select the font explicitly; if it fails to load, keep the
+        // background/border and skip the text rather than inherit another
+        // widget's font.
+        std::shared_ptr<Font> font = APP->window->loadFont(
+            asset::system("res/fonts/DejaVuSans.ttf"));
+        if (font) {
+            int mode = 0;
+            if (module)
+                mode = (int)module->params[Vortex::MODE_PARAM].getValue();
 
-        const char* text = modeStrings[mode];
-        nvgFontSize(args.vg, 14);
-        nvgFillColor(args.vg, nvgRGB(128, 255, 128));
-        nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        nvgText(args.vg, box.size.x / 2, box.size.y / 2, text, nullptr);
+            const char* text = modeStrings[mode];
+            nvgFontFaceId(args.vg, font->handle);
+            nvgFontSize(args.vg, 14);
+            nvgFillColor(args.vg, nvgRGB(128, 255, 128));
+            nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            nvgText(args.vg, box.size.x / 2, box.size.y / 2, text, nullptr);
+        }
 
         Widget::drawLayer(args, layer);
     }
