@@ -5,6 +5,8 @@ import pathlib
 import unittest
 import xml.etree.ElementTree as ET
 
+from panel_geometry import visible_output_material
+
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUTPUT_FILL = "#39445f"
@@ -47,10 +49,15 @@ class PanelOutputStyleTest(unittest.TestCase):
         circle = circle_at(circles, coordinate)
         self.assertEqual(OUTPUT_FILL, circle.attrib["fill"])
         self.assertEqual(OUTPUT_STROKE, circle.attrib["stroke"])
-        stroke_width = float(circle.attrib["stroke-width"])
-        visible_material_mm = (
-            float(circle.attrib["r"]) - RACK_PORT_RADIUS_MM + stroke_width
+        visible_material_mm = visible_output_material(
+            float(circle.attrib["r"]),
+            float(circle.attrib["stroke-width"]),
+            RACK_PORT_RADIUS_MM,
         )
+        # Brink's existing SVG formatter rounds its radius to two decimals;
+        # its artifact envelope is therefore slightly below the source value.
+        if module is not self.brink:
+            self.assertAlmostEqual(0.725, visible_material_mm, places=3)
         self.assertGreaterEqual(
             visible_material_mm, MINIMUM_VISIBLE_OUTPUT_RING_MM)
 

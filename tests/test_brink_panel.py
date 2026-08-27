@@ -3,6 +3,9 @@ import pathlib
 import re
 import unittest
 
+from panel_geometry import centered_stroke_outer_radius
+
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "generate_panel_brink.py"
 
@@ -176,10 +179,13 @@ class BrinkPanelTest(unittest.TestCase):
 
         # The backplate's stroke is painted half inside and half outside the
         # fill radius, so the stroke width counts against the light gap.
+        output_outer_radius = centered_stroke_outer_radius(
+            self.panel.OUTPUT_BACKPLATE_RADIUS,
+            self.panel.OUTPUT_STROKE_WIDTH,
+        )
         light_to_backplate = (
             self.panel.OUTPUT_LIGHT_OFFSET
-            - (self.panel.OUTPUT_BACKPLATE_RADIUS
-               + self.panel.OUTPUT_STROKE_WIDTH / 2.0)
+            - output_outer_radius
             - self.panel.STATUS_LIGHT_RADIUS
         )
         self.assertGreaterEqual(light_to_backplate, 0.25)
