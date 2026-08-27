@@ -778,8 +778,9 @@ struct BrinkWidget : ModuleWidget {
             const BrinkChannelLayout& layout = brinkChannelLayouts[channel];
             const BrinkPoint gatePoints[] = {layout.inside, layout.outside};
             for (int gate = 0; gate < 2; ++gate) {
-                const float lightX = gate == 0 ? gatePoints[gate].x + 4.f
-                                               : gatePoints[gate].x - 4.f;
+                const float lightX = gate == 0
+                    ? gatePoints[gate].x + brink_layout::OUTPUT_LIGHT_OFFSET
+                    : gatePoints[gate].x - brink_layout::OUTPUT_LIGHT_OFFSET;
                 if (channel == 0) {
                     addChild(createLightCentered<BrinkTealLight>(
                         mm2px(Vec(lightX, gatePoints[gate].y)), module, gateLights[channel][gate]));
@@ -794,8 +795,9 @@ struct BrinkWidget : ModuleWidget {
             };
             for (int event = 0; event < brink::EVENT_COUNT; ++event) {
                 const int side = event % 2;
-                const float lightX = side == 0 ? eventPoints[event].x + 4.f
-                                               : eventPoints[event].x - 4.f;
+                const float lightX = side == 0
+                    ? eventPoints[event].x + brink_layout::OUTPUT_LIGHT_OFFSET
+                    : eventPoints[event].x - brink_layout::OUTPUT_LIGHT_OFFSET;
                 if (channel == 0) {
                     addChild(createLightCentered<BrinkTealLight>(
                         mm2px(Vec(lightX, eventPoints[event].y)), module,
@@ -813,7 +815,8 @@ struct BrinkWidget : ModuleWidget {
                                    Brink::XOR_LIGHT, Brink::STATE_LIGHT};
         for (int logic = 0; logic < 4; ++logic)
             addChild(createLightCentered<BrinkVioletLight>(
-                mm2px(Vec(brinkLogicLayout[logic].x + 4.f, brinkLogicLayout[logic].y)),
+                mm2px(Vec(brinkLogicLayout[logic].x + brink_layout::OUTPUT_LIGHT_OFFSET,
+                          brinkLogicLayout[logic].y)),
                 module, logicLights[logic]));
     }
 };

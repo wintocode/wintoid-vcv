@@ -9,6 +9,9 @@ import xml.etree.ElementTree as ET
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUTPUT_FILL = "#39445f"
 OUTPUT_STROKE = "#c4cede"
+RACK_PIXELS_PER_MM = 15.0 / 5.08
+RACK_PORT_RADIUS_MM = 23.7 / (2.0 * RACK_PIXELS_PER_MM)
+MINIMUM_VISIBLE_OUTPUT_RING_MM = 0.60
 
 
 def load_generator(name):
@@ -44,9 +47,10 @@ class PanelOutputStyleTest(unittest.TestCase):
         circle = circle_at(circles, coordinate)
         self.assertEqual(OUTPUT_FILL, circle.attrib["fill"])
         self.assertEqual(OUTPUT_STROKE, circle.attrib["stroke"])
-        jack_radius = (module.JACK_RADIUS if hasattr(module, "JACK_RADIUS")
-                       else module.PORT_RADIUS)
-        self.assertGreater(float(circle.attrib["r"]), jack_radius)
+        self.assertGreaterEqual(
+            float(circle.attrib["r"]) - RACK_PORT_RADIUS_MM,
+            MINIMUM_VISIBLE_OUTPUT_RING_MM,
+        )
 
     def assert_input_style(self, circles, coordinate):
         circle = circle_at(circles, coordinate)

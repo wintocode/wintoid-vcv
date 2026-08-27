@@ -25,8 +25,11 @@ HEIGHT_MM = 128.5
 
 # Component sizes (for SVG placeholder circles)
 SMALL_KNOB_RADIUS = 2.5    # RoundSmallBlackKnob / Trimpot
-JACK_RADIUS = 3.2           # PJ301MPort
-OUTPUT_BACKPLATE_RADIUS = JACK_RADIUS + 0.65
+JACK_RADIUS = 3.2           # PJ301MPort (structural guide)
+PIXELS_PER_MM = 15.0 / 5.08
+RACK_PORT_RADIUS = 23.7 / (2.0 * PIXELS_PER_MM)
+OUTPUT_RING_WIDTH = 0.65
+OUTPUT_BACKPLATE_RADIUS = RACK_PORT_RADIUS + OUTPUT_RING_WIDTH
 OUTPUT_BACKPLATE_FILL = '#39445f'
 OUTPUT_BACKPLATE_STROKE = '#c4cede'
 TOGGLE_W = 2.5              # CKSS half-width

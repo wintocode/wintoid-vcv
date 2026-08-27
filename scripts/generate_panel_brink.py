@@ -64,9 +64,16 @@ CHANNEL_B_RIGHT_X = CHANNEL_B_X + PAIR_OFFSET
 SMALL_KNOB_RADIUS = 2.5
 TRIMPOT_RADIUS = 2.0
 PORT_RADIUS = 3.2
-OUTPUT_BACKPLATE_RADIUS = PORT_RADIUS + 0.65
+OUTPUT_RING_WIDTH = 0.65
+OUTPUT_BACKPLATE_RADIUS = RACK_PORT_RADIUS + OUTPUT_RING_WIDTH
 OUTPUT_BACKPLATE_FILL = "#39445f"
 OUTPUT_BACKPLATE_STROKE = "#c4cede"
+
+# Status lights sit beside their output jacks, facing the channel centre.
+# At a 6 mm centre offset a 2 mm light clears the enlarged backplate, its
+# paired light, and the panel edge by at least 0.25 mm.
+OUTPUT_LIGHT_OFFSET = 6.0
+STATUS_LIGHT_RADIUS = 1.0
 RAIL_WIDTH = 2.0
 OUTLINE_MARGIN = 2.0
 
@@ -326,6 +333,7 @@ def generate_header():
         f"constexpr float KNOB_LABEL_OFFSET = {KNOB_LABEL_OFFSET:.1f}f;",
         f"constexpr float PORT_LABEL_OFFSET = {PORT_LABEL_OFFSET:.1f}f;",
         f"constexpr float EVENT_LABEL_OFFSET = {EVENT_LABEL_OFFSET:.1f}f;",
+        f"constexpr float OUTPUT_LIGHT_OFFSET = {OUTPUT_LIGHT_OFFSET:.1f}f;",
         f"constexpr float ARROW_UP_BASE_FACTOR = {_fmt(arrow_up_base)}f;",
         f"constexpr float ARROW_UP_TIP_FACTOR = {_fmt(arrow_up_tip)}f;",
         f"constexpr float ARROW_DOWN_BASE_FACTOR = {_fmt(arrow_down_base)}f;",

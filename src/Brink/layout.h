@@ -26,6 +26,7 @@ constexpr int CHANNEL_B_ACCENT_B = 54;
 constexpr float KNOB_LABEL_OFFSET = 5.5f;
 constexpr float PORT_LABEL_OFFSET = 5.5f;
 constexpr float EVENT_LABEL_OFFSET = 5.5f;
+constexpr float OUTPUT_LIGHT_OFFSET = 6.0f;
 constexpr float ARROW_UP_BASE_FACTOR = 0.50f;
 constexpr float ARROW_UP_TIP_FACTOR = -0.50f;
 constexpr float ARROW_DOWN_BASE_FACTOR = -0.50f;

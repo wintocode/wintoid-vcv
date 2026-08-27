@@ -164,6 +164,30 @@ class BrinkPanelTest(unittest.TestCase):
                 clearance = offset - radius - half_text_height
                 self.assertGreaterEqual(clearance, minimum_gap_mm)
 
+    def test_status_lights_clear_jacks_backplates_and_each_other(self):
+        self.assertEqual(6.0, self.panel.OUTPUT_LIGHT_OFFSET)
+        self.assertEqual(1.0, self.panel.STATUS_LIGHT_RADIUS)
+
+        light_to_backplate = (
+            self.panel.OUTPUT_LIGHT_OFFSET
+            - self.panel.OUTPUT_BACKPLATE_RADIUS
+            - self.panel.STATUS_LIGHT_RADIUS
+        )
+        self.assertGreaterEqual(light_to_backplate, 0.25)
+
+        paired_light_gap = (
+            2.0 * self.panel.PAIR_OFFSET
+            - 2.0 * self.panel.OUTPUT_LIGHT_OFFSET
+            - 2.0 * self.panel.STATUS_LIGHT_RADIUS
+        )
+        self.assertGreaterEqual(paired_light_gap, 0.25)
+
+        for logic_x in self.panel.LOGIC_X:
+            with self.subTest(x=logic_x):
+                right_edge = (logic_x + self.panel.OUTPUT_LIGHT_OFFSET
+                              + self.panel.STATUS_LIGHT_RADIUS)
+                self.assertLessEqual(right_edge, self.panel.WIDTH_MM)
+
     def test_direction_arrow_tips_match_crossing_direction(self):
         arrow_offsets = getattr(self.panel, "direction_arrow_y_offsets", None)
         self.assertIsNotNone(arrow_offsets)
