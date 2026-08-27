@@ -18,6 +18,20 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 MODULES = ("Four", "Vortex", "Brink")
 
 
+def extract_struct(source, marker):
+    start = source.index(marker)
+    brace = source.index("{", start)
+    depth = 0
+    for index in range(brace, len(source)):
+        if source[index] == "{":
+            depth += 1
+        elif source[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return source[start:index + 1]
+    raise AssertionError(f"unterminated struct: {marker}")
+
+
 class MetaModuleGraphicsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -29,35 +43,57 @@ class MetaModuleGraphicsTest(unittest.TestCase):
             ROOT / "docs" / "metamodule-compatibility.md"
         ).read_text()
 
+    def test_extract_struct_handles_nested_braces(self):
+        source = (
+            "struct Demo { void run() { if (true) { int value = 1; } } }; "
+            "struct Next { int value; };"
+        )
+        body = extract_struct(source, "struct Demo")
+        self.assertIn("if (true) { int value = 1; }", body)
+        self.assertNotIn("struct Next", body)
+
     def test_compatibility_doc_records_png_faceplate_handoff(self):
         self.assertIn("assets/*.png", self.compatibility)
         self.assertIn("240 px", self.compatibility)
         self.assertIn("does not render `res/*.svg`", self.compatibility)
         self.assertIn("SvgToPng.py", self.compatibility)
 
-    def test_modules_include_and_consume_the_geometry_helpers(self):
-        for name in MODULES:
-            with self.subTest(module=name):
-                source = self.sources[name]
-                self.assertIn('#include "../ui_geometry.h"', source)
-                self.assertIn("wintoid::ui::", source)
+    def test_custom_widgets_keep_drawing_on_layer_one_and_use_geometry_helpers(self):
+        widgets = (
+            ("Four", "struct AlgoDisplay"),
+            ("Four", "struct FoldTypeDisplay"),
+            ("Vortex", "struct ModeDisplay"),
+            ("Brink", "struct WindowRail"),
+        )
 
-    def test_algo_and_mode_displays_select_the_supported_font(self):
-        for name, marker in (("Four", "struct AlgoDisplay"),
-                             ("Vortex", "struct ModeDisplay")):
-            with self.subTest(module=name):
-                source = self.sources[name]
-                start = source.index(marker)
-                end = source.index("void onButton", start)
-                display = source[start:end]
-                self.assertIn("res/fonts/DejaVuSans.ttf", display)
-                self.assertIn("nvgFontFaceId", display)
+        for name, marker in widgets:
+            with self.subTest(module=name, widget=marker):
+                body = extract_struct(self.sources[name], marker)
+                self.assertIn("drawLayer", body)
+                self.assertIn("layer != 1", body)
+                self.assertIn("wintoid::ui::", body)
 
-    def test_custom_displays_keep_drawing_on_layer_one(self):
-        for name in MODULES:
-            with self.subTest(module=name):
-                self.assertIn("drawLayer", self.sources[name])
-                self.assertIn("layer != 1", self.sources[name])
+    def test_custom_widgets_select_the_supported_font(self):
+        widgets = (
+            ("Four", "struct AlgoDisplay"),
+            ("Four", "struct FoldTypeDisplay"),
+            ("Vortex", "struct ModeDisplay"),
+            ("Brink", "struct WindowRail"),
+        )
+
+        for name, marker in widgets[:3]:
+            with self.subTest(module=name, widget=marker):
+                body = extract_struct(self.sources[name], marker)
+                self.assertIn("res/fonts/DejaVuSans.ttf", body)
+                self.assertIn("nvgFontFaceId", body)
+                self.assertIn("stroke_inset", body)
+                self.assertIn("inset_extent", body)
+
+    def test_window_rail_uses_all_stroke_geometry_helpers(self):
+        rail = extract_struct(self.sources["Brink"], "struct WindowRail")
+        for helper in ("clamp_stroke_center", "stroke_inset", "inset_extent"):
+            with self.subTest(helper=helper):
+                self.assertIn(helper, rail)
 
     def test_no_display_rectangle_uses_the_full_box_form(self):
         full_box = "nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y,"
