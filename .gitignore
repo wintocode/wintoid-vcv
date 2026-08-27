@@ -15,3 +15,5 @@ plugin.so
 *.o
 dep/
 ._*
+
+.superpowers/

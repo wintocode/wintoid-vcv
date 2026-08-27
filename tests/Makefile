@@ -1,7 +1,7 @@
 CC := c++
 CFLAGS := -std=c++11 -Wall -Wextra -g -fsanitize=address,undefined
 
-all: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_brink_panel test_panel_output_style test_polyphony_metadata
+all: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_brink_panel test_panel_output_style test_polyphony_metadata test_repository_hygiene
 
 test_four_dsp: test_four_dsp.cpp ../src/Four/dsp.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
@@ -27,7 +27,10 @@ test_panel_output_style:
 test_polyphony_metadata:
 	python3 test_polyphony_metadata.py
 
-run: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_brink_panel test_panel_output_style test_polyphony_metadata
+test_repository_hygiene:
+	python3 test_repository_hygiene.py
+
+run: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_brink_panel test_panel_output_style test_polyphony_metadata test_repository_hygiene
 	./test_four_dsp
 	./test_four_engine
 	./test_vortex_dsp
@@ -36,8 +39,9 @@ run: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphon
 	python3 test_brink_panel.py
 	python3 test_panel_output_style.py
 	python3 test_polyphony_metadata.py
+	python3 test_repository_hygiene.py
 
 clean:
 	rm -f test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony
 
-.PHONY: all run clean test_brink_panel test_panel_output_style test_polyphony_metadata
+.PHONY: all run clean test_brink_panel test_panel_output_style test_polyphony_metadata test_repository_hygiene
