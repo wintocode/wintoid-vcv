@@ -17,3 +17,6 @@ dep/
 ._*
 
 .superpowers/
+tests/test_brink_dsp
+tests/test_polyphony
+tests/test_ui_geometry
