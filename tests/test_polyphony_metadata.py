@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 manifest = json.loads((ROOT / "plugin.json").read_text(encoding="utf-8"))
 modules = {module["name"]: module for module in manifest["modules"]}
 
-assert manifest["version"] == "2.2.0"
+assert manifest["version"] == "2.2.1"
 for name in ("Four", "Vortex"):
     assert "Polyphonic" in modules[name]["tags"]
     assert "16-channel polyphonic" in modules[name]["description"].lower()
