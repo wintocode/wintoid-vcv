@@ -8,6 +8,10 @@ constexpr float PANEL_WIDTH  = 132.08f;
 constexpr float PANEL_HEIGHT = 128.5f;
 
 // Label positions (for NanoVG rendering)
+constexpr float TITLE_Y = 8.0f;
+constexpr float LOGO_BASELINE_Y = 124.5f;
+constexpr float LOGO_UNDERLINE_OFFSET = 2.5f;
+constexpr float LOGO_FONT_SIZE = 10.0f;
 constexpr float LABEL_COL_X   = 17.0f;
 constexpr float OP_HEADER_Y   = 46.0f;
 

@@ -6,7 +6,11 @@ namespace vortex_layout {
 
 constexpr float PANEL_WIDTH  = 30.48f;
 constexpr float PANEL_HEIGHT = 128.5f;
+constexpr float TITLE_Y = 8.0f;
+constexpr float LOGO_BASELINE_Y = 124.5f;
+constexpr float LOGO_UNDERLINE_OFFSET = 2.5f;
 constexpr float LOGO_FONT_SIZE = 10.0f;
+constexpr float KNOB_LABEL_OFFSET = 6.0f;
 constexpr float AUDIO_LABEL_OFFSET = 5.0f;
 
 // Mode display (Y matches Four ALGO_DISPLAY_Y)

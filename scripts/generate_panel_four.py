@@ -40,7 +40,11 @@ TOGGLE_H = 5.0              # CKSS half-height
 #  Vertical layout
 # ─────────────────────────────────────────────────────────────
 
-Y_TITLE = 6.5
+# Shared visual reservations used by the NanoVG widget.
+Y_TITLE = 8.0
+LOGO_BASELINE_Y = 124.5
+LOGO_UNDERLINE_OFFSET = 2.5
+LOGO_FONT_SIZE = 10.0
 Y_ALGO = 16.0
 Y_GLOBAL_ROW1 = 26.0       # V/Oct, Fine, VCA, Main
 Y_GLOBAL_ROW2 = 36.0       # XM, FM
@@ -226,6 +230,10 @@ def generate_coords_header():
 
     # Label layout constants (for NanoVG text rendering)
     lines.append('// Label positions (for NanoVG rendering)')
+    lines.append(f'constexpr float TITLE_Y = {Y_TITLE:.1f}f;')
+    lines.append(f'constexpr float LOGO_BASELINE_Y = {LOGO_BASELINE_Y:.1f}f;')
+    lines.append(f'constexpr float LOGO_UNDERLINE_OFFSET = {LOGO_UNDERLINE_OFFSET:.1f}f;')
+    lines.append(f'constexpr float LOGO_FONT_SIZE = {LOGO_FONT_SIZE:.1f}f;')
     lines.append(f'constexpr float LABEL_COL_X   = {LABEL_COL_X:.1f}f;')
     lines.append(f'constexpr float OP_HEADER_Y   = {Y_OP_HEADER:.1f}f;')
     lines.append('')

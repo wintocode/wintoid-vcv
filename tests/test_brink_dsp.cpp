@@ -143,10 +143,14 @@ TEST(concurrent_snapshot_never_accepts_torn_frames)
     const int publications = 200000;
     std::atomic<bool> done(false);
     std::atomic<bool> readerReady(false);
+    std::atomic<bool> publicationPhaseActive(false);
+    std::atomic<bool> readerObservedPublicationPhase(false);
     std::atomic<int> violations(0);
     std::atomic<int> accepted(0);
 
     std::thread reader([&snapshot, &done, &readerReady,
+                        &publicationPhaseActive,
+                        &readerObservedPublicationPhase,
                         &violations, &accepted]() {
         const brink::WindowDisplayFrame initialFrame = snapshot.load();
         ++accepted;
@@ -156,6 +160,17 @@ TEST(concurrent_snapshot_never_accepts_torn_frames)
             ++violations;
         }
         readerReady.store(true, std::memory_order_release);
+
+        while (!publicationPhaseActive.load(std::memory_order_acquire)) {}
+
+        const brink::WindowDisplayFrame postPhaseFrame = snapshot.load();
+        ++accepted;
+        if (postPhaseFrame.center - postPhaseFrame.signal != 1000000.f
+            || postPhaseFrame.lower - postPhaseFrame.signal != 2000000.f
+            || postPhaseFrame.upper - postPhaseFrame.signal != 3000000.f) {
+            ++violations;
+        }
+        readerObservedPublicationPhase.store(true, std::memory_order_release);
 
         while (!done.load(std::memory_order_acquire)) {
             const brink::WindowDisplayFrame frame = snapshot.load();
@@ -170,7 +185,8 @@ TEST(concurrent_snapshot_never_accepts_torn_frames)
 
     while (!readerReady.load(std::memory_order_acquire)) {}
 
-    std::thread writer([&snapshot]() {
+    std::thread writer([&snapshot, &publicationPhaseActive,
+                        &readerObservedPublicationPhase]() {
         for (int i = 0; i < publications; ++i) {
             const float value = static_cast<float>(i % 1000000);
             brink::WindowFrame frame;
@@ -179,10 +195,21 @@ TEST(concurrent_snapshot_never_accepts_torn_frames)
             frame.lower = value + 2000000.f;
             frame.upper = value + 3000000.f;
             snapshot.store(frame);
+
+            if (i == 0) {
+                // The first store has entered the publication phase. Keep
+                // the loop in progress until the reader acknowledges a
+                // subsequent load.
+                publicationPhaseActive.store(true, std::memory_order_release);
+                while (!readerObservedPublicationPhase.load(
+                    std::memory_order_acquire)) {}
+            }
         }
+        publicationPhaseActive.store(false, std::memory_order_release);
     });
 
     writer.join();
+    ASSERT(readerObservedPublicationPhase.load(std::memory_order_acquire));
     done.store(true, std::memory_order_release);
     reader.join();
 

@@ -47,6 +47,35 @@ class PanelLabelTest(unittest.TestCase):
         self.assertIn("constexpr float GLOBAL_KNOB_LABEL_OFFSET = 5.0f;", header)
         self.assertIn("constexpr float GLOBAL_PORT_LABEL_OFFSET = 5.1f;", header)
 
+    def test_four_emits_and_consumes_label_geometry_constants(self):
+        self.assertEqual(8.0, self.four.Y_TITLE)
+        self.assertEqual(124.5, self.four.LOGO_BASELINE_Y)
+        self.assertEqual(2.5, self.four.LOGO_UNDERLINE_OFFSET)
+        self.assertEqual(10.0, self.four.LOGO_FONT_SIZE)
+
+        header = self.four.generate_coords_header()
+        self.assertIn("constexpr float TITLE_Y = 8.0f;", header)
+        self.assertIn("constexpr float LOGO_BASELINE_Y = 124.5f;", header)
+        self.assertIn(
+            "constexpr float LOGO_UNDERLINE_OFFSET = 2.5f;",
+            header,
+        )
+        self.assertIn("constexpr float LOGO_FONT_SIZE = 10.0f;", header)
+
+        for expression in (
+            "mm2px(TITLE_Y)",
+            "mm2px(LOGO_BASELINE_Y)",
+            "mm2px(LOGO_UNDERLINE_OFFSET)",
+            "nvgFontSize(args.vg, LOGO_FONT_SIZE)",
+        ):
+            with self.subTest(expression=expression):
+                self.assertIn(expression, self.four_source)
+
+        self.assertNotIn("mm2px(8.0f)", self.four_source)
+        self.assertNotIn("mm2px(124.5f)", self.four_source)
+        self.assertNotIn("mm2px(2.5f)", self.four_source)
+        self.assertNotIn("nvgFontSize(args.vg, 10)", self.four_source)
+
     def test_four_consumes_generated_offsets_and_labels_its_output(self):
         self.assertIn("mm2px(GLOBAL_KNOB_LABEL_OFFSET)", self.four_source)
         self.assertIn("mm2px(GLOBAL_PORT_LABEL_OFFSET)", self.four_source)
@@ -94,13 +123,48 @@ class PanelLabelTest(unittest.TestCase):
         self.assertIn("constexpr float LOGO_FONT_SIZE = 10.0f;",
                       self.vortex.generate_coords_header())
 
+    def test_vortex_emits_and_consumes_label_geometry_constants(self):
+        self.assertEqual(8.0, self.vortex.TITLE_Y)
+        self.assertEqual(124.5, self.vortex.LOGO_BASELINE_Y)
+        self.assertEqual(2.5, self.vortex.LOGO_UNDERLINE_OFFSET)
+        self.assertEqual(6.0, self.vortex.KNOB_LABEL_OFFSET)
+
+        header = self.vortex.generate_coords_header()
+        self.assertIn("constexpr float TITLE_Y = 8.0f;", header)
+        self.assertIn("constexpr float LOGO_BASELINE_Y = 124.5f;", header)
+        self.assertIn(
+            "constexpr float LOGO_UNDERLINE_OFFSET = 2.5f;",
+            header,
+        )
+        self.assertIn("constexpr float KNOB_LABEL_OFFSET = 6.0f;", header)
+
+        for expression in (
+            "mm2px(TITLE_Y)",
+            "mm2px(LOGO_BASELINE_Y)",
+            "mm2px(LOGO_UNDERLINE_OFFSET)",
+            "CUTOFF_KNOB_Y - KNOB_LABEL_OFFSET",
+            "RESONANCE_KNOB_Y - KNOB_LABEL_OFFSET",
+            "DRIVE_KNOB_Y - KNOB_LABEL_OFFSET",
+        ):
+            with self.subTest(expression=expression):
+                self.assertIn(expression, self.vortex_source)
+
+        self.assertNotIn("mm2px(8.0f)", self.vortex_source)
+        self.assertNotIn("mm2px(124.5f)", self.vortex_source)
+        self.assertNotIn("mm2px(2.5f)", self.vortex_source)
+        self.assertNotIn("KNOB_Y - 6.0f", self.vortex_source)
+
     def test_all_logos_share_one_size(self):
-        # Four and Brink draw their logos at 10 px; Vortex follows its
-        # generated constant, so this pins all three to the same size.
-        for name in ("Four", "Brink"):
-            with self.subTest(module=name):
-                source = (ROOT / "src" / name / f"{name}.cpp").read_text()
-                self.assertIn("nvgFontSize(args.vg, 10);", source)
+        # Four and Vortex use their generated constants; Brink's existing
+        # source remains the third 10 px logo implementation.
+        self.assertEqual(10.0, self.four.LOGO_FONT_SIZE)
+        self.assertEqual(10.0, self.vortex.LOGO_FONT_SIZE)
+        self.assertIn("nvgFontSize(args.vg, LOGO_FONT_SIZE)",
+                      self.four_source)
+        self.assertIn("nvgFontSize(args.vg, LOGO_FONT_SIZE)",
+                      self.vortex_source)
+        brink_source = (ROOT / "src" / "Brink" / "Brink.cpp").read_text()
+        self.assertIn("nvgFontSize(args.vg, 10);", brink_source)
 
     def test_modules_do_not_draw_decorative_screws(self):
         for name in ("Four", "Vortex", "Brink"):

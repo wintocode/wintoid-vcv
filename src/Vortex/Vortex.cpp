@@ -366,7 +366,7 @@ struct PanelLabels : Widget {
         nvgFontSize(args.vg, 14);
         nvgFillColor(args.vg, nvgRGB(220, 220, 220));
         nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        nvgText(args.vg, mm2px(PANEL_WIDTH / 2), mm2px(8.0f), "Vortex", nullptr);
+        nvgText(args.vg, mm2px(PANEL_WIDTH / 2), mm2px(TITLE_Y), "Vortex", nullptr);
 
         // wintoid logo (bottom center on the screw-free panel)
         nvgFontSize(args.vg, LOGO_FONT_SIZE);
@@ -381,7 +381,7 @@ struct PanelLabels : Widget {
         float totalWidth = wintWidth + oidWidth;
 
         float logoX = mm2px(PANEL_WIDTH / 2) - totalWidth / 2;
-        float logoY = mm2px(124.5f);
+        float logoY = mm2px(LOGO_BASELINE_Y);
 
         nvgFillColor(args.vg, nvgRGB(255, 255, 255));
         nvgText(args.vg, logoX, logoY, "wint", nullptr);
@@ -389,7 +389,7 @@ struct PanelLabels : Widget {
         nvgFillColor(args.vg, nvgRGB(255, 77, 0));
         nvgText(args.vg, logoX + wintWidth, logoY, "oid", nullptr);
 
-        float lineY = logoY + mm2px(2.5f);
+        float lineY = logoY + mm2px(LOGO_UNDERLINE_OFFSET);
         nvgStrokeWidth(args.vg, 1.0f);
 
         nvgStrokeColor(args.vg, nvgRGBA(255, 255, 255, 200));
@@ -409,9 +409,9 @@ struct PanelLabels : Widget {
         nvgFillColor(args.vg, nvgRGB(180, 180, 180));
         nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
 
-        nvgText(args.vg, mm2px(CUTOFF_KNOB_X), mm2px(CUTOFF_KNOB_Y - 6.0f), "Cutoff", nullptr);
-        nvgText(args.vg, mm2px(RESONANCE_KNOB_X), mm2px(RESONANCE_KNOB_Y - 6.0f), "Reso", nullptr);
-        nvgText(args.vg, mm2px(DRIVE_KNOB_X), mm2px(DRIVE_KNOB_Y - 6.0f), "Drive", nullptr);
+        nvgText(args.vg, mm2px(CUTOFF_KNOB_X), mm2px(CUTOFF_KNOB_Y - KNOB_LABEL_OFFSET), "Cutoff", nullptr);
+        nvgText(args.vg, mm2px(RESONANCE_KNOB_X), mm2px(RESONANCE_KNOB_Y - KNOB_LABEL_OFFSET), "Reso", nullptr);
+        nvgText(args.vg, mm2px(DRIVE_KNOB_X), mm2px(DRIVE_KNOB_Y - KNOB_LABEL_OFFSET), "Drive", nullptr);
 
         // Audio I/O labels
         nvgFontSize(args.vg, 9);
