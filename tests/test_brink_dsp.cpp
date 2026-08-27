@@ -142,8 +142,33 @@ TEST(concurrent_snapshot_never_accepts_torn_frames)
 
     const int publications = 200000;
     std::atomic<bool> done(false);
+    std::atomic<bool> readerReady(false);
     std::atomic<int> violations(0);
     std::atomic<int> accepted(0);
+
+    std::thread reader([&snapshot, &done, &readerReady,
+                        &violations, &accepted]() {
+        const brink::WindowDisplayFrame initialFrame = snapshot.load();
+        ++accepted;
+        if (initialFrame.center - initialFrame.signal != 1000000.f
+            || initialFrame.lower - initialFrame.signal != 2000000.f
+            || initialFrame.upper - initialFrame.signal != 3000000.f) {
+            ++violations;
+        }
+        readerReady.store(true, std::memory_order_release);
+
+        while (!done.load(std::memory_order_acquire)) {
+            const brink::WindowDisplayFrame frame = snapshot.load();
+            ++accepted;
+            if (frame.center - frame.signal != 1000000.f
+                || frame.lower - frame.signal != 2000000.f
+                || frame.upper - frame.signal != 3000000.f) {
+                ++violations;
+            }
+        }
+    });
+
+    while (!readerReady.load(std::memory_order_acquire)) {}
 
     std::thread writer([&snapshot]() {
         for (int i = 0; i < publications; ++i) {
@@ -154,18 +179,6 @@ TEST(concurrent_snapshot_never_accepts_torn_frames)
             frame.lower = value + 2000000.f;
             frame.upper = value + 3000000.f;
             snapshot.store(frame);
-        }
-    });
-
-    std::thread reader([&snapshot, &done, &violations, &accepted]() {
-        while (!done.load(std::memory_order_acquire)) {
-            const brink::WindowDisplayFrame frame = snapshot.load();
-            ++accepted;
-            if (frame.center - frame.signal != 1000000.f
-                || frame.lower - frame.signal != 2000000.f
-                || frame.upper - frame.signal != 3000000.f) {
-                ++violations;
-            }
         }
     });
 
