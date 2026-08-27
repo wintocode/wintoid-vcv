@@ -4,6 +4,7 @@ import unittest
 
 from panel_geometry import (
     centered_stroke_outer_radius,
+    centered_text_clearance,
     visible_output_material,
 )
 
@@ -19,6 +20,12 @@ class PanelGeometryTest(unittest.TestCase):
         self.assertAlmostEqual(
             0.725,
             visible_output_material(4.45, 0.55, 4.0),
+        )
+
+    def test_centered_text_clearance_reserves_half_the_font_height(self):
+        self.assertAlmostEqual(
+            0.50,
+            centered_text_clearance(5.5, 4.5, 6.0, 6.0),
         )
 
 

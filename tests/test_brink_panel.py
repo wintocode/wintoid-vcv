@@ -3,7 +3,10 @@ import pathlib
 import re
 import unittest
 
-from panel_geometry import centered_stroke_outer_radius
+from panel_geometry import (
+    centered_stroke_outer_radius,
+    centered_text_clearance,
+)
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -139,7 +142,7 @@ class BrinkPanelTest(unittest.TestCase):
         self.assertEqual(expected_header,
                          (ROOT / "src" / "Brink" / "layout.h").read_text())
 
-    def test_label_offsets_clear_the_actual_rack_widgets(self):
+    def test_input_and_knob_labels_clear_actual_rack_widgets(self):
         pixels_per_mm = 15.0 / 5.08
         minimum_gap_mm = 0.25
         cases = (
@@ -155,17 +158,43 @@ class BrinkPanelTest(unittest.TestCase):
                 23.7 / (2.0 * pixels_per_mm),
                 6.5 / (2.0 * pixels_per_mm),
             ),
-            (
-                "event port",
-                getattr(self.panel, "EVENT_LABEL_OFFSET", 0.0),
-                23.7 / (2.0 * pixels_per_mm),
-                6.0 / (2.0 * pixels_per_mm),
-            ),
         )
         for name, offset, radius, half_text_height in cases:
             with self.subTest(name=name):
                 clearance = offset - radius - half_text_height
                 self.assertGreaterEqual(clearance, minimum_gap_mm)
+
+    def test_output_labels_clear_the_complete_output_envelope(self):
+        output_outer_radius = centered_stroke_outer_radius(
+            self.panel.OUTPUT_BACKPLATE_RADIUS,
+            self.panel.OUTPUT_STROKE_WIDTH,
+        )
+        normal_clearance = centered_text_clearance(
+            self.panel.PORT_LABEL_OFFSET,
+            output_outer_radius,
+            6.5,
+            self.panel.PIXELS_PER_MM,
+        )
+        event_clearance = centered_text_clearance(
+            self.panel.EVENT_LABEL_OFFSET,
+            output_outer_radius,
+            self.panel.EVENT_LABEL_FONT_SIZE,
+            self.panel.PIXELS_PER_MM,
+        )
+        self.assertGreaterEqual(normal_clearance, 0.25)
+        self.assertGreaterEqual(event_clearance, 0.25)
+
+        event_half_height = (
+            self.panel.EVENT_LABEL_FONT_SIZE
+            / (2.0 * self.panel.PIXELS_PER_MM)
+        )
+        previous_ring_bottom = self.panel.Y_EVENTS_UP + output_outer_radius
+        down_label_top = (
+            self.panel.Y_EVENTS_DOWN
+            - self.panel.EVENT_LABEL_OFFSET
+            - event_half_height
+        )
+        self.assertGreaterEqual(down_label_top - previous_ring_bottom, 0.25)
 
     def test_channel_fields_align_with_sibling_module_displays(self):
         # Four's AlgoDisplay and Vortex's ModeDisplay are 8 mm tall centred

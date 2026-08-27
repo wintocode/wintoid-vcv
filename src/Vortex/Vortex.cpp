@@ -417,8 +417,8 @@ struct PanelLabels : Widget {
         nvgFontSize(args.vg, 9);
         nvgFillColor(args.vg, nvgRGB(180, 180, 180));
         nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
-        nvgText(args.vg, mm2px(AUDIO_IN_X), mm2px(AUDIO_IN_Y - 4.5f), "In", nullptr);
-        nvgText(args.vg, mm2px(AUDIO_OUT_X), mm2px(AUDIO_OUT_Y - 4.5f), "Out", nullptr);
+        nvgText(args.vg, mm2px(AUDIO_IN_X), mm2px(AUDIO_IN_Y - AUDIO_LABEL_OFFSET), "In", nullptr);
+        nvgText(args.vg, mm2px(AUDIO_OUT_X), mm2px(AUDIO_OUT_Y - AUDIO_LABEL_OFFSET), "Out", nullptr);
 
         Widget::drawLayer(args, layer);
     }

@@ -606,7 +606,7 @@ struct PanelLabels : Widget {
         };
         const char* eventLabels[] = {"LOW", "HIGH", "LOW", "HIGH"};
         const bool eventUp[] = {true, true, false, false};
-        nvgFontSize(args.vg, 6.f);
+        nvgFontSize(args.vg, brink_layout::EVENT_LABEL_FONT_SIZE);
         for (int channel = 0; channel < 2; ++channel) {
             const BrinkChannelLayout& layout = brinkChannelLayouts[channel];
             for (int event = 0; event < 4; ++event) {

@@ -32,6 +32,7 @@ OUTPUT_BACKPLATE_STROKE = '#dfe7f3'
 # The panels carry no decorative screw widgets, so the bottom-centre logo
 # can use the same 10 px size as Four and Brink.
 LOGO_FONT_SIZE = 10.0
+AUDIO_LABEL_OFFSET = 5.0
 
 # Vertical layout
 Y_MODE_DISPLAY = 16.0
@@ -140,6 +141,7 @@ def generate_coords_header():
     lines.append(f'constexpr float PANEL_WIDTH  = {WIDTH_MM:.2f}f;')
     lines.append(f'constexpr float PANEL_HEIGHT = {HEIGHT_MM:.1f}f;')
     lines.append(f'constexpr float LOGO_FONT_SIZE = {LOGO_FONT_SIZE:.1f}f;')
+    lines.append(f'constexpr float AUDIO_LABEL_OFFSET = {AUDIO_LABEL_OFFSET:.1f}f;')
     lines.append('')
 
     lines.append('// Mode display (Y matches Four ALGO_DISPLAY_Y)')

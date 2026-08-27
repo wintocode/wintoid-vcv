@@ -4,6 +4,8 @@ import importlib.util
 import pathlib
 import unittest
 
+from panel_geometry import centered_stroke_outer_radius
+
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PIXELS_PER_MM = 15.0 / 5.08
@@ -58,6 +60,34 @@ class PanelLabelTest(unittest.TestCase):
             main_output_x + self.four.GLOBAL_PORT_LABEL_OFFSET + 7.0
         )
         self.assertLessEqual(conservative_right_edge, self.four.WIDTH_MM)
+
+    def test_four_output_label_clears_the_complete_ring(self):
+        outer_radius = centered_stroke_outer_radius(
+            self.four.OUTPUT_BACKPLATE_RADIUS,
+            self.four.OUTPUT_STROKE_WIDTH,
+        )
+        self.assertGreaterEqual(
+            self.four.GLOBAL_PORT_LABEL_OFFSET - outer_radius,
+            0.25,
+        )
+
+    def test_vortex_audio_labels_clear_the_complete_ring(self):
+        outer_radius = centered_stroke_outer_radius(
+            self.vortex.OUTPUT_BACKPLATE_RADIUS,
+            self.vortex.OUTPUT_STROKE_WIDTH,
+        )
+        self.assertGreaterEqual(
+            self.vortex.AUDIO_LABEL_OFFSET - outer_radius,
+            0.25,
+        )
+
+        vortex_header = self.vortex.generate_coords_header()
+        self.assertIn(
+            "constexpr float AUDIO_LABEL_OFFSET = 5.0f;",
+            vortex_header,
+        )
+        self.assertIn("AUDIO_IN_Y - AUDIO_LABEL_OFFSET", self.vortex_source)
+        self.assertIn("AUDIO_OUT_Y - AUDIO_LABEL_OFFSET", self.vortex_source)
 
     def test_vortex_logo_font_size_is_generator_owned(self):
         self.assertEqual(10.0, self.vortex.LOGO_FONT_SIZE)

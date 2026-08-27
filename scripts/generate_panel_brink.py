@@ -85,8 +85,9 @@ OUTLINE_MARGIN = 2.0
 # Label baselines sit above their component centres.  These offsets leave at
 # least 0.25 mm between the text and the actual Rack component artwork.
 KNOB_LABEL_OFFSET = 5.5
-PORT_LABEL_OFFSET = 5.5
-EVENT_LABEL_OFFSET = 5.5
+PORT_LABEL_OFFSET = 6.35
+EVENT_LABEL_OFFSET = 6.0
+EVENT_LABEL_FONT_SIZE = 5.9
 
 
 def signal_marker_spec(channel):
@@ -336,8 +337,9 @@ def generate_header():
         f"constexpr int CHANNEL_B_ACCENT_G = {channel_b_rgb[1]};",
         f"constexpr int CHANNEL_B_ACCENT_B = {channel_b_rgb[2]};",
         f"constexpr float KNOB_LABEL_OFFSET = {KNOB_LABEL_OFFSET:.1f}f;",
-        f"constexpr float PORT_LABEL_OFFSET = {PORT_LABEL_OFFSET:.1f}f;",
+        f"constexpr float PORT_LABEL_OFFSET = {PORT_LABEL_OFFSET:.2f}f;",
         f"constexpr float EVENT_LABEL_OFFSET = {EVENT_LABEL_OFFSET:.1f}f;",
+        f"constexpr float EVENT_LABEL_FONT_SIZE = {EVENT_LABEL_FONT_SIZE:.1f}f;",
         f"constexpr float OUTPUT_LIGHT_OFFSET = {OUTPUT_LIGHT_OFFSET:.1f}f;",
         f"constexpr float ARROW_UP_BASE_FACTOR = {_fmt(arrow_up_base)}f;",
         f"constexpr float ARROW_UP_TIP_FACTOR = {_fmt(arrow_up_tip)}f;",
