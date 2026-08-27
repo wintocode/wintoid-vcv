@@ -25,6 +25,24 @@
 - Suggested commits below are checkpoints, not authorization to absorb unrelated user changes. Because several fixes overlap existing uncommitted Brink work, inspect `git diff --cached` before every commit and omit the commit if the owner has not authorized committing the current batch.
 - `git add -p` ignores untracked paths entirely: it prints "No changes." and stages nothing. Checkpoints below therefore stage every not-yet-tracked path with plain `git add` and reserve `git add -p` for paths Git already tracks. Staging the pre-existing untracked `tests/test_panel_output_style.py` commits its owner-authored content together with this plan's edits, so apply the owner-authorization rule above to that file specifically.
 
+### 2026-08-27 live-GUI outcome addendum
+
+The later Rack composite review superseded only the visual decisions listed
+below. The original steps remain as implementation history and must not be
+used to restore older constants:
+
+- All three modules intentionally omit decorative screw widgets.
+- Vortex keeps the shared 10 px portfolio logo because the screws are absent.
+- Brink's channel fields and their contained controls/ports moved down 1 mm;
+  IDs, DSP bindings, and patch compatibility did not change.
+- Output circles retain `OUTPUT_RING_WIDTH = 0.45` and use a centered 0.55 mm
+  `#dfe7f3` stroke. Their true outer margin is 0.725 mm because only half the
+  stroke extends outward.
+- The earlier 0.65 mm radius extension plus a centered 0.30 mm stroke would
+  leave only about 0.187 mm between a Brink ring and its 6 mm-offset light,
+  contradicting the 0.25 mm light-clearance requirement. The implemented
+  geometry resolves that conflict and is authoritative.
+
 ## Dependency order
 
 1. Protect the current worktree and contain the credential.
@@ -710,9 +728,10 @@ Load the development plugin in Rack and place Four, Vortex, and Brink next to ea
 Acceptance checklist:
 
 - Every output shows a continuous navy/light output ring outside the real jack; no input has that ring.
+- Output and light clearances use `circle radius + stroke width / 2`; no acceptance calculation counts the full centered stroke as outward material.
 - Four's only output reads `Out` without colliding with VCA or the panel edge.
 - Fine, VCA, XMod, V/Oct, and Ext PM labels have visibly stable gaps at all tested zooms.
-- Vortex's lower logo has visible clearance from both screw boxes and keeps its centered underline.
+- Vortex's 10 px lower logo is centered, fully visible, and keeps its two-colour underline on the screw-free panel.
 - All 16 Brink status lights are completely visible and do not touch a jack, output ring, another light, or the panel edge.
 - Brink's gate/event/logic labels remain associated with the correct ports after light movement.
 - Algo, Mode, and Fold borders have four complete edges; Brink rail tracks/ticks/boundaries/center/signal marks do not lose half a stroke at the top or bottom.
