@@ -355,7 +355,7 @@ struct PanelLabels : Widget {
         nvgText(args.vg, mm2px(PANEL_WIDTH / 2), mm2px(8.0f), "Vortex", nullptr);
 
         // wintoid logo (bottom center, between screws)
-        nvgFontSize(args.vg, 10);
+        nvgFontSize(args.vg, LOGO_FONT_SIZE);
         nvgTextAlign(args.vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
         float wintBounds[4];

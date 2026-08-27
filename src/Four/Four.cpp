@@ -594,15 +594,19 @@ struct PanelLabels : Widget {
         nvgFillColor(args.vg, nvgRGB(180, 180, 180));
         nvgTextAlign(args.vg, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
 
-        float knobOff = mm2px(4.0f);   // small knob radius + 1.5mm gap
+        const float knobOff = mm2px(GLOBAL_KNOB_LABEL_OFFSET);
+        const float portOff = mm2px(GLOBAL_PORT_LABEL_OFFSET);
         nvgText(args.vg, mm2px(FINE_TUNE_KNOB_X) - knobOff, mm2px(FINE_TUNE_KNOB_Y), "Fine", nullptr);
         nvgText(args.vg, mm2px(VCA_KNOB_X) - knobOff, mm2px(VCA_KNOB_Y), "VCA", nullptr);
 
-        float jackOff = mm2px(4.7f);   // jack radius + 1.5mm gap
-        nvgText(args.vg, mm2px(VOCT_JACK_X) - jackOff, mm2px(VOCT_JACK_Y), "V/Oct", nullptr);
+        nvgText(args.vg, mm2px(VOCT_JACK_X) - portOff, mm2px(VOCT_JACK_Y), "V/Oct", nullptr);
         nvgText(args.vg, mm2px(XM_KNOB_X) - knobOff, mm2px(XM_KNOB_Y), "XMod", nullptr);
         // Ext PM label: positioned left of jack
-        nvgText(args.vg, mm2px(FM_CV_JACK_X) - jackOff, mm2px(FM_CV_JACK_Y), "Ext PM", nullptr);
+        nvgText(args.vg, mm2px(FM_CV_JACK_X) - portOff, mm2px(FM_CV_JACK_Y), "Ext PM", nullptr);
+
+        // Main output label: left-aligned to the right of the output jack
+        nvgTextAlign(args.vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgText(args.vg, mm2px(MAIN_OUTPUT_X) + portOff, mm2px(MAIN_OUTPUT_Y), "Out", nullptr);
 
         // ── Operator column headers (centered over middle sub-column) ──
         nvgFontSize(args.vg, 11);
