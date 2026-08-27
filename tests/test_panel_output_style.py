@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUTPUT_FILL = "#39445f"
-OUTPUT_STROKE = "#c4cede"
+OUTPUT_STROKE = "#dfe7f3"
 RACK_PIXELS_PER_MM = 15.0 / 5.08
 RACK_PORT_RADIUS_MM = 23.7 / (2.0 * RACK_PIXELS_PER_MM)
 MINIMUM_VISIBLE_OUTPUT_RING_MM = 0.60
@@ -47,10 +47,12 @@ class PanelOutputStyleTest(unittest.TestCase):
         circle = circle_at(circles, coordinate)
         self.assertEqual(OUTPUT_FILL, circle.attrib["fill"])
         self.assertEqual(OUTPUT_STROKE, circle.attrib["stroke"])
-        self.assertGreaterEqual(
-            float(circle.attrib["r"]) - RACK_PORT_RADIUS_MM,
-            MINIMUM_VISIBLE_OUTPUT_RING_MM,
+        stroke_width = float(circle.attrib["stroke-width"])
+        visible_material_mm = (
+            float(circle.attrib["r"]) - RACK_PORT_RADIUS_MM + stroke_width
         )
+        self.assertGreaterEqual(
+            visible_material_mm, MINIMUM_VISIBLE_OUTPUT_RING_MM)
 
     def assert_input_style(self, circles, coordinate):
         circle = circle_at(circles, coordinate)

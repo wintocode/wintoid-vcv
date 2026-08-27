@@ -23,10 +23,11 @@ JACK_RADIUS = 3.2           # PJ301MPort (structural guide)
 TRIMPOT_RADIUS = 2.0
 PIXELS_PER_MM = 15.0 / 5.08
 RACK_PORT_RADIUS = 23.7 / (2.0 * PIXELS_PER_MM)
-OUTPUT_RING_WIDTH = 0.65
+OUTPUT_RING_WIDTH = 0.45
+OUTPUT_STROKE_WIDTH = 0.55
 OUTPUT_BACKPLATE_RADIUS = RACK_PORT_RADIUS + OUTPUT_RING_WIDTH
 OUTPUT_BACKPLATE_FILL = '#39445f'
-OUTPUT_BACKPLATE_STROKE = '#c4cede'
+OUTPUT_BACKPLATE_STROKE = '#dfe7f3'
 
 # The panels carry no decorative screw widgets, so the bottom-centre logo
 # can use the same 10 px size as Four and Brink.
@@ -58,26 +59,26 @@ def _format_coordinate(value):
     return formatted
 
 
-def _circle(x, y, r, fill, stroke):
+def _circle(x, y, r, fill, stroke, width='0.3'):
     return (f'  <circle cx="{_format_coordinate(x)}" cy="{y:.1f}" r="{r}" '
-            f'fill="{fill}" stroke="{stroke}" stroke-width="0.3" />')
+            f'fill="{fill}" stroke="{stroke}" stroke-width="{width}" />')
 
 
 def component_style(name):
     """Return the structural guide style for a named component."""
     if name == 'audio_out':
         return (OUTPUT_BACKPLATE_RADIUS, OUTPUT_BACKPLATE_FILL,
-                OUTPUT_BACKPLATE_STROKE)
+                OUTPUT_BACKPLATE_STROKE, OUTPUT_STROKE_WIDTH)
     if name in ('audio_in', 'cv_jack'):
-        return JACK_RADIUS, '#222', '#888'
+        return JACK_RADIUS, '#222', '#888', '0.3'
     if name == 'cv_atten':
-        return TRIMPOT_RADIUS, '#333', '#666'
-    return KNOB_RADIUS, '#333', '#aaa'
+        return TRIMPOT_RADIUS, '#333', '#666', '0.3'
+    return KNOB_RADIUS, '#333', '#aaa', '0.3'
 
 
 def _append_control(lines, name, x, y):
-    radius, fill, stroke = component_style(name)
-    lines.append(_circle(x, y, radius, fill, stroke))
+    radius, fill, stroke, width = component_style(name)
+    lines.append(_circle(x, y, radius, fill, stroke, width))
 
 
 def generate_svg():

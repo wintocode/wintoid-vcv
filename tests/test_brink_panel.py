@@ -174,9 +174,12 @@ class BrinkPanelTest(unittest.TestCase):
         self.assertEqual(6.0, self.panel.OUTPUT_LIGHT_OFFSET)
         self.assertEqual(1.0, self.panel.STATUS_LIGHT_RADIUS)
 
+        # The backplate's stroke is painted half inside and half outside the
+        # fill radius, so the stroke width counts against the light gap.
         light_to_backplate = (
             self.panel.OUTPUT_LIGHT_OFFSET
-            - self.panel.OUTPUT_BACKPLATE_RADIUS
+            - (self.panel.OUTPUT_BACKPLATE_RADIUS
+               + self.panel.OUTPUT_STROKE_WIDTH / 2.0)
             - self.panel.STATUS_LIGHT_RADIUS
         )
         self.assertGreaterEqual(light_to_backplate, 0.25)

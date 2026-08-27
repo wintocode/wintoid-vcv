@@ -68,10 +68,11 @@ CHANNEL_B_RIGHT_X = CHANNEL_B_X + PAIR_OFFSET
 SMALL_KNOB_RADIUS = 2.5
 TRIMPOT_RADIUS = 2.0
 PORT_RADIUS = 3.2
-OUTPUT_RING_WIDTH = 0.65
+OUTPUT_RING_WIDTH = 0.45
+OUTPUT_STROKE_WIDTH = 0.55
 OUTPUT_BACKPLATE_RADIUS = RACK_PORT_RADIUS + OUTPUT_RING_WIDTH
 OUTPUT_BACKPLATE_FILL = "#39445f"
-OUTPUT_BACKPLATE_STROKE = "#c4cede"
+OUTPUT_BACKPLATE_STROKE = "#dfe7f3"
 
 # Status lights sit beside their output jacks, facing the channel centre.
 # At a 6 mm centre offset a 2 mm light clears the enlarged backplate, its
@@ -191,10 +192,10 @@ def direction_arrow_y_offsets(up):
     return direction * 0.5, -direction * 0.5
 
 
-def _circle(x, y, radius, fill, stroke):
+def _circle(x, y, radius, fill, stroke, width=0.30):
     return (
         f'  <circle cx="{_fmt(x)}" cy="{_fmt(y)}" r="{_fmt(radius)}" '
-        f'fill="{fill}" stroke="{stroke}" stroke-width="0.30" />'
+        f'fill="{fill}" stroke="{stroke}" stroke-width="{_fmt(width)}" />'
     )
 
 
@@ -222,12 +223,12 @@ def is_output_component(name):
 def _component_style(name):
     if is_output_component(name):
         return (OUTPUT_BACKPLATE_RADIUS, OUTPUT_BACKPLATE_FILL,
-                OUTPUT_BACKPLATE_STROKE)
+                OUTPUT_BACKPLATE_STROKE, OUTPUT_STROKE_WIDTH)
     if "_ATTEN" in name:
-        return TRIMPOT_RADIUS, "#30364d", "#68718e"
+        return TRIMPOT_RADIUS, "#30364d", "#68718e", 0.30
     if any(token in name for token in ("_KNOB",)):
-        return SMALL_KNOB_RADIUS, "#30364d", "#aab3c8"
-    return PORT_RADIUS, "#202538", "#77819c"
+        return SMALL_KNOB_RADIUS, "#30364d", "#aab3c8", 0.30
+    return PORT_RADIUS, "#202538", "#77819c", 0.30
 
 
 def generate_svg():
@@ -293,8 +294,8 @@ def generate_svg():
     # panel artwork.  NanoVG labels, lights, and active rail markers are
     # supplied by the widget.
     for name, x, y in COMPONENTS:
-        radius, fill, stroke = _component_style(name)
-        lines.append(_circle(x, y, radius, fill, stroke))
+        radius, fill, stroke, width = _component_style(name)
+        lines.append(_circle(x, y, radius, fill, stroke, width))
 
     lines.append('</svg>')
     return "\n".join(lines)

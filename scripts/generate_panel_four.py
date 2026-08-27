@@ -28,10 +28,11 @@ SMALL_KNOB_RADIUS = 2.5    # RoundSmallBlackKnob / Trimpot
 JACK_RADIUS = 3.2           # PJ301MPort (structural guide)
 PIXELS_PER_MM = 15.0 / 5.08
 RACK_PORT_RADIUS = 23.7 / (2.0 * PIXELS_PER_MM)
-OUTPUT_RING_WIDTH = 0.65
+OUTPUT_RING_WIDTH = 0.45
+OUTPUT_STROKE_WIDTH = 0.55
 OUTPUT_BACKPLATE_RADIUS = RACK_PORT_RADIUS + OUTPUT_RING_WIDTH
 OUTPUT_BACKPLATE_FILL = '#39445f'
-OUTPUT_BACKPLATE_STROKE = '#c4cede'
+OUTPUT_BACKPLATE_STROKE = '#dfe7f3'
 TOGGLE_W = 2.5              # CKSS half-width
 TOGGLE_H = 5.0              # CKSS half-height
 
@@ -111,9 +112,9 @@ CV_ROWS = [1, 2, 3, 4]
 #  SVG generation
 # ─────────────────────────────────────────────────────────────
 
-def _circle(x, y, r, fill, stroke):
+def _circle(x, y, r, fill, stroke, width='0.3'):
     return (f'  <circle cx="{x:.1f}" cy="{y:.1f}" r="{r}" '
-            f'fill="{fill}" stroke="{stroke}" stroke-width="0.3" />')
+            f'fill="{fill}" stroke="{stroke}" stroke-width="{width}" />')
 
 
 def _rect(x, y, w, h, fill, stroke):
@@ -130,12 +131,12 @@ def component_style(name):
     """Return the structural guide style for a named component."""
     if name == 'main_output':
         return (OUTPUT_BACKPLATE_RADIUS, OUTPUT_BACKPLATE_FILL,
-                OUTPUT_BACKPLATE_STROKE)
+                OUTPUT_BACKPLATE_STROKE, OUTPUT_STROKE_WIDTH)
     if 'jack' in name:
-        return JACK_RADIUS, '#222', '#888'
+        return JACK_RADIUS, '#222', '#888', '0.3'
     if 'atten' in name:
-        return SMALL_KNOB_RADIUS, '#333', '#666'
-    return SMALL_KNOB_RADIUS, '#333', '#aaa'
+        return SMALL_KNOB_RADIUS, '#333', '#666', '0.3'
+    return SMALL_KNOB_RADIUS, '#333', '#aaa', '0.3'
 
 
 def generate_svg():
@@ -159,8 +160,8 @@ def generate_svg():
     for name, (x, y) in GLOBAL_CONTROLS.items():
         if name == 'algo_display':
             continue
-        r, fill, stroke = component_style(name)
-        lines.append(_circle(x, y, r, fill, stroke))
+        r, fill, stroke, width = component_style(name)
+        lines.append(_circle(x, y, r, fill, stroke, width))
 
     # ── Operator section ──
 
@@ -196,8 +197,8 @@ def generate_svg():
             else:
                 # CV rows: knob + jack + atten
                 lines.append(_circle(kx, y, SMALL_KNOB_RADIUS, '#333', '#aaa'))
-                jack_r, jack_fill, jack_stroke = component_style('operator_cv_jack')
-                lines.append(_circle(mx, y, jack_r, jack_fill, jack_stroke))
+                jack_r, jack_fill, jack_stroke, jack_w = component_style('operator_cv_jack')
+                lines.append(_circle(mx, y, jack_r, jack_fill, jack_stroke, jack_w))
                 lines.append(_circle(rx, y, SMALL_KNOB_RADIUS, '#333', '#666'))
 
     lines.append('</svg>')
