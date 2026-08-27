@@ -20,18 +20,22 @@ CHANNEL_A_X = WIDTH_MM / 4
 CHANNEL_B_X = WIDTH_MM * 3 / 4
 LOGIC_X = (8.0, 23.0, 38.0, 53.0)
 
-# Fixed vertical layout, in millimetres
-Y_CHANNEL_HEADER = 15.0
-Y_KNOBS = 24.0
-Y_SIGNAL_POSITION = 38.0
-Y_CENTER_CV = 50.0
-Y_WIDTH_CV = 62.0
-Y_STATE_GATES = 74.0
-Y_EVENTS_UP = 88.0
-Y_EVENTS_DOWN = 100.0
+# Fixed vertical layout, in millimetres.  The channel fields top out at
+# 12.0 mm so their upper edge lines up with Four's AlgoDisplay and
+# Vortex's ModeDisplay (8 mm tall, centred at 16.0 mm); everything inside
+# the fields shifts with that anchor.  The title and the shared logic row
+# keep the positions shared with the other panels.
+Y_CHANNEL_HEADER = 16.0
+Y_KNOBS = 25.0
+Y_SIGNAL_POSITION = 39.0
+Y_CENTER_CV = 51.0
+Y_WIDTH_CV = 63.0
+Y_STATE_GATES = 75.0
+Y_EVENTS_UP = 89.0
+Y_EVENTS_DOWN = 101.0
 Y_LOGIC = 114.0
-CHANNEL_FIELD_TOP = 11.0
-CHANNEL_FIELD_BOTTOM = 106.0
+CHANNEL_FIELD_TOP = 12.0
+CHANNEL_FIELD_BOTTOM = 107.0
 
 # Shared visual reservations used by the NanoVG widget
 TITLE_Y = 8.0

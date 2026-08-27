@@ -10,8 +10,6 @@ PIXELS_PER_MM = 15.0 / 5.08
 RACK_SMALL_KNOB_RADIUS_MM = 22.67581 / (2.0 * PIXELS_PER_MM)
 RACK_PORT_RADIUS_MM = 23.7 / (2.0 * PIXELS_PER_MM)
 MINIMUM_LABEL_CLEARANCE_MM = 1.0
-SCREW_BOX_PX = 15.0
-CONSERVATIVE_GLYPH_WIDTH_FACTOR = 3.2
 
 
 def load_generator(name):
@@ -62,21 +60,24 @@ class PanelLabelTest(unittest.TestCase):
         self.assertLessEqual(conservative_right_edge, self.four.WIDTH_MM)
 
     def test_vortex_logo_font_size_is_generator_owned(self):
-        self.assertEqual(8.5, self.vortex.LOGO_FONT_SIZE)
-        self.assertIn("constexpr float LOGO_FONT_SIZE = 8.5f;",
+        self.assertEqual(10.0, self.vortex.LOGO_FONT_SIZE)
+        self.assertIn("constexpr float LOGO_FONT_SIZE = 10.0f;",
                       self.vortex.generate_coords_header())
 
-    def test_vortex_logo_clears_the_lower_screw_boxes(self):
-        screw_box_mm = SCREW_BOX_PX / PIXELS_PER_MM
-        conservative_logo_width_mm = (
-            CONSERVATIVE_GLYPH_WIDTH_FACTOR * self.vortex.LOGO_FONT_SIZE
-            / PIXELS_PER_MM
-        )
-        gap_to_screw_box = (
-            self.vortex.WIDTH_MM / 2 - conservative_logo_width_mm / 2
-            - screw_box_mm
-        )
-        self.assertGreaterEqual(gap_to_screw_box, 0.4)
+    def test_all_logos_share_one_size(self):
+        # Four and Brink draw their logos at 10 px; Vortex follows its
+        # generated constant, so this pins all three to the same size.
+        for name in ("Four", "Brink"):
+            with self.subTest(module=name):
+                source = (ROOT / "src" / name / f"{name}.cpp").read_text()
+                self.assertIn("nvgFontSize(args.vg, 10);", source)
+
+    def test_modules_do_not_draw_decorative_screws(self):
+        for name in ("Four", "Vortex", "Brink"):
+            with self.subTest(module=name):
+                source = (ROOT / "src" / name / f"{name}.cpp").read_text()
+                self.assertNotIn("ScrewSilver", source)
+                self.assertNotIn("ScrewBlack", source)
 
     def test_vortex_uses_the_generated_logo_font_size(self):
         self.assertIn("LOGO_FONT_SIZE", self.vortex_source)

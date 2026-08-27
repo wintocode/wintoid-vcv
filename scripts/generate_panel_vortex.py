@@ -28,9 +28,9 @@ OUTPUT_BACKPLATE_RADIUS = RACK_PORT_RADIUS + OUTPUT_RING_WIDTH
 OUTPUT_BACKPLATE_FILL = '#39445f'
 OUTPUT_BACKPLATE_STROKE = '#c4cede'
 
-# The bottom-centre logo must stay clear of the 15 px lower screw boxes on
-# this narrow 6 HP panel; 8.5 px text leaves a comfortable margin.
-LOGO_FONT_SIZE = 8.5
+# The panels carry no decorative screw widgets, so the bottom-centre logo
+# can use the same 10 px size as Four and Brink.
+LOGO_FONT_SIZE = 10.0
 
 # Vertical layout
 Y_MODE_DISPLAY = 16.0

@@ -164,6 +164,12 @@ class BrinkPanelTest(unittest.TestCase):
                 clearance = offset - radius - half_text_height
                 self.assertGreaterEqual(clearance, minimum_gap_mm)
 
+    def test_channel_fields_align_with_sibling_module_displays(self):
+        # Four's AlgoDisplay and Vortex's ModeDisplay are 8 mm tall centred
+        # at y = 16, so their top edge is 12.0 mm.  The channel fields share
+        # that line so the three panels read as one family.
+        self.assertEqual(12.0, self.panel.CHANNEL_FIELD_TOP)
+
     def test_status_lights_clear_jacks_backplates_and_each_other(self):
         self.assertEqual(6.0, self.panel.OUTPUT_LIGHT_OFFSET)
         self.assertEqual(1.0, self.panel.STATUS_LIGHT_RADIUS)
