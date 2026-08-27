@@ -64,6 +64,9 @@ CHANNEL_B_RIGHT_X = CHANNEL_B_X + PAIR_OFFSET
 SMALL_KNOB_RADIUS = 2.5
 TRIMPOT_RADIUS = 2.0
 PORT_RADIUS = 3.2
+OUTPUT_BACKPLATE_RADIUS = PORT_RADIUS + 0.65
+OUTPUT_BACKPLATE_FILL = "#39445f"
+OUTPUT_BACKPLATE_STROKE = "#c4cede"
 RAIL_WIDTH = 2.0
 OUTLINE_MARGIN = 2.0
 
@@ -153,6 +156,18 @@ COMPONENTS = tuple(
     if not name.endswith("_POSITION_RAIL")
 )
 
+OUTPUT_COMPONENT_NAMES = frozenset(
+    [
+        f"{prefix}_{suffix}"
+        for prefix in ("A", "B")
+        for suffix in (
+            "POSITION", "INSIDE", "OUTSIDE", "LOW_UP", "HIGH_UP",
+            "LOW_DOWN", "HIGH_DOWN",
+        )
+    ]
+    + ["AND_OUTPUT", "OR_OUTPUT", "XOR_OUTPUT", "STATE_OUTPUT"]
+)
+
 
 def _fmt(value):
     """Format a coordinate without introducing platform-dependent output."""
@@ -189,7 +204,14 @@ def _line(x1, y1, x2, y2, stroke="#3b4668", width=0.20):
     )
 
 
+def is_output_component(name):
+    return name in OUTPUT_COMPONENT_NAMES
+
+
 def _component_style(name):
+    if is_output_component(name):
+        return (OUTPUT_BACKPLATE_RADIUS, OUTPUT_BACKPLATE_FILL,
+                OUTPUT_BACKPLATE_STROKE)
     if "_ATTEN" in name:
         return TRIMPOT_RADIUS, "#30364d", "#68718e"
     if any(token in name for token in ("_KNOB",)):

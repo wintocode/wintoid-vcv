@@ -20,5 +20,5 @@
   <!-- Audio In -->
   <circle cx="9.0" cy="115.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
   <!-- Audio Out -->
-  <circle cx="21.5" cy="115.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="21.5" cy="115.0" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.3" />
 </svg>

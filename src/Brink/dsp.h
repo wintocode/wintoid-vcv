@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../polyphony.h"
+#include <atomic>
 #include <cmath>
+#include <cstdint>
 
 namespace brink {
 
@@ -22,6 +24,84 @@ struct WindowFrame {
     float upper;
     float relative;
     float position;
+};
+
+struct WindowDisplayFrame {
+    float signal;
+    float center;
+    float lower;
+    float upper;
+};
+
+struct AtomicDisplayFrame {
+    std::atomic<std::uint32_t> sequence;
+    std::atomic<float> signal;
+    std::atomic<float> center;
+    std::atomic<float> lower;
+    std::atomic<float> upper;
+
+    AtomicDisplayFrame()
+        : sequence(0), signal(0.f), center(0.f), lower(-2.5f), upper(2.5f) {}
+
+    void store(const WindowFrame& frame) noexcept
+    {
+        sequence.fetch_add(1, std::memory_order_release);
+        signal.store(frame.signal, std::memory_order_relaxed);
+        center.store(frame.center, std::memory_order_relaxed);
+        lower.store(frame.lower, std::memory_order_relaxed);
+        upper.store(frame.upper, std::memory_order_relaxed);
+        sequence.fetch_add(1, std::memory_order_release);
+    }
+
+    WindowDisplayFrame load() const noexcept
+    {
+        for (;;) {
+            const std::uint32_t before = sequence.load(std::memory_order_acquire);
+            if (before & 1u) continue;
+
+            WindowDisplayFrame frame;
+            frame.signal = signal.load(std::memory_order_relaxed);
+            frame.center = center.load(std::memory_order_relaxed);
+            frame.lower = lower.load(std::memory_order_relaxed);
+            frame.upper = upper.load(std::memory_order_relaxed);
+
+            const std::uint32_t after = sequence.load(std::memory_order_acquire);
+            if (before == after) return frame;
+        }
+    }
+};
+
+constexpr float DISPLAY_UPDATE_HZ = 60.f;
+
+struct DisplayRateLimiter {
+    int sampleInterval;
+    int samplesUntilUpdate;
+
+    DisplayRateLimiter() : sampleInterval(1), samplesUntilUpdate(0) {}
+
+    void reset(float sampleRate) noexcept
+    {
+        if (!std::isfinite(sampleRate) || sampleRate <= 0.f) {
+            sampleInterval = 1;
+        }
+        else {
+            const float roundedInterval = sampleRate / DISPLAY_UPDATE_HZ + 0.5f;
+            sampleInterval = roundedInterval < 1.f
+                ? 1
+                : static_cast<int>(roundedInterval);
+        }
+        samplesUntilUpdate = 0;
+    }
+
+    bool should_publish() noexcept
+    {
+        if (samplesUntilUpdate <= 1) {
+            samplesUntilUpdate = sampleInterval;
+            return true;
+        }
+        --samplesUntilUpdate;
+        return false;
+    }
 };
 
 inline float sanitize(float value, float fallback)
@@ -53,6 +133,19 @@ inline WindowFrame make_window(float signal, float center, float rawWidth)
     f.relative = 10.f * (f.signal - f.center) / f.width;
     f.position = clampf(f.relative, -5.f, 5.f);
     return f;
+}
+
+inline WindowDisplayFrame make_display_frame(float signal,
+                                             float center,
+                                             float rawWidth)
+{
+    const WindowFrame frame = make_window(signal, center, rawWidth);
+    WindowDisplayFrame display;
+    display.signal = frame.signal;
+    display.center = frame.center;
+    display.lower = frame.lower;
+    display.upper = frame.upper;
+    return display;
 }
 
 inline Region classify_initial(const WindowFrame& f)

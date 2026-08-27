@@ -26,6 +26,9 @@ HEIGHT_MM = 128.5
 # Component sizes (for SVG placeholder circles)
 SMALL_KNOB_RADIUS = 2.5    # RoundSmallBlackKnob / Trimpot
 JACK_RADIUS = 3.2           # PJ301MPort
+OUTPUT_BACKPLATE_RADIUS = JACK_RADIUS + 0.65
+OUTPUT_BACKPLATE_FILL = '#39445f'
+OUTPUT_BACKPLATE_STROKE = '#c4cede'
 TOGGLE_W = 2.5              # CKSS half-width
 TOGGLE_H = 5.0              # CKSS half-height
 
@@ -34,7 +37,7 @@ TOGGLE_H = 5.0              # CKSS half-height
 # ─────────────────────────────────────────────────────────────
 
 Y_TITLE = 6.5
-Y_ALGO = 15.0
+Y_ALGO = 16.0
 Y_GLOBAL_ROW1 = 26.0       # V/Oct, Fine, VCA, Main
 Y_GLOBAL_ROW2 = 36.0       # XM, FM
 Y_OP_HEADER = 46.0          # "OP1" ... "OP4" column headers
@@ -114,6 +117,18 @@ def _line(x1, y1, x2, y2, stroke='#404060', width=0.2):
             f'stroke="{stroke}" stroke-width="{width}" />')
 
 
+def component_style(name):
+    """Return the structural guide style for a named component."""
+    if name == 'main_output':
+        return (OUTPUT_BACKPLATE_RADIUS, OUTPUT_BACKPLATE_FILL,
+                OUTPUT_BACKPLATE_STROKE)
+    if 'jack' in name:
+        return JACK_RADIUS, '#222', '#888'
+    if 'atten' in name:
+        return SMALL_KNOB_RADIUS, '#333', '#666'
+    return SMALL_KNOB_RADIUS, '#333', '#aaa'
+
+
 def generate_svg():
     """Generate the panel SVG string."""
     lines = []
@@ -135,12 +150,7 @@ def generate_svg():
     for name, (x, y) in GLOBAL_CONTROLS.items():
         if name == 'algo_display':
             continue
-        if 'jack' in name or 'output' in name:
-            r, fill, stroke = JACK_RADIUS, '#222', '#888'
-        elif 'atten' in name:
-            r, fill, stroke = SMALL_KNOB_RADIUS, '#333', '#666'
-        else:
-            r, fill, stroke = SMALL_KNOB_RADIUS, '#333', '#aaa'
+        r, fill, stroke = component_style(name)
         lines.append(_circle(x, y, r, fill, stroke))
 
     # ── Operator section ──
@@ -177,7 +187,8 @@ def generate_svg():
             else:
                 # CV rows: knob + jack + atten
                 lines.append(_circle(kx, y, SMALL_KNOB_RADIUS, '#333', '#aaa'))
-                lines.append(_circle(mx, y, JACK_RADIUS, '#222', '#888'))
+                jack_r, jack_fill, jack_stroke = component_style('operator_cv_jack')
+                lines.append(_circle(mx, y, jack_r, jack_fill, jack_stroke))
                 lines.append(_circle(rx, y, SMALL_KNOB_RADIUS, '#333', '#666'))
 
     lines.append('</svg>')

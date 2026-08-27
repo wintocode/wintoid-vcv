@@ -2,63 +2,75 @@
 """Generate Vortex panel SVG and C++ coordinate header.
 
 Run from project root:
-    python3 scripts/generate_panel.py
+    python3 scripts/generate_panel_vortex.py
 
 Outputs:
-    res/Vortex.svg  - panel SVG background
-    src/layout.h      - C++ header with constexpr float coordinates in mm
+    res/Vortex.svg       - panel SVG background
+    src/Vortex/layout.h  - C++ header with constexpr float coordinates in mm
 """
 
 import os
 
-# Panel dimensions
-HP = 14
-WIDTH_MM = HP * 5.08   # 71.12mm
+
+# Panel dimensions: Vortex is a compact 6 HP module.
+HP = 6
+WIDTH_MM = HP * 5.08  # 30.48mm
 HEIGHT_MM = 128.5
 
 # Component sizes (for SVG placeholder circles/rects)
-SMALL_KNOB_RADIUS = 2.5
-LARGE_KNOB_RADIUS = 4.0
+KNOB_RADIUS = 3.0
 JACK_RADIUS = 3.2
 TRIMPOT_RADIUS = 2.0
+OUTPUT_BACKPLATE_RADIUS = JACK_RADIUS + 0.65
+OUTPUT_BACKPLATE_FILL = '#39445f'
+OUTPUT_BACKPLATE_STROKE = '#c4cede'
 
 # Vertical layout
-Y_TITLE = 6.5
 Y_MODE_DISPLAY = 16.0
-Y_CUTOFF_KNOB = 28.0       # large knob, centered
-Y_KNOB_ROW1 = 40.0         # Resonance + Drive side by side
-Y_KNOB_ROW2 = 50.0         # Mix centered
-
-# CV section: 6 rows
-Y_CV_START = 62.0
-Y_CV_SPACING = 8.5
-# V/OCT=62, FM=70.5, Res=79, Mode=87.5, Drive=96, Mix=104.5
-
-# Audio I/O
-Y_AUDIO_IO = 116.0
+Y_CUTOFF_KNOB = 32.0
+Y_CUTOFF_CV = 44.0
+Y_RESONANCE_KNOB = 60.0
+Y_RESONANCE_CV = 72.0
+Y_DRIVE_KNOB = 88.0
+Y_DRIVE_CV = 100.0
+Y_AUDIO_IO = 115.0
 
 # Horizontal layout
-CENTER_X = WIDTH_MM / 2     # 35.56
-LEFT_KNOB_X = 20.0          # Resonance / left knob
-RIGHT_KNOB_X = WIDTH_MM - 20.0  # Drive / right knob
+CENTER_X = WIDTH_MM / 2
+ATTEN_X = 23.75
+AUDIO_IN_X = 9.0
+AUDIO_OUT_X = 21.5
 
-# CV section horizontal: label area left, jack center-left, atten center-right
-CV_JACK_X = 38.0
-CV_ATTEN_X = 50.0
 
-# Audio I/O horizontal
-AUDIO_IN_X = 20.0
-AUDIO_OUT_X = WIDTH_MM - 20.0
+def _format_coordinate(value):
+    formatted = f'{value:.2f}'
+    if '.' in formatted:
+        formatted = formatted.rstrip('0')
+        if formatted.endswith('.'):
+            formatted += '0'
+    return formatted
 
 
 def _circle(x, y, r, fill, stroke):
-    return (f'  <circle cx="{x:.1f}" cy="{y:.1f}" r="{r}" '
+    return (f'  <circle cx="{_format_coordinate(x)}" cy="{y:.1f}" r="{r}" '
             f'fill="{fill}" stroke="{stroke}" stroke-width="0.3" />')
 
 
-def _rect(x, y, w, h, fill, stroke):
-    return (f'  <rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" '
-            f'fill="{fill}" stroke="{stroke}" stroke-width="0.3" />')
+def component_style(name):
+    """Return the structural guide style for a named component."""
+    if name == 'audio_out':
+        return (OUTPUT_BACKPLATE_RADIUS, OUTPUT_BACKPLATE_FILL,
+                OUTPUT_BACKPLATE_STROKE)
+    if name in ('audio_in', 'cv_jack'):
+        return JACK_RADIUS, '#222', '#888'
+    if name == 'cv_atten':
+        return TRIMPOT_RADIUS, '#333', '#666'
+    return KNOB_RADIUS, '#333', '#aaa'
+
+
+def _append_control(lines, name, x, y):
+    radius, fill, stroke = component_style(name)
+    lines.append(_circle(x, y, radius, fill, stroke))
 
 
 def generate_svg():
@@ -70,82 +82,96 @@ def generate_svg():
     # Background
     lines.append(f'  <rect width="{WIDTH_MM}" height="{HEIGHT_MM}" fill="#1a1a2e" />')
 
-    # Mode display rectangle
-    mode_w = WIDTH_MM - 20
-    lines.append(f'  <rect x="{CENTER_X - mode_w/2:.1f}" y="{Y_MODE_DISPLAY - 4:.1f}" '
-                 f'width="{mode_w:.1f}" height="8" '
-                 f'rx="1" fill="#0a0a1a" stroke="#404060" stroke-width="0.3" />')
+    # Mode display
+    lines.append('  <!-- Mode display -->')
+    mode_width = WIDTH_MM - 10.0
+    lines.append(f'  <rect x="{(WIDTH_MM - mode_width) / 2:.1f}" '
+                 f'y="{Y_MODE_DISPLAY - 4:.1f}" width="{mode_width:.2f}" '
+                 f'height="8" rx="1" fill="#0a0a1a" stroke="#404060" '
+                 f'stroke-width="0.3" />')
 
-    # Cutoff knob (large)
-    lines.append(_circle(CENTER_X, Y_CUTOFF_KNOB, LARGE_KNOB_RADIUS, '#333', '#aaa'))
+    # Cutoff group
+    lines.append('  <!-- Cutoff knob -->')
+    _append_control(lines, 'knob', CENTER_X, Y_CUTOFF_KNOB)
+    lines.append('  <!-- Cutoff CV jack + trimpot -->')
+    _append_control(lines, 'cv_jack', CENTER_X, Y_CUTOFF_CV)
+    _append_control(lines, 'cv_atten', ATTEN_X, Y_CUTOFF_CV)
 
-    # Resonance + Drive knobs
-    lines.append(_circle(LEFT_KNOB_X, Y_KNOB_ROW1, SMALL_KNOB_RADIUS, '#333', '#aaa'))
-    lines.append(_circle(RIGHT_KNOB_X, Y_KNOB_ROW1, SMALL_KNOB_RADIUS, '#333', '#aaa'))
+    # Resonance group
+    lines.append('  <!-- Reso knob -->')
+    _append_control(lines, 'knob', CENTER_X, Y_RESONANCE_KNOB)
+    lines.append('  <!-- Reso CV jack + trimpot -->')
+    _append_control(lines, 'cv_jack', CENTER_X, Y_RESONANCE_CV)
+    _append_control(lines, 'cv_atten', ATTEN_X, Y_RESONANCE_CV)
 
-    # Mix knob (centered)
-    lines.append(_circle(CENTER_X, Y_KNOB_ROW2, SMALL_KNOB_RADIUS, '#333', '#aaa'))
-
-    # CV section: 6 rows of jack + attenuverter
-    for i in range(6):
-        y = Y_CV_START + i * Y_CV_SPACING
-        lines.append(_circle(CV_JACK_X, y, JACK_RADIUS, '#222', '#888'))
-        lines.append(_circle(CV_ATTEN_X, y, TRIMPOT_RADIUS, '#333', '#666'))
+    # Drive group
+    lines.append('  <!-- Drive knob -->')
+    _append_control(lines, 'knob', CENTER_X, Y_DRIVE_KNOB)
+    lines.append('  <!-- Drive CV jack + trimpot -->')
+    _append_control(lines, 'cv_jack', CENTER_X, Y_DRIVE_CV)
+    _append_control(lines, 'cv_atten', ATTEN_X, Y_DRIVE_CV)
 
     # Audio I/O
-    lines.append(_circle(AUDIO_IN_X, Y_AUDIO_IO, JACK_RADIUS, '#222', '#888'))
-    lines.append(_circle(AUDIO_OUT_X, Y_AUDIO_IO, JACK_RADIUS, '#222', '#888'))
+    lines.append('  <!-- Audio In -->')
+    _append_control(lines, 'audio_in', AUDIO_IN_X, Y_AUDIO_IO)
+    lines.append('  <!-- Audio Out -->')
+    _append_control(lines, 'audio_out', AUDIO_OUT_X, Y_AUDIO_IO)
 
     lines.append('</svg>')
-    return '\n'.join(lines)
+    return '\n'.join(lines) + '\n'
 
 
 def generate_coords_header():
     lines = []
     lines.append('#pragma once')
-    lines.append('// Auto-generated by scripts/generate_panel.py -- do not edit manually.')
     lines.append('// All coordinates in mm (use mm2px() in VCV widget code).')
     lines.append('')
     lines.append('namespace vortex_layout {')
     lines.append('')
-
-    # Panel dimensions
     lines.append(f'constexpr float PANEL_WIDTH  = {WIDTH_MM:.2f}f;')
     lines.append(f'constexpr float PANEL_HEIGHT = {HEIGHT_MM:.1f}f;')
     lines.append('')
 
-    # Mode display
-    lines.append('// Mode display')
+    lines.append('// Mode display (Y matches Four ALGO_DISPLAY_Y)')
     lines.append(f'constexpr float MODE_DISPLAY_X = {CENTER_X:.2f}f;')
     lines.append(f'constexpr float MODE_DISPLAY_Y = {Y_MODE_DISPLAY:.1f}f;')
     lines.append('')
 
-    # Main knobs
-    lines.append('// Main knobs')
-    lines.append(f'constexpr float CUTOFF_KNOB_X = {CENTER_X:.2f}f;')
-    lines.append(f'constexpr float CUTOFF_KNOB_Y = {Y_CUTOFF_KNOB:.1f}f;')
-    lines.append(f'constexpr float RESONANCE_KNOB_X = {LEFT_KNOB_X:.1f}f;')
-    lines.append(f'constexpr float RESONANCE_KNOB_Y = {Y_KNOB_ROW1:.1f}f;')
-    lines.append(f'constexpr float DRIVE_KNOB_X = {RIGHT_KNOB_X:.1f}f;')
-    lines.append(f'constexpr float DRIVE_KNOB_Y = {Y_KNOB_ROW1:.1f}f;')
-    lines.append(f'constexpr float MIX_KNOB_X = {CENTER_X:.2f}f;')
-    lines.append(f'constexpr float MIX_KNOB_Y = {Y_KNOB_ROW2:.1f}f;')
+    lines.append('// Centered column X for knobs and CV jacks')
+    lines.append(f'constexpr float CENTER_X = {CENTER_X:.2f}f;')
+    lines.append('')
+    lines.append('// Attenuverter trimpots: 8.5mm right of jack (matches Four CV jack→atten gap)')
+    lines.append(f'constexpr float ATTEN_X = {ATTEN_X:.2f}f;')
     lines.append('')
 
-    # CV section
-    lines.append('// CV section (jack + attenuverter per row)')
-    lines.append('// Row order: V/OCT, FM, Resonance, Mode, Drive, Mix')
-    cv_names = ['VOCT', 'FM', 'RESONANCE', 'MODE', 'DRIVE', 'MIX']
-    for i, name in enumerate(cv_names):
-        y = Y_CV_START + i * Y_CV_SPACING
-        lines.append(f'constexpr float CV_{name}_JACK_X  = {CV_JACK_X:.1f}f;')
-        lines.append(f'constexpr float CV_{name}_JACK_Y  = {y:.1f}f;')
-        lines.append(f'constexpr float CV_{name}_ATTEN_X = {CV_ATTEN_X:.1f}f;')
-        lines.append(f'constexpr float CV_{name}_ATTEN_Y = {y:.1f}f;')
+    lines.append('// --- Cutoff group (knob → CV jack + trimpot) ---')
+    lines.append('constexpr float CUTOFF_KNOB_X       = CENTER_X;')
+    lines.append(f'constexpr float CUTOFF_KNOB_Y       = {Y_CUTOFF_KNOB:.1f}f;')
+    lines.append('constexpr float CV_CUTOFF_JACK_X    = CENTER_X;')
+    lines.append(f'constexpr float CV_CUTOFF_JACK_Y    = {Y_CUTOFF_CV:.1f}f;')
+    lines.append('constexpr float CV_CUTOFF_ATTEN_X   = ATTEN_X;')
+    lines.append(f'constexpr float CV_CUTOFF_ATTEN_Y   = {Y_CUTOFF_CV:.1f}f;')
     lines.append('')
 
-    # Audio I/O
-    lines.append('// Audio I/O')
+    lines.append('// --- Resonance group ---')
+    lines.append('constexpr float RESONANCE_KNOB_X       = CENTER_X;')
+    lines.append(f'constexpr float RESONANCE_KNOB_Y       = {Y_RESONANCE_KNOB:.1f}f;')
+    lines.append('constexpr float CV_RESONANCE_JACK_X    = CENTER_X;')
+    lines.append(f'constexpr float CV_RESONANCE_JACK_Y    = {Y_RESONANCE_CV:.1f}f;')
+    lines.append('constexpr float CV_RESONANCE_ATTEN_X   = ATTEN_X;')
+    lines.append(f'constexpr float CV_RESONANCE_ATTEN_Y   = {Y_RESONANCE_CV:.1f}f;')
+    lines.append('')
+
+    lines.append('// --- Drive group ---')
+    lines.append('constexpr float DRIVE_KNOB_X       = CENTER_X;')
+    lines.append(f'constexpr float DRIVE_KNOB_Y       = {Y_DRIVE_KNOB:.1f}f;')
+    lines.append('constexpr float CV_DRIVE_JACK_X    = CENTER_X;')
+    lines.append(f'constexpr float CV_DRIVE_JACK_Y    = {Y_DRIVE_CV:.1f}f;')
+    lines.append('constexpr float CV_DRIVE_ATTEN_X   = ATTEN_X;')
+    lines.append(f'constexpr float CV_DRIVE_ATTEN_Y   = {Y_DRIVE_CV:.1f}f;')
+    lines.append('')
+
+    lines.append('// Audio I/O (same height as FB row on Four)')
     lines.append(f'constexpr float AUDIO_IN_X  = {AUDIO_IN_X:.1f}f;')
     lines.append(f'constexpr float AUDIO_IN_Y  = {Y_AUDIO_IO:.1f}f;')
     lines.append(f'constexpr float AUDIO_OUT_X = {AUDIO_OUT_X:.1f}f;')
@@ -153,8 +179,7 @@ def generate_coords_header():
     lines.append('')
 
     lines.append('} // namespace vortex_layout')
-    lines.append('')
-    return '\n'.join(lines)
+    return '\n'.join(lines) + '\n'
 
 
 if __name__ == '__main__':

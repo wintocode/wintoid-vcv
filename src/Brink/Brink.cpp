@@ -39,7 +39,8 @@ struct Brink : Module {
     brink::WindowState windowStates[2][brink::MAX_CHANNELS];
     brink::LogicState logicStates[brink::MAX_CHANNELS];
     bool insideStates[2][brink::MAX_CHANNELS];
-    brink::WindowFrame displayFrames[2];
+    brink::AtomicDisplayFrame displayFrames[2];
+    brink::DisplayRateLimiter displayRateLimiter;
     int previousSignalChannels[2];
     int previousLogicChannels;
     float previousSampleRate;
@@ -123,7 +124,7 @@ struct Brink : Module {
 
     void clearRuntimeState() {
         for (int channel = 0; channel < 2; ++channel) {
-            displayFrames[channel] = brink::make_window(0.f, 0.f, 5.f);
+            displayFrames[channel].store(brink::make_window(0.f, 0.f, 5.f));
             previousSignalChannels[channel] = 0;
             for (int lane = 0; lane < brink::MAX_CHANNELS; ++lane) {
                 brink::reset(windowStates[channel][lane]);
@@ -134,6 +135,7 @@ struct Brink : Module {
             brink::reset(logicStates[lane]);
         previousLogicChannels = 0;
         previousSampleRate = 0.f;
+        displayRateLimiter.reset(0.f);
     }
 
     void onReset() override {
@@ -187,7 +189,10 @@ struct Brink : Module {
         if (args.sampleRate != previousSampleRate) {
             clearRuntimeState();
             previousSampleRate = args.sampleRate;
+            displayRateLimiter.reset(args.sampleRate);
         }
+
+        const bool publishDisplay = displayRateLimiter.should_publish();
 
         const Input& aSignal = inputs[A_SIGNAL_INPUT];
         const Input& aCenterCv = inputs[A_CENTER_CV_INPUT];
@@ -253,8 +258,8 @@ struct Brink : Module {
                 insideStates[channel][lane] = out.inside;
                 gateActivity[channel][0] = gateActivity[channel][0] || out.inside;
                 gateActivity[channel][1] = gateActivity[channel][1] || !out.inside;
-                if (lane == 0)
-                    displayFrames[channel] = out.frame;
+                if (lane == 0 && publishDisplay)
+                    displayFrames[channel].store(out.frame);
             }
 
             lights[channelLightIds[channel][0]].setBrightness(gateActivity[channel][0] ? 1.f : 0.f);
@@ -396,9 +401,9 @@ struct WindowRail : Widget {
             brink_layout::SIGNAL_MARKER_PATH_WIDTH);
         const float markerStrokeWidth = mm2px(
             brink_layout::SIGNAL_MARKER_STROKE_WIDTH);
-        brink::WindowFrame frame = module
-            ? module->displayFrames[channel]
-            : brink::make_window(0.f, 0.f, 5.f);
+        brink::WindowDisplayFrame frame = module
+            ? module->displayFrames[channel].load()
+            : brink::make_display_frame(0.f, 0.f, 5.f);
         const float signalY = box.size.y
             * (1.f - brink::normalize_display_voltage(frame.signal));
         const float centerY = box.size.y

@@ -4,7 +4,7 @@
   <circle cx="20.0" cy="26.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
   <circle cx="66.0" cy="26.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
   <circle cx="105.1" cy="26.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
-  <circle cx="114.1" cy="26.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
+  <circle cx="114.1" cy="26.0" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.3" />
   <circle cx="20.0" cy="36.0" r="2.5" fill="#333" stroke="#aaa" stroke-width="0.3" />
   <circle cx="29.0" cy="36.0" r="3.2" fill="#222" stroke="#888" stroke-width="0.3" />
   <circle cx="37.0" cy="36.0" r="2.5" fill="#333" stroke="#666" stroke-width="0.3" />

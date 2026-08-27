@@ -16,33 +16,33 @@
   <circle cx="8.00" cy="24.00" r="2.50" fill="#30364d" stroke="#aab3c8" stroke-width="0.30" />
   <circle cx="22.48" cy="24.00" r="2.50" fill="#30364d" stroke="#aab3c8" stroke-width="0.30" />
   <circle cx="22.48" cy="38.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="8.00" cy="38.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
+  <circle cx="8.00" cy="38.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
   <circle cx="22.48" cy="50.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
   <circle cx="8.00" cy="50.00" r="2.00" fill="#30364d" stroke="#68718e" stroke-width="0.30" />
   <circle cx="22.48" cy="62.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
   <circle cx="8.00" cy="62.00" r="2.00" fill="#30364d" stroke="#68718e" stroke-width="0.30" />
-  <circle cx="8.00" cy="74.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="22.48" cy="74.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="8.00" cy="88.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="22.48" cy="88.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="8.00" cy="100.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="22.48" cy="100.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
+  <circle cx="8.00" cy="74.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="22.48" cy="74.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="8.00" cy="88.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="22.48" cy="88.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="8.00" cy="100.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="22.48" cy="100.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
   <circle cx="38.48" cy="24.00" r="2.50" fill="#30364d" stroke="#aab3c8" stroke-width="0.30" />
   <circle cx="52.96" cy="24.00" r="2.50" fill="#30364d" stroke="#aab3c8" stroke-width="0.30" />
   <circle cx="38.48" cy="38.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="52.96" cy="38.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
+  <circle cx="52.96" cy="38.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
   <circle cx="38.48" cy="50.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
   <circle cx="52.96" cy="50.00" r="2.00" fill="#30364d" stroke="#68718e" stroke-width="0.30" />
   <circle cx="38.48" cy="62.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
   <circle cx="52.96" cy="62.00" r="2.00" fill="#30364d" stroke="#68718e" stroke-width="0.30" />
-  <circle cx="38.48" cy="74.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="52.96" cy="74.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="38.48" cy="88.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="52.96" cy="88.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="38.48" cy="100.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="52.96" cy="100.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="8.00" cy="114.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="23.00" cy="114.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="38.00" cy="114.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
-  <circle cx="53.00" cy="114.00" r="3.20" fill="#202538" stroke="#77819c" stroke-width="0.30" />
+  <circle cx="38.48" cy="74.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="52.96" cy="74.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="38.48" cy="88.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="52.96" cy="88.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="38.48" cy="100.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="52.96" cy="100.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="8.00" cy="114.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="23.00" cy="114.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="38.00" cy="114.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
+  <circle cx="53.00" cy="114.00" r="3.85" fill="#39445f" stroke="#c4cede" stroke-width="0.30" />
 </svg>

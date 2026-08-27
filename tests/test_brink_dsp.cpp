@@ -99,6 +99,36 @@ TEST(window_output_exposes_window_for_display)
     ASSERT_NEAR(o.frame.upper, 3.f, 1e-6f);
 }
 
+TEST(display_frame_snapshot_round_trips_visible_geometry)
+{
+    brink::WindowFrame source = brink::make_window(7.f, 1.f, 4.f);
+    brink::AtomicDisplayFrame snapshot;
+    snapshot.store(source);
+    brink::WindowDisplayFrame displayed = snapshot.load();
+    ASSERT_NEAR(displayed.signal, 7.f, 1e-6f);
+    ASSERT_NEAR(displayed.center, 1.f, 1e-6f);
+    ASSERT_NEAR(displayed.lower, -1.f, 1e-6f);
+    ASSERT_NEAR(displayed.upper, 3.f, 1e-6f);
+}
+
+TEST(display_rate_limiter_updates_on_first_sample_and_at_sixty_hz)
+{
+    brink::DisplayRateLimiter limiter;
+    limiter.reset(48000.f);
+    ASSERT(limiter.should_publish());
+    for (int sample = 1; sample < 800; ++sample)
+        ASSERT(!limiter.should_publish());
+    ASSERT(limiter.should_publish());
+}
+
+TEST(display_rate_limiter_handles_invalid_sample_rate)
+{
+    brink::DisplayRateLimiter limiter;
+    limiter.reset(NAN);
+    ASSERT(limiter.should_publish());
+    ASSERT(limiter.should_publish());
+}
+
 TEST(initial_sample_is_silent)
 {
     brink::WindowState s;
@@ -217,6 +247,9 @@ int main()
     run_non_finite_signal_and_center_are_safe();
     run_display_voltage_uses_fixed_bipolar_range();
     run_window_output_exposes_window_for_display();
+    run_display_frame_snapshot_round_trips_visible_geometry();
+    run_display_rate_limiter_updates_on_first_sample_and_at_sixty_hz();
+    run_display_rate_limiter_handles_invalid_sample_rate();
     run_initial_sample_is_silent();
     run_all_four_directional_events();
     run_full_window_jump_fires_both_boundaries();
