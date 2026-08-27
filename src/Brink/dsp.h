@@ -34,6 +34,17 @@ struct WindowDisplayFrame {
 };
 
 struct AtomicDisplayFrame {
+    static constexpr std::memory_order WRITER_BEGIN_ORDER =
+        std::memory_order_acq_rel;
+    static constexpr std::memory_order WRITER_END_ORDER =
+        std::memory_order_release;
+    static constexpr std::memory_order READER_BEGIN_ORDER =
+        std::memory_order_acquire;
+    static constexpr std::memory_order READER_VALIDATE_FENCE_ORDER =
+        std::memory_order_acquire;
+    static constexpr std::memory_order READER_END_ORDER =
+        std::memory_order_relaxed;
+
     std::atomic<std::uint32_t> sequence;
     std::atomic<float> signal;
     std::atomic<float> center;
@@ -45,18 +56,18 @@ struct AtomicDisplayFrame {
 
     void store(const WindowFrame& frame) noexcept
     {
-        sequence.fetch_add(1, std::memory_order_release);
+        sequence.fetch_add(1, WRITER_BEGIN_ORDER);
         signal.store(frame.signal, std::memory_order_relaxed);
         center.store(frame.center, std::memory_order_relaxed);
         lower.store(frame.lower, std::memory_order_relaxed);
         upper.store(frame.upper, std::memory_order_relaxed);
-        sequence.fetch_add(1, std::memory_order_release);
+        sequence.fetch_add(1, WRITER_END_ORDER);
     }
 
     WindowDisplayFrame load() const noexcept
     {
         for (;;) {
-            const std::uint32_t before = sequence.load(std::memory_order_acquire);
+            const std::uint32_t before = sequence.load(READER_BEGIN_ORDER);
             if (before & 1u) continue;
 
             WindowDisplayFrame frame;
@@ -65,7 +76,8 @@ struct AtomicDisplayFrame {
             frame.lower = lower.load(std::memory_order_relaxed);
             frame.upper = upper.load(std::memory_order_relaxed);
 
-            const std::uint32_t after = sequence.load(std::memory_order_acquire);
+            std::atomic_thread_fence(READER_VALIDATE_FENCE_ORDER);
+            const std::uint32_t after = sequence.load(READER_END_ORDER);
             if (before == after) return frame;
         }
     }

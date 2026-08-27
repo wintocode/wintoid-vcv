@@ -1,5 +1,5 @@
 CC := c++
-CFLAGS := -std=c++11 -Wall -Wextra -g -fsanitize=address,undefined
+CFLAGS := -std=c++11 -Wall -Wextra -g -fsanitize=address,undefined -pthread
 
 all: test_four_dsp test_four_engine test_vortex_dsp test_brink_dsp test_polyphony test_brink_panel test_panel_output_style test_polyphony_metadata test_repository_hygiene
 

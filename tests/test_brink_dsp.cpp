@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <thread>
 
 static int tests_run = 0;
 static int tests_passed = 0;
@@ -30,6 +31,23 @@ static int tests_passed = 0;
     } } while(0)
 
 #include "../src/Brink/dsp.h"
+
+static_assert(
+    brink::AtomicDisplayFrame::WRITER_BEGIN_ORDER == std::memory_order_acq_rel,
+    "the odd sequence marker must precede payload stores");
+static_assert(
+    brink::AtomicDisplayFrame::WRITER_END_ORDER == std::memory_order_release,
+    "the even sequence marker must publish the payload");
+static_assert(
+    brink::AtomicDisplayFrame::READER_BEGIN_ORDER == std::memory_order_acquire,
+    "payload reads must follow the first sequence read");
+static_assert(
+    brink::AtomicDisplayFrame::READER_VALIDATE_FENCE_ORDER ==
+        std::memory_order_acquire,
+    "payload reads must complete before validation");
+static_assert(
+    brink::AtomicDisplayFrame::READER_END_ORDER == std::memory_order_relaxed,
+    "the acquire fence supplies validation ordering");
 
 TEST(window_frame_nominal)
 {
@@ -109,6 +127,54 @@ TEST(display_frame_snapshot_round_trips_visible_geometry)
     ASSERT_NEAR(displayed.center, 1.f, 1e-6f);
     ASSERT_NEAR(displayed.lower, -1.f, 1e-6f);
     ASSERT_NEAR(displayed.upper, 3.f, 1e-6f);
+}
+
+TEST(concurrent_snapshot_never_accepts_torn_frames)
+{
+    brink::AtomicDisplayFrame snapshot;
+
+    brink::WindowFrame initial;
+    initial.signal = 0.f;
+    initial.center = 1000000.f;
+    initial.lower = 2000000.f;
+    initial.upper = 3000000.f;
+    snapshot.store(initial);
+
+    const int publications = 200000;
+    std::atomic<bool> done(false);
+    std::atomic<int> violations(0);
+    std::atomic<int> accepted(0);
+
+    std::thread writer([&snapshot]() {
+        for (int i = 0; i < publications; ++i) {
+            const float value = static_cast<float>(i % 1000000);
+            brink::WindowFrame frame;
+            frame.signal = value;
+            frame.center = value + 1000000.f;
+            frame.lower = value + 2000000.f;
+            frame.upper = value + 3000000.f;
+            snapshot.store(frame);
+        }
+    });
+
+    std::thread reader([&snapshot, &done, &violations, &accepted]() {
+        while (!done.load(std::memory_order_acquire)) {
+            const brink::WindowDisplayFrame frame = snapshot.load();
+            ++accepted;
+            if (frame.center - frame.signal != 1000000.f
+                || frame.lower - frame.signal != 2000000.f
+                || frame.upper - frame.signal != 3000000.f) {
+                ++violations;
+            }
+        }
+    });
+
+    writer.join();
+    done.store(true, std::memory_order_release);
+    reader.join();
+
+    ASSERT(accepted.load() > 0);
+    ASSERT(violations.load() == 0);
 }
 
 TEST(display_rate_limiter_updates_on_first_sample_and_at_sixty_hz)
@@ -248,6 +314,7 @@ int main()
     run_display_voltage_uses_fixed_bipolar_range();
     run_window_output_exposes_window_for_display();
     run_display_frame_snapshot_round_trips_visible_geometry();
+    run_concurrent_snapshot_never_accepts_torn_frames();
     run_display_rate_limiter_updates_on_first_sample_and_at_sixty_hz();
     run_display_rate_limiter_handles_invalid_sample_rate();
     run_initial_sample_is_silent();
