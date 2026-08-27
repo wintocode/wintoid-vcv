@@ -7,10 +7,14 @@ the 2026-08-27 GUI audit; they are release acceptance gates, not TODOs.
 
 ## How the wrapper consumes this repository
 
-- The sibling wrapper compiles **these exact C++ files** — `src/Four/Four.cpp`,
-  `src/Vortex/Vortex.cpp`, and (once the wrapper is updated) `src/Brink/Brink.cpp`
-  — together with the generated `res/*.svg` and `src/*/layout.h` artifacts.
-  Do not fork or wrap module sources for the MetaModule build; fix them here.
+- The sibling wrapper compiles versioned checkouts of the shared C++ sources
+  and their included `src/*/layout.h` headers. MetaModule does not render `res/*.svg`:
+  its adapter rewrites those asset requests to PNG names and the
+  wrapper packages separately converted `assets/*.png` faceplates. When the
+  wrapper is intentionally refreshed, regenerate each faceplate at 240 px
+  height with the SDK's `SvgToPng.py` (or an equivalent approved conversion)
+  so panel artwork and shared coordinates remain from the same wintoid-vcv
+  revision.
 - The wrapper repository is **read-only from here**.  This repository may add
   compatibility checks and shared-source fixes, but must not modify the
   wrapper, its assets, metadata, or build files.  A temporary throwaway copy
@@ -41,6 +45,8 @@ the 2026-08-27 GUI audit; they are release acceptance gates, not TODOs.
 These cannot be closed against the stale wrapper and must remain explicit
 release checks for whoever updates it:
 
+- Confirm the wrapper's Four, Vortex, and Brink PNG faceplates were regenerated
+  from the same wintoid-vcv revision as the compiled C++ and generated headers.
 - Four/Vortex/Brink render with acceptable dynamic-buffer memory and
   refresh cost on actual MetaModule hardware, individually and in one
   patch.  Full-panel `PanelLabels` widgets allocate dynamic buffers sized

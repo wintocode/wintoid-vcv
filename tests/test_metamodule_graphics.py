@@ -25,6 +25,15 @@ class MetaModuleGraphicsTest(unittest.TestCase):
             name: (ROOT / "src" / name / f"{name}.cpp").read_text()
             for name in MODULES
         }
+        cls.compatibility = (
+            ROOT / "docs" / "metamodule-compatibility.md"
+        ).read_text()
+
+    def test_compatibility_doc_records_png_faceplate_handoff(self):
+        self.assertIn("assets/*.png", self.compatibility)
+        self.assertIn("240 px", self.compatibility)
+        self.assertIn("does not render `res/*.svg`", self.compatibility)
+        self.assertIn("SvgToPng.py", self.compatibility)
 
     def test_modules_include_and_consume_the_geometry_helpers(self):
         for name in MODULES:
