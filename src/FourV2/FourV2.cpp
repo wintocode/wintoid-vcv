@@ -10,7 +10,33 @@ namespace {
 
 inline float patch_value(float knob, float cv, float atten)
 {
+    knob = four_v2::finite_or(knob, 0.f);
+    cv = four_v2::finite_or(cv, 0.f);
+    atten = four_v2::finite_or(atten, 0.f);
     return clamp(knob + cv * atten / 10.f, 0.f, 1.f);
+}
+
+inline float unit_param(float value, float fallback)
+{
+    return clamp(four_v2::finite_or(value, fallback), 0.f, 1.f);
+}
+
+inline float bipolar_param(float value, float fallback = 0.f)
+{
+    return clamp(four_v2::finite_or(value, fallback), -1.f, 1.f);
+}
+
+inline float cents_multiplier(float cents)
+{
+    cents = four_v2::finite_or(cents, 0.f);
+    return four_v2::finite_or(exp2f(cents / 1200.f), 1.f);
+}
+
+inline int fold_type_index(float value)
+{
+    value = four_v2::finite_or(value, 0.f);
+    value = fmaxf(0.f, fminf(2.f, value));
+    return static_cast<int>(floorf(value + 0.5f));
 }
 
 struct CoarseParamQuantity : ParamQuantity {
@@ -179,9 +205,8 @@ struct FourV2 : Module {
             const std::string name = "Op " + std::to_string(op + 1);
             const float output_default = op == 0 ? 1.f : 0.f;
 
-            // The plain form documents the frozen range/default contract;
-            // the typed form installs the display-only quantity below.
-            // configParam(coarse_ids[op], 0.f, 14.f, 5.f, "Coarse");
+            // The typed quantity changes display text only; the parameter
+            // range, default, and snapping remain ordinary Rack metadata.
             auto* coarse_quantity = configParam<CoarseParamQuantity>(
                 coarse_ids[op], 0.f, 14.f, 5.f,
                 name + " Coarse");
@@ -332,71 +357,88 @@ struct FourV2 : Module {
         };
 
         four_v2::EngineParams common;
-        common.algorithm = static_cast<int>(
+        common.algorithm = four_v2::algorithm_index(
             params[ALGORITHM_PARAM].getValue());
-        common.master = params[MASTER_PARAM].getValue();
+        common.master = unit_param(
+            params[MASTER_PARAM].getValue(), 1.f);
 
-        const float global_tune = exp2f(params[TUNE_PARAM].getValue() / 1200.f);
-        const float pm_depth = params[PM_DEPTH_PARAM].getValue();
-        const float pm_cv_atten = params[PM_DEPTH_CV_ATTEN_PARAM].getValue();
-        const float external_pm_atten = params[EXT_PM_ATTEN_PARAM].getValue();
+        const float global_tune = cents_multiplier(
+            params[TUNE_PARAM].getValue());
+        const float pm_depth = unit_param(
+            params[PM_DEPTH_PARAM].getValue(), 1.f);
+        const float pm_cv_atten = bipolar_param(
+            params[PM_DEPTH_CV_ATTEN_PARAM].getValue());
+        const float external_pm_atten = bipolar_param(
+            params[EXT_PM_ATTEN_PARAM].getValue());
 
         for (int op = 0; op < 4; ++op) {
-            common.opCoarse[op] = params[coarse_ids[op]].getValue();
-            common.opFine[op] = exp2f(params[fine_ids[op]].getValue() / 1200.f);
-            common.opFreqMode[op] = static_cast<int>(
+            common.opCoarse[op] = clamp(
+                four_v2::finite_or(
+                    params[coarse_ids[op]].getValue(),
+                    (float)four_v2::DEFAULT_RATIO_INDEX),
+                four_v2::COARSE_MIN, four_v2::COARSE_MAX);
+            common.opFine[op] = cents_multiplier(
+                params[fine_ids[op]].getValue());
+            common.opFreqMode[op] = four_v2::clamp_mode(
                 params[freq_mode_ids[op]].getValue());
-            common.opFoldType[op] = static_cast<int>(
+            common.opFoldType[op] = fold_type_index(
                 params[fold_type_ids[op]].getValue());
         }
 
         float peakVolts = 0.f;
         for (int lane = 0; lane < channels; ++lane) {
             four_v2::EngineParams ep = common;
-            ep.baseFreq = four_v2::voct_to_freq(
-                readBroadcast(inputs[VOCT_INPUT], lane)) * global_tune;
+            const float voct = four_v2::finite_or(
+                readBroadcast(inputs[VOCT_INPUT], lane), 0.f);
+            ep.baseFreq = four_v2::finite_or(
+                four_v2::voct_to_freq(voct) * global_tune, 261.63f);
 
-            const float pm_cv = readBroadcast(inputs[PM_DEPTH_CV_INPUT], lane)
-                * pm_cv_atten / 10.f;
+            const float pm_cv_voltage = four_v2::finite_or(
+                readBroadcast(inputs[PM_DEPTH_CV_INPUT], lane), 0.f);
+            const float pm_cv = four_v2::finite_or(
+                pm_cv_voltage * pm_cv_atten / 10.f, 0.f);
             ep.pmDepth = clamp(pm_depth + pm_cv, 0.f, 1.f);
 
-            const float external_pm_volts =
-                readBroadcast(inputs[EXT_PM_INPUT], lane);
-            const float external_pm_cycles =
-                external_pm_volts * external_pm_atten * 0.1f;
+            const float external_pm_volts = four_v2::finite_or(
+                readBroadcast(inputs[EXT_PM_INPUT], lane), 0.f);
+            const float external_pm_cycles = four_v2::finite_or(
+                external_pm_volts * external_pm_atten * 0.1f, 0.f);
 
             for (int op = 0; op < 4; ++op) {
-                const float output_knob =
-                    params[output_ids[op]].getValue();
-                const float output_cv = readBroadcast(
-                    inputs[output_cv_input_ids[op]], lane);
-                const float output_atten =
-                    params[output_cv_atten_ids[op]].getValue();
+                const float output_default = op == 0 ? 1.f : 0.f;
+                const float output_knob = four_v2::finite_or(
+                    params[output_ids[op]].getValue(), output_default);
+                const float output_cv = four_v2::finite_or(readBroadcast(
+                    inputs[output_cv_input_ids[op]], lane), 0.f);
+                const float output_atten = bipolar_param(
+                    params[output_cv_atten_ids[op]].getValue());
                 ep.opOutput[op] = patch_value(
                     output_knob, output_cv, output_atten);
 
-                const float warp_knob = params[warp_ids[op]].getValue();
-                const float warp_cv = readBroadcast(
-                    inputs[warp_cv_input_ids[op]], lane);
-                const float warp_atten =
-                    params[warp_cv_atten_ids[op]].getValue();
+                const float warp_knob = four_v2::finite_or(
+                    params[warp_ids[op]].getValue(), 0.f);
+                const float warp_cv = four_v2::finite_or(readBroadcast(
+                    inputs[warp_cv_input_ids[op]], lane), 0.f);
+                const float warp_atten = bipolar_param(
+                    params[warp_cv_atten_ids[op]].getValue());
                 ep.opWarp[op] = patch_value(
                     warp_knob, warp_cv, warp_atten);
 
-                const float fold_knob = params[fold_ids[op]].getValue();
-                const float fold_cv = readBroadcast(
-                    inputs[fold_cv_input_ids[op]], lane);
-                const float fold_atten =
-                    params[fold_cv_atten_ids[op]].getValue();
+                const float fold_knob = four_v2::finite_or(
+                    params[fold_ids[op]].getValue(), 0.f);
+                const float fold_cv = four_v2::finite_or(readBroadcast(
+                    inputs[fold_cv_input_ids[op]], lane), 0.f);
+                const float fold_atten = bipolar_param(
+                    params[fold_cv_atten_ids[op]].getValue());
                 ep.opFold[op] = patch_value(
                     fold_knob, fold_cv, fold_atten);
 
-                const float feedback_knob =
-                    params[feedback_ids[op]].getValue();
-                const float feedback_cv = readBroadcast(
-                    inputs[feedback_cv_input_ids[op]], lane);
-                const float feedback_atten =
-                    params[feedback_cv_atten_ids[op]].getValue();
+                const float feedback_knob = four_v2::finite_or(
+                    params[feedback_ids[op]].getValue(), 0.f);
+                const float feedback_cv = four_v2::finite_or(readBroadcast(
+                    inputs[feedback_cv_input_ids[op]], lane), 0.f);
+                const float feedback_atten = bipolar_param(
+                    params[feedback_cv_atten_ids[op]].getValue());
                 ep.opFeedback[op] = patch_value(
                     feedback_knob, feedback_cv, feedback_atten);
             }

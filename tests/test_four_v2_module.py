@@ -138,7 +138,7 @@ class FourV2ModuleContractTest(unittest.TestCase):
             'configParam(PM_DEPTH_CV_ATTEN_PARAM, -1.f, 1.f, 0.f',
             'configParam(MASTER_PARAM, 0.f, 1.f, 1.f, "Master"',
             'configParam(EXT_PM_ATTEN_PARAM, -1.f, 1.f, 0.f',
-            'configParam(coarse_ids[op], 0.f, 14.f, 5.f',
+            'configParam<CoarseParamQuantity>(\n                coarse_ids[op], 0.f, 14.f, 5.f,',
             'configParam(fine_ids[op], -100.f, 100.f, 0.f',
             'configParam(output_ids[op], 0.f, 1.f, output_default',
             'configParam(warp_ids[op], 0.f, 1.f, 0.f',
@@ -190,8 +190,9 @@ class FourV2ModuleContractTest(unittest.TestCase):
             "wintoid::polyphony::effective_channels",
             "wintoid::polyphony::broadcast_lane",
             "wintoid::polyphony::reset_changed_lanes",
-            "exp2f(params[TUNE_PARAM].getValue() / 1200.f)",
-            "exp2f(params[fine_ids[op]].getValue() / 1200.f)",
+            "const float global_tune = cents_multiplier(",
+            "common.opFine[op] = cents_multiplier(",
+            "exp2f(cents / 1200.f)",
             "external_pm_volts * external_pm_atten * 0.1f",
             "four_v2::engine_process",
             "const float volts = out * 5.f",
@@ -202,12 +203,20 @@ class FourV2ModuleContractTest(unittest.TestCase):
             with self.subTest(contract=contract):
                 self.assertIn(contract, source)
         self.assertIn(
-            "const float pm_cv = readBroadcast(inputs[PM_DEPTH_CV_INPUT], lane)",
+            "const float pm_cv_voltage = four_v2::finite_or(",
             source,
         )
         self.assertIn("pm_cv_atten / 10.f", source)
         self.assertIn("clamp(pm_depth + pm_cv, 0.f, 1.f)", source)
         self.assertIn("clamp(knob + cv * atten / 10.f, 0.f, 1.f)", source)
+        for contract in (
+            "four_v2::algorithm_index",
+            "four_v2::clamp_mode",
+            "fold_type_index",
+            "four_v2::finite_or",
+        ):
+            with self.subTest(sanitizer=contract):
+                self.assertIn(contract, source)
 
     def test_quantity_only_changes_display_text_and_displays_are_not_controls(self):
         source = self.require_source()
