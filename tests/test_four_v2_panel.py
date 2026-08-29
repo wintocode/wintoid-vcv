@@ -358,6 +358,28 @@ class FourV2PanelTest(unittest.TestCase):
             self.assertLessEqual(x + width, panel.WIDTH_MM)
             self.assertLessEqual(y + height, panel.HEIGHT_MM)
 
+    def test_state_switch_assets_are_generated_for_every_static_choice(self):
+        panel = self.require_panel()
+        expected = (
+            ("FourV2FrequencyMode_Ratio.svg", "RATIO"),
+            ("FourV2FrequencyMode_Fixed.svg", "FIXED"),
+            ("FourV2FoldType_Symmetric.svg", "SYM"),
+            ("FourV2FoldType_Asymmetric.svg", "ASYM"),
+            ("FourV2FoldType_SoftClip.svg", "SOFT"),
+        )
+        self.assertEqual(expected, tuple(getattr(panel, "STATE_SWITCH_ASSETS", ())))
+        for filename, label in expected:
+            path = ROOT / "res" / filename
+            with self.subTest(asset=filename):
+                self.assertTrue(path.exists(), f"missing switch asset: {path}")
+                self.assertEqual(
+                    panel.generate_state_switch_svg(label),
+                    path.read_text(encoding="utf-8"),
+                )
+                root = ET.parse(path).getroot()
+                self.assertEqual("10mm", root.attrib.get("width"))
+                self.assertEqual("5mm", root.attrib.get("height"))
+
     def test_live_displays_use_generated_display_rectangles(self):
         self.require_panel()
         for contract in (
@@ -504,6 +526,11 @@ class FourV2PanelTest(unittest.TestCase):
             )
             component_name = f"op{operator}_{label_components[label.text]}"
             component_x, component_y, radius = component_by_name[component_name]
+            if component_name.endswith(("_freq_mode", "_fold_type")):
+                # The labeled switches are rectangular; this vertical
+                # clearance uses their actual half-height rather than the
+                # conservative circular envelope used for pairwise checks.
+                radius = panel.STATE_SWITCH_HEIGHT / 2.0
             self.assertAlmostEqual(component_x, x, delta=0.01)
             baseline = float(label.attrib["y"])
             font_size = float(label.attrib["font-size"])

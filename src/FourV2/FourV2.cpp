@@ -52,6 +52,30 @@ struct CoarseParamQuantity : ParamQuantity {
     }
 };
 
+struct FourV2FrequencyModeSwitch : app::SvgSwitch {
+    FourV2FrequencyModeSwitch()
+    {
+        shadow->opacity = 0.0;
+        addFrame(Svg::load(asset::plugin(
+            pluginInstance, "res/FourV2FrequencyMode_Ratio.svg")));
+        addFrame(Svg::load(asset::plugin(
+            pluginInstance, "res/FourV2FrequencyMode_Fixed.svg")));
+    }
+};
+
+struct FourV2FoldTypeSwitch : app::SvgSwitch {
+    FourV2FoldTypeSwitch()
+    {
+        shadow->opacity = 0.0;
+        addFrame(Svg::load(asset::plugin(
+            pluginInstance, "res/FourV2FoldType_Symmetric.svg")));
+        addFrame(Svg::load(asset::plugin(
+            pluginInstance, "res/FourV2FoldType_Asymmetric.svg")));
+        addFrame(Svg::load(asset::plugin(
+            pluginInstance, "res/FourV2FoldType_SoftClip.svg")));
+    }
+};
+
 } // namespace
 
 struct FourV2 : Module {
@@ -946,7 +970,7 @@ struct FourV2Widget : ModuleWidget {
             addParam(createParamCentered<RoundSmallBlackKnob>(
                 mm2px(Vec(coarse_x[op], operator_frequency_y)),
                 module, coarse_ids[op]));
-            addParam(createParamCentered<CKSS>(
+            addParam(createParamCentered<FourV2FrequencyModeSwitch>(
                 mm2px(Vec(freq_mode_x[op], operator_frequency_y)),
                 module, freq_mode_ids[op]));
             addParam(createParamCentered<Trimpot>(
@@ -962,7 +986,7 @@ struct FourV2Widget : ModuleWidget {
             addParam(createParamCentered<RoundSmallBlackKnob>(
                 mm2px(Vec(fold_x[op], operator_fold_y)),
                 module, fold_ids[op]));
-            addParam(createParamCentered<CKSSThree>(
+            addParam(createParamCentered<FourV2FoldTypeSwitch>(
                 mm2px(Vec(fold_type_x[op], operator_fold_y)),
                 module, fold_type_ids[op]));
             addParam(createParamCentered<RoundSmallBlackKnob>(

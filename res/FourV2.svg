@@ -118,44 +118,36 @@
   <circle cx="153" cy="17.5" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
   <circle cx="145" cy="29" r="1.2" fill="#a93636" stroke="#242522" stroke-width="0.25" />
   <circle cx="12.258" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="20.058" y="47.5" width="5.4" height="5" fill="#242522" stroke="#556d80" stroke-width="0.3" rx="0.7" />
-  <line x1="21.157" y1="50" x2="24.358" y2="50" stroke="#b7693c" stroke-width="0.45" />
+  <rect x="17.758" y="47.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
   <circle cx="33.258" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="13.758" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="31.758" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="13.758" cy="71" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="29.058" y="68.5" width="5.4" height="5" fill="#242522" stroke="#556d80" stroke-width="0.3" rx="0.7" />
-  <line x1="30.157" y1="71" x2="33.358" y2="71" stroke="#b7693c" stroke-width="0.45" />
+  <rect x="26.758" y="68.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
   <circle cx="22.758" cy="81.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="51.273" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="59.072" y="47.5" width="5.4" height="5" fill="#242522" stroke="#556d80" stroke-width="0.3" rx="0.7" />
-  <line x1="60.172" y1="50" x2="63.373" y2="50" stroke="#b7693c" stroke-width="0.45" />
+  <rect x="56.773" y="47.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
   <circle cx="72.273" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="52.773" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="70.773" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="52.773" cy="71" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="68.073" y="68.5" width="5.4" height="5" fill="#242522" stroke="#556d80" stroke-width="0.3" rx="0.7" />
-  <line x1="69.173" y1="71" x2="72.373" y2="71" stroke="#b7693c" stroke-width="0.45" />
+  <rect x="65.773" y="68.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
   <circle cx="61.773" cy="81.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="90.287" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="98.087" y="47.5" width="5.4" height="5" fill="#242522" stroke="#556d80" stroke-width="0.3" rx="0.7" />
-  <line x1="99.188" y1="50" x2="102.387" y2="50" stroke="#b7693c" stroke-width="0.45" />
+  <rect x="95.787" y="47.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
   <circle cx="111.287" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="91.787" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="109.787" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="91.787" cy="71" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="107.087" y="68.5" width="5.4" height="5" fill="#242522" stroke="#556d80" stroke-width="0.3" rx="0.7" />
-  <line x1="108.188" y1="71" x2="111.387" y2="71" stroke="#b7693c" stroke-width="0.45" />
+  <rect x="104.787" y="68.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
   <circle cx="100.787" cy="81.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="129.303" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="137.103" y="47.5" width="5.4" height="5" fill="#242522" stroke="#556d80" stroke-width="0.3" rx="0.7" />
-  <line x1="138.203" y1="50" x2="141.403" y2="50" stroke="#b7693c" stroke-width="0.45" />
+  <rect x="134.803" y="47.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
   <circle cx="150.303" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="130.803" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="148.803" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="130.803" cy="71" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="146.103" y="68.5" width="5.4" height="5" fill="#242522" stroke="#556d80" stroke-width="0.3" rx="0.7" />
-  <line x1="147.203" y1="71" x2="150.403" y2="71" stroke="#b7693c" stroke-width="0.45" />
+  <rect x="143.803" y="68.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
   <circle cx="139.803" cy="81.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="18.157" cy="94.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="27.358" cy="94.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />

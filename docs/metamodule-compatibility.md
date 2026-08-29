@@ -45,13 +45,18 @@ the 2026-08-27 GUI audit; they are release acceptance gates, not TODOs.
 The future MetaModule consumer must treat FourV2's generated panel and shared
 layout as a matched revision boundary:
 
-- Package a `FourV2` PNG faceplate generated from the same wintoid-vcv revision
-  as `src/FourV2/layout.h`. MetaModule consumes the PNG rather than the Rack
+- Package a `FourV2` PNG faceplate generated from the same revision of
+  wintoid-vcv as `src/FourV2/layout.h`. MetaModule consumes the PNG rather than the Rack
   SVG; regenerate it at 240 px height with the SDK's `SvgToPng.py` (or an
   approved equivalent) whenever the panel or layout changes. Do not mix a PNG
   from one revision with `layout.h` from another.
-- Map Algorithm, each Frequency Mode, and each Fold Type as ordinary static
-  parameters/switches. Ratio selection remains the module's deterministic
+- Convert and package the five generated `FourV2` state-switch frames as PNG
+  component assets from that same revision:
+  `FourV2FrequencyMode_Ratio.svg`, `FourV2FrequencyMode_Fixed.svg`,
+  `FourV2FoldType_Symmetric.svg`, `FourV2FoldType_Asymmetric.svg`, and
+  `FourV2FoldType_SoftClip.svg`.
+- Map Algorithm, each Frequency Mode, and each Fold Type as ordinary static parameters;
+  these are host-mappable switches. Ratio selection remains the module's deterministic
   quantisation of a continuous parameter; the consumer must not depend on
   runtime changes to Rack parameter snapping.
 - Register both `AlgorithmRoutingDisplay` and

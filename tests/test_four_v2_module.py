@@ -4,6 +4,7 @@ import json
 import pathlib
 import re
 import unittest
+import xml.etree.ElementTree as ET
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -13,6 +14,14 @@ PLUGIN_SOURCE_PATH = ROOT / "src" / "plugin.cpp"
 MANIFEST_PATH = ROOT / "plugin.json"
 README_PATH = ROOT / "README.md"
 COMPATIBILITY_PATH = ROOT / "docs" / "metamodule-compatibility.md"
+
+STATE_SWITCH_ASSETS = {
+    "FourV2FrequencyMode_Ratio.svg": "RATIO",
+    "FourV2FrequencyMode_Fixed.svg": "FIXED",
+    "FourV2FoldType_Symmetric.svg": "SYM",
+    "FourV2FoldType_Asymmetric.svg": "ASYM",
+    "FourV2FoldType_SoftClip.svg": "SOFT",
+}
 
 
 PARAM_IDS = [
@@ -174,8 +183,8 @@ class FourV2ModuleContractTest(unittest.TestCase):
         for contract in (
             "RoundSmallBlackKnob",
             "Trimpot",
-            "CKSS",
-            "CKSSThree",
+            "FourV2FrequencyModeSwitch",
+            "FourV2FoldTypeSwitch",
             "PJ301MPort",
             "RedLight",
             "OP1_COARSE_X",
@@ -186,6 +195,48 @@ class FourV2ModuleContractTest(unittest.TestCase):
             with self.subTest(contract=contract):
                 self.assertIn(contract, source)
         self.assertIn("for (int op = 0; op < 4; ++op)", source)
+
+    def test_mode_controls_use_labeled_asset_backed_param_widgets(self):
+        source = self.require_source()
+        for contract in (
+            "struct FourV2FrequencyModeSwitch : app::SvgSwitch",
+            "struct FourV2FoldTypeSwitch : app::SvgSwitch",
+            "createParamCentered<FourV2FrequencyModeSwitch>",
+            "createParamCentered<FourV2FoldTypeSwitch>",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, source)
+
+        for filename in STATE_SWITCH_ASSETS:
+            with self.subTest(asset=filename):
+                self.assertRegex(
+                    source,
+                    rf'asset::plugin\(\s*pluginInstance,\s*"res/{re.escape(filename)}"\)',
+                )
+
+        self.assertNotIn("createParamCentered<CKSS>", source)
+        self.assertNotIn("createParamCentered<CKSSThree>", source)
+
+    def test_state_switch_assets_use_nanosvg_compatible_vector_labels(self):
+        for filename, label in STATE_SWITCH_ASSETS.items():
+            path = ROOT / "res" / filename
+            with self.subTest(asset=filename):
+                self.assertTrue(path.exists(), f"missing switch asset: {path}")
+                root = ET.parse(path).getroot()
+                self.assertEqual("10mm", root.attrib.get("width"))
+                self.assertEqual("5mm", root.attrib.get("height"))
+                self.assertEqual([], [
+                    node for node in root.iter()
+                    if node.tag.endswith("text") and node.text
+                ])
+                label_paths = [
+                    node for node in root.iter()
+                    if node.tag.endswith("path")
+                ]
+                self.assertEqual(1, len(label_paths))
+                self.assertTrue(label_paths[0].attrib.get("d"))
+                self.assertEqual(label, label_paths[0].attrib.get("data-label"))
+                self.assertEqual("#ece8d9", label_paths[0].attrib.get("fill"))
 
     def test_process_equations_cover_polyphony_tuning_patchbay_output_and_over(self):
         source = self.require_source()

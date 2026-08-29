@@ -7,6 +7,8 @@ Run from the project root or from any other working directory::
 
 Outputs:
     res/FourV2.svg       -- deterministic ivory structural artwork
+    res/FourV2FrequencyMode_*.svg and res/FourV2FoldType_*.svg
+                         -- labeled ParamWidget switch frames
     src/FourV2/layout.h  -- generated millimetre coordinates for Rack widgets
 
 All geometry in this file is millimetres.  The SVG is intentionally a quiet
@@ -29,6 +31,32 @@ LOGO_PATH = ROOT / "res" / "WintoidLogo.svg"
 SVG_PATH = ROOT / "res" / "FourV2.svg"
 HEADER_PATH = ROOT / "src" / "FourV2" / "layout.h"
 GLYPH_DATA_PATH = ROOT / "scripts" / "assets" / "wintoid_logo_glyphs.json"
+STATE_SWITCH_ASSETS = (
+    ("FourV2FrequencyMode_Ratio.svg", "RATIO"),
+    ("FourV2FrequencyMode_Fixed.svg", "FIXED"),
+    ("FourV2FoldType_Symmetric.svg", "SYM"),
+    ("FourV2FoldType_Asymmetric.svg", "ASYM"),
+    ("FourV2FoldType_SoftClip.svg", "SOFT"),
+)
+STATE_SWITCH_WIDTH = 10.0
+STATE_SWITCH_HEIGHT = 5.0
+STATE_SWITCH_CELL_SIZE = 0.30
+STATE_SWITCH_CELL_GAP = 0.03
+STATE_SWITCH_LETTER_GAP = 0.10
+STATE_SWITCH_GLYPHS = {
+    "A": ("01110", "10001", "10001", "11111", "10001", "10001", "10001"),
+    "D": ("11110", "10001", "10001", "10001", "10001", "10001", "11110"),
+    "E": ("11111", "10000", "10000", "11110", "10000", "10000", "11111"),
+    "F": ("11111", "10000", "10000", "11110", "10000", "10000", "10000"),
+    "I": ("11111", "00100", "00100", "00100", "00100", "00100", "11111"),
+    "M": ("10001", "11011", "10101", "10001", "10001", "10001", "10001"),
+    "O": ("01110", "10001", "10001", "10001", "10001", "10001", "01110"),
+    "R": ("11110", "10001", "10001", "11110", "10100", "10010", "10001"),
+    "S": ("01111", "10000", "10000", "01110", "00001", "00001", "11110"),
+    "T": ("11111", "00100", "00100", "00100", "00100", "00100", "00100"),
+    "X": ("10001", "10001", "01010", "00100", "01010", "10001", "10001"),
+    "Y": ("10001", "10001", "01010", "00100", "00100", "00100", "00100"),
+}
 
 
 # Panel dimensions and SEM-instrument palette.
@@ -60,7 +88,7 @@ RACK_SMALL_KNOB_RADIUS = 22.67581 / (2.0 * PIXELS_PER_MM)
 RACK_PORT_RADIUS = 23.7 / (2.0 * PIXELS_PER_MM)
 SMALL_KNOB_RADIUS = RACK_SMALL_KNOB_RADIUS
 PORT_RADIUS = RACK_PORT_RADIUS
-SWITCH_RADIUS = 3.0
+SWITCH_RADIUS = STATE_SWITCH_WIDTH / 2.0
 LIGHT_RADIUS = 1.2
 
 OUTPUT_RING_WIDTH = 0.45
@@ -304,6 +332,69 @@ def _path(data: str, stroke: str, width: float = 0.30, fill: str = "none") -> st
     )
 
 
+def _state_switch_label_path(label: str) -> str:
+    """Return a NanoSVG-compatible block glyph path for one label."""
+    glyph_width = 5.0 * STATE_SWITCH_CELL_SIZE + 4.0 * STATE_SWITCH_CELL_GAP
+    label_width = (
+        len(label) * glyph_width
+        + max(0, len(label) - 1) * STATE_SWITCH_LETTER_GAP
+    )
+    glyph_height = 7.0 * STATE_SWITCH_CELL_SIZE + 6.0 * STATE_SWITCH_CELL_GAP
+    start_x = (STATE_SWITCH_WIDTH - label_width) / 2.0
+    start_y = (STATE_SWITCH_HEIGHT - glyph_height) / 2.0
+    commands = []
+    for character in label:
+        glyph = STATE_SWITCH_GLYPHS[character]
+        for row, line in enumerate(glyph):
+            for column, filled in enumerate(line):
+                if filled != "1":
+                    continue
+                x = start_x + column * (STATE_SWITCH_CELL_SIZE + STATE_SWITCH_CELL_GAP)
+                y = start_y + row * (STATE_SWITCH_CELL_SIZE + STATE_SWITCH_CELL_GAP)
+                x2 = x + STATE_SWITCH_CELL_SIZE
+                y2 = y + STATE_SWITCH_CELL_SIZE
+                commands.append(
+                    f"M {_fmt(x)} {_fmt(y)} L {_fmt(x2)} {_fmt(y)} "
+                    f"L {_fmt(x2)} {_fmt(y2)} L {_fmt(x)} {_fmt(y2)} Z"
+                )
+        start_x += glyph_width + STATE_SWITCH_LETTER_GAP
+    return (
+        f'  <path data-label="{escape(label)}" '
+        f'd="{" ".join(commands)}" fill="{DISPLAY_TEXT}" />'
+    )
+
+
+def generate_state_switch_svg(label: str) -> str:
+    """Return one labeled, asset-backed switch frame."""
+    labels = {choice for _filename, choice in STATE_SWITCH_ASSETS}
+    if label not in labels:
+        raise ValueError(f"unknown state switch label: {label!r}")
+    if any(character not in STATE_SWITCH_GLYPHS for character in label):
+        raise ValueError(f"no vector glyphs for state switch label: {label!r}")
+
+    inset = 0.25
+    lines = [
+        '<svg xmlns="http://www.w3.org/2000/svg" '
+        f'width="{_fmt(STATE_SWITCH_WIDTH, 1)}mm" '
+        f'height="{_fmt(STATE_SWITCH_HEIGHT, 1)}mm" '
+        f'viewBox="0 0 {_fmt(STATE_SWITCH_WIDTH, 1)} '
+        f'{_fmt(STATE_SWITCH_HEIGHT, 1)}">',
+        _rect(
+            inset,
+            inset,
+            STATE_SWITCH_WIDTH - inset * 2.0,
+            STATE_SWITCH_HEIGHT - inset * 2.0,
+            DISPLAY_CHARCOAL,
+            CONTROL_ACCENT,
+            radius=0.9,
+            stroke_width=0.50,
+        ),
+        _state_switch_label_path(label),
+        "</svg>",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def _text(
     x: float,
     y: float,
@@ -377,16 +468,16 @@ def _append_component(lines: list[str], name: str, x: float, y: float) -> None:
     elif kind == "switch":
         lines.append(
             _rect(
-                x - 2.7,
-                y - 2.5,
-                5.4,
-                5.0,
+                x - STATE_SWITCH_WIDTH / 2.0,
+                y - STATE_SWITCH_HEIGHT / 2.0,
+                STATE_SWITCH_WIDTH,
+                STATE_SWITCH_HEIGHT,
                 CONTROL_FILL,
-                CONTROL_STROKE,
-                radius=0.7,
+                CONTROL_ACCENT,
+                radius=0.9,
+                stroke_width=0.50,
             )
         )
-        lines.append(_line(x - 1.6, y, x + 1.6, y, CONTROL_ACCENT, 0.45))
     elif kind == "light":
         lines.append(_circle(x, y, LIGHT_RADIUS, "#a93636", LEGEND_CHARCOAL, 0.25))
     else:
@@ -1083,13 +1174,24 @@ def generate_coords_header() -> str:
 generate_header = generate_coords_header
 
 
+def write_state_switch_assets() -> None:
+    for filename, label in STATE_SWITCH_ASSETS:
+        (ROOT / "res" / filename).write_text(
+            generate_state_switch_svg(label),
+            encoding="utf-8",
+        )
+
+
 def main() -> None:
     SVG_PATH.parent.mkdir(parents=True, exist_ok=True)
     HEADER_PATH.parent.mkdir(parents=True, exist_ok=True)
     SVG_PATH.write_text(generate_svg(), encoding="utf-8")
     HEADER_PATH.write_text(generate_coords_header(), encoding="utf-8")
+    write_state_switch_assets()
     print(f"Wrote {SVG_PATH}")
     print(f"Wrote {HEADER_PATH}")
+    for filename, _label in STATE_SWITCH_ASSETS:
+        print(f"Wrote {ROOT / 'res' / filename}")
 
 
 if __name__ == "__main__":
