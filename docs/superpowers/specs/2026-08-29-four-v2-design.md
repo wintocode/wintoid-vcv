@@ -201,7 +201,7 @@ The initial direction is a warm, light `SEM instrument` panel:
 
 The aim is to combine the warmth and directness of the Oberheim SEM with the disciplined hierarchy admired in XAOC Devices modules, without copying either brand's decorative identity.
 
-### Wintoid mark
+### wintoid mark
 
 The logo retains its existing concept:
 
@@ -291,7 +291,7 @@ Before FourV2's first compatibility-bearing release:
 
 1. Confirm the 32 HP panel at actual size or document the approved increase.
 2. Approve the visible `FourV2` title treatment.
-3. Approve the real-size vector Wintoid mark.
+3. Approve the real-size vector wintoid mark.
 4. Confirm External PM scaling after listening tests.
 5. Confirm all native and compatibility-oriented tests pass.
 6. Freeze the `FourV2` model slug and parameter ordering for subsequent patch compatibility.

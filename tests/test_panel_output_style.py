@@ -42,6 +42,7 @@ class PanelOutputStyleTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.four = load_generator("four")
+        cls.four_v2 = load_generator("four_v2")
         cls.vortex = load_generator("vortex")
         cls.brink = load_generator("brink")
 
@@ -72,6 +73,13 @@ class PanelOutputStyleTest(unittest.TestCase):
         self.assert_input_style(
             circles, self.four.GLOBAL_CONTROLS["voct_jack"])
 
+    def test_four_v2_main_output_has_inverted_backplate(self):
+        circles = circles_by_position(self.four_v2.generate_svg())
+        self.assert_output_style(
+            circles, self.four_v2, self.four_v2.OUTPUT_COMPONENTS[0][1:])
+        self.assert_input_style(
+            circles, self.four_v2.INPUT_COMPONENTS[0][1:])
+
     def test_vortex_audio_output_has_inverted_backplate(self):
         circles = circles_by_position(self.vortex.generate_svg())
         self.assert_output_style(
@@ -91,6 +99,7 @@ class PanelOutputStyleTest(unittest.TestCase):
     def test_checked_in_panel_artifacts_match_generators(self):
         generated = (
             ("Four", self.four, ""),
+            ("FourV2", self.four_v2, ""),
             ("Brink", self.brink, "\n"),
             ("Vortex", self.vortex, ""),
         )
