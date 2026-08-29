@@ -28,6 +28,16 @@ MINIMUM_LABEL_CLEARANCE_MM = 0.25
 
 _FLOAT_TOKEN = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
 _PATH_TOKEN_RE = re.compile(rf"[A-Za-z]|{_FLOAT_TOKEN}")
+_HEADER_FLOAT_RE = re.compile(
+    rf"constexpr float (?P<name>[A-Z0-9_]+) = (?P<value>{_FLOAT_TOKEN})f;"
+)
+
+
+def _emitted_header_floats(source):
+    return {
+        match.group("name"): float(match.group("value"))
+        for match in _HEADER_FLOAT_RE.finditer(source)
+    }
 
 
 def _quadratic_x_values(start, control, end):
@@ -318,13 +328,48 @@ class FourV2PanelTest(unittest.TestCase):
 
     def test_patchbay_row_labels_clear_every_real_rack_widget_envelope(self):
         panel = self.require_panel()
-        root = ET.fromstring(panel.generate_svg())
+        root = ET.fromstring(PANEL_SVG.read_text(encoding="utf-8"))
+        header = _emitted_header_floats(
+            LAYOUT_HEADER.read_text(encoding="utf-8")
+        )
         labels = {
             node.text: node
             for node in root.iter()
             if node.tag.endswith("text") and node.text in panel.PATCHBAY_ROWS
         }
         self.assertEqual(set(panel.PATCHBAY_ROWS), set(labels))
+
+        circles = [
+            node for node in root.iter()
+            if node.tag.endswith("circle")
+            and "cx" in node.attrib
+            and "cy" in node.attrib
+        ]
+        components = []
+        for row in panel.PATCHBAY_ROWS:
+            slug = row.upper()
+            for index in range(1, 5):
+                for role, radius_name in (
+                    ("CV_INPUT", "RACK_PORT_RADIUS"),
+                    ("CV_ATTEN", "RACK_SMALL_KNOB_RADIUS"),
+                ):
+                    prefix = f"OP{index}_{slug}_{role}"
+                    x = header[f"{prefix}_X"]
+                    y = header[f"{prefix}_Y"]
+                    matches = [
+                        circle for circle in circles
+                        if float(circle.attrib["cx"]) == x
+                        and float(circle.attrib["cy"]) == y
+                    ]
+                    self.assertEqual(
+                        1,
+                        len(matches),
+                        f"missing emitted SVG component for {prefix}",
+                    )
+                    components.append(
+                        (prefix, x, y, header[radius_name])
+                    )
+
         for row in panel.PATCHBAY_ROWS:
             rectangle = _text_envelope(labels[row])
             with self.subTest(label=row, boundary="left gutter"):
@@ -333,9 +378,9 @@ class FourV2PanelTest(unittest.TestCase):
                     rectangle[2],
                     panel.PATCHBAY_SECTION[0] + panel.PATCHBAY_SECTION[2],
                 )
-            for name, x, y in panel.COMPONENTS:
+            for name, x, y, radius in components:
                 clearance = _rectangle_circle_clearance(
-                    rectangle, x, y, panel.COMPONENT_RADII[name]
+                    rectangle, x, y, radius
                 )
                 with self.subTest(label=row, component=name):
                     self.assertGreaterEqual(

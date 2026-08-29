@@ -173,7 +173,10 @@ PATCHBAY_LABEL_RIGHT_X = (
     PATCHBAY_COLUMN_XS[0]
     - PATCHBAY_WIDGET_OFFSET
     - RACK_PORT_RADIUS
-    - MINIMUM_LABEL_CLEARANCE_MM
+    # Leave a quantization margin: the generated SVG/header round positions
+    # to three decimals, so the emitted geometry must remain over the public
+    # 0.25 mm minimum rather than merely touching it before formatting.
+    - (MINIMUM_LABEL_CLEARANCE_MM + 0.05)
 )
 PATCHBAY_LABEL_WIDTHS = {
     "Output": 6.5,
