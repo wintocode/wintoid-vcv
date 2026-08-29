@@ -23,7 +23,7 @@ static int tests_passed = 0;
     } } while (0)
 
 #define ASSERT_NEAR(a, b, eps) \
-    do { float _a=(a), _b=(b); if (fabsf(_a-_b) > (eps)) { \
+    do { float _a=(a), _b=(b); if (!isfinite(_a) || !isfinite(_b) || fabsf(_a-_b) > (eps)) { \
         printf("FAIL\n    %s:%d: %f != %f (eps=%f)\n", \
                __FILE__, __LINE__, (double)_a, (double)_b, (double)(eps)); \
         exit(1); \
