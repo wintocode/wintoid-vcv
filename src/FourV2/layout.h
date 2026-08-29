@@ -12,18 +12,18 @@ constexpr float TITLE_Y = 7.0f;
 constexpr float TITLE_FONT_SIZE = 6.6f;
 constexpr float LOGO_TARGET_X = 125.0f;
 constexpr float LOGO_TARGET_Y = 1.8f;
-constexpr float LOGO_SCALE = 0.12f;
+constexpr float LOGO_SCALE = 0.06f;
 constexpr float MINIMUM_EDGE_CLEARANCE_MM = 4.0f;
 constexpr float MINIMUM_LABEL_CLEARANCE_MM = 0.25f;
 
 // Global routing display rectangle
-constexpr float ROUTING_DISPLAY_X = 6.5f;
+constexpr float ROUTING_DISPLAY_X = 17.5f;
 constexpr float ROUTING_DISPLAY_Y = 13.0f;
 constexpr float ROUTING_DISPLAY_WIDTH = 48.0f;
 constexpr float ROUTING_DISPLAY_HEIGHT = 21.0f;
 
 // Global controls
-constexpr float ALGORITHM_KNOB_X = 60.5f;
+constexpr float ALGORITHM_KNOB_X = 8.5f;
 constexpr float ALGORITHM_KNOB_Y = 23.5f;
 constexpr float TUNE_KNOB_X = 70.5f;
 constexpr float TUNE_KNOB_Y = 17.5f;

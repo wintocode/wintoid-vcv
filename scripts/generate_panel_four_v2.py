@@ -79,15 +79,15 @@ TITLE_Y = 7.0
 TITLE_FONT_SIZE = 6.6
 LOGO_TARGET_X = 125.0
 LOGO_TARGET_Y = 1.8
-LOGO_SCALE = 0.12
+LOGO_SCALE = 0.06
 
 
 # Global routing/control band.
 ROUTING_SECTION = (4.0, 10.5, WIDTH_MM - 8.0, 25.5)
-ROUTING_DISPLAY = (6.5, 13.0, 48.0, 21.0)
+ROUTING_DISPLAY = (17.5, 13.0, 48.0, 21.0)
 ROUTING_DISPLAY_INSET = 1.3
 GLOBAL_CONTROLS = {
-    "algorithm_knob": (60.5, 23.5),
+    "algorithm_knob": (8.5, 23.5),
     "tune_knob": (70.5, 17.5),
     "pm_depth_knob": (82.5, 17.5),
     "master_knob": (94.5, 17.5),
@@ -441,8 +441,6 @@ SECTION_RECTS = {
 # not the much smaller structural circles in the SVG.
 LABEL_CLEARANCES = {
     "title": {"clearance_mm": 0.50},
-    "routing_heading": {"clearance_mm": 0.50},
-    "algorithm": {"clearance_mm": 0.35},
     "tune": {"clearance_mm": 0.35},
     "pm_depth": {"clearance_mm": 0.35},
     "master": {"clearance_mm": 0.35},
@@ -460,7 +458,6 @@ LABEL_CLEARANCES = {
         for index in range(1, 5)
         for label in ("coarse", "fine", "output", "warp", "fold", "fold_type", "feedback")
     },
-    "patchbay_heading": {"clearance_mm": 0.50},
     **{
         f"patchbay_{row.lower()}": {"clearance_mm": 0.30}
         for row in PATCHBAY_ROWS
@@ -613,9 +610,7 @@ def generate_svg() -> str:
             stroke_width=0.35,
         )
     )
-    lines.append(_text(7.5, 12.0, "ROUTING", size=2.0, anchor="start", weight="600", letter_spacing=0.35))
     _append_routing_artwork(lines)
-    lines.append(_text(GLOBAL_CONTROLS["algorithm_knob"][0], 14.2, "ALGORITHM", size=1.75, weight="600"))
     for value, x in (
         ("TUNE", GLOBAL_CONTROLS["tune_knob"][0]),
         ("PM DEPTH", GLOBAL_CONTROLS["pm_depth_knob"][0]),
@@ -680,7 +675,6 @@ def generate_svg() -> str:
             stroke_width=0.35,
         )
     )
-    lines.append(_text(7.5, 86.5, "CV PATCHBAY", size=2.0, anchor="start", weight="600", letter_spacing=0.25))
     for index, x in enumerate(PATCHBAY_COLUMN_XS, start=1):
         lines.append(_text(x, 86.5, f"OP{index}", size=1.55, fill=SECTION_BLUE_GREY, weight="600"))
     for row, y in zip(PATCHBAY_ROWS, PATCHBAY_ROW_YS):
@@ -696,7 +690,6 @@ def generate_svg() -> str:
                 text_length=PATCHBAY_LABEL_WIDTHS[row],
             )
         )
-        lines.append(_line(18.5, y, WIDTH_MM - 5.0, y, "#c5c0ae", 0.15))
 
     # Shared I/O frame and static labels.
     lines.append(

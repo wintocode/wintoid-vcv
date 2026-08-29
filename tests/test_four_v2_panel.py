@@ -275,6 +275,14 @@ class FourV2PanelTest(unittest.TestCase):
                    if node.tag.endswith("path")}
         self.assertEqual({"#155f91", "#ed5b22"}, colours)
 
+    def test_panel_logo_is_rendered_at_half_size(self):
+        panel = self.require_panel()
+        self.assertAlmostEqual(0.06, panel.LOGO_SCALE)
+        root = ET.fromstring(panel.generate_svg())
+        logo = next(node for node in root.iter()
+                    if node.attrib.get("id") == "wintoid-logo")
+        self.assertRegex(logo.attrib["transform"], r"scale\(0\.06\)")
+
     def test_all_physical_components_clear_panel_edges(self):
         panel = self.require_panel()
         for name, x, y in panel.COMPONENTS:
@@ -317,6 +325,18 @@ class FourV2PanelTest(unittest.TestCase):
         self.assertLessEqual(x + width, panel.WIDTH_MM)
         self.assertLessEqual(y + height, panel.HEIGHT_MM)
 
+    def test_algorithm_knob_is_left_of_and_aligned_with_routing_display(self):
+        panel = self.require_panel()
+        display_x, display_y, _display_width, display_height = \
+            panel.DISPLAY_RECTS["ROUTING"]
+        algorithm_x, algorithm_y = panel.GLOBAL_CONTROLS["algorithm_knob"]
+        algorithm_radius = panel.COMPONENT_RADII["algorithm_knob"]
+        self.assertLess(algorithm_x + algorithm_radius, display_x)
+        self.assertAlmostEqual(
+            display_y + display_height / 2.0,
+            algorithm_y,
+        )
+
     def test_frequency_displays_have_equal_dimensions_and_fit(self):
         panel = self.require_panel()
         rectangles = tuple(panel.FREQUENCY_DISPLAY_RECTS)
@@ -358,6 +378,18 @@ class FourV2PanelTest(unittest.TestCase):
             for cell, x in zip(panel.PATCHBAY_CELLS[row],
                                panel.PATCHBAY_COLUMN_XS):
                 self.assertAlmostEqual(x, cell[0])
+
+    def test_patchbay_has_no_horizontal_guide_lines_through_socket_rows(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        patchbay_rows = {round(y, 3) for y in panel.PATCHBAY_ROW_YS}
+        guide_lines = [
+            node for node in root.iter()
+            if node.tag.endswith("line")
+            and round(float(node.attrib["y1"]), 3) in patchbay_rows
+            and round(float(node.attrib["y2"]), 3) in patchbay_rows
+        ]
+        self.assertEqual([], guide_lines)
 
     def test_patchbay_row_labels_clear_every_real_rack_widget_envelope(self):
         panel = self.require_panel()
@@ -442,11 +474,14 @@ class FourV2PanelTest(unittest.TestCase):
         root = ET.fromstring(panel.generate_svg())
         labels = {node.text for node in root.iter()
                   if node.tag.endswith("text") and node.text}
-        for expected in ("FourV2", "ROUTING", "OP1", "OP2", "OP3", "OP4",
-                         "CV PATCHBAY", "Output", "Warp", "Fold",
+        for expected in ("FourV2", "OP1", "OP2", "OP3", "OP4",
+                         "Output", "Warp", "Fold",
                          "Feedback", "PM DEPTH", "MASTER", "OVER"):
             with self.subTest(label=expected):
                 self.assertIn(expected, labels)
+        for removed in ("ROUTING", "ALGORITHM", "CV PATCHBAY"):
+            with self.subTest(removed_label=removed):
+                self.assertNotIn(removed, labels)
 
     def test_rack_runtime_gets_static_labels_from_a_nvg_overlay(self):
         source = self.source
@@ -462,15 +497,15 @@ class FourV2PanelTest(unittest.TestCase):
             "nvgFontFaceId",
             "nvgText",
             '"FourV2"',
-            '"ROUTING"',
-            '"ALGORITHM"',
             '"COARSE"',
             '"FEEDBACK"',
-            '"CV PATCHBAY"',
             '"MAIN OUT"',
         ):
             with self.subTest(contract=contract):
                 self.assertIn(contract, body)
+        for removed in ('"ROUTING"', '"ALGORITHM"', '"CV PATCHBAY"'):
+            with self.subTest(removed_label=removed):
+                self.assertNotIn(removed, body)
         self.assertRegex(source, r"addChild\(\s*labels\s*\)")
 
     def test_generated_artifacts_match_generators(self):

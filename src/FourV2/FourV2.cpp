@@ -505,10 +505,6 @@ struct FourV2PanelLabels : Widget {
         const Label labels[] = {
             {TITLE_X, TITLE_Y, TITLE_FONT_SIZE, leftBaseline,
              36, 37, 34, "FourV2"},
-            {7.5f, 12.0f, 2.0f, leftBaseline,
-             36, 37, 34, "ROUTING"},
-            {ALGORITHM_KNOB_X, 14.2f, 1.75f, centerBaseline,
-             36, 37, 34, "ALGORITHM"},
             {TUNE_KNOB_X, 13.9f, 1.55f, centerBaseline,
              36, 37, 34, "TUNE"},
             {PM_DEPTH_KNOB_X, 13.9f, 1.55f, centerBaseline,
@@ -554,8 +550,6 @@ struct FourV2PanelLabels : Widget {
                               centerBaseline, 36, 37, 34, "FEEDBACK"});
         }
 
-        drawLabel(args, {7.5f, 86.5f, 2.0f, leftBaseline,
-                         36, 37, 34, "CV PATCHBAY"});
         for (int op = 0; op < 4; ++op) {
             drawLabel(args, {operatorCenters[op], 86.5f, 1.55f,
                               centerBaseline, 85, 109, 128,
