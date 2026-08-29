@@ -17,6 +17,83 @@ VCV Rack plugin — synthesizer, filter, and CV/logic utilities.
 - **16-channel polyphony** — voice count follows the **V/OCT** input; mono and shorter polyphonic modulation inputs broadcast lane 0
 - **2× internal oversampling** with DC blocking
 
+### FourV2
+Independent 4-operator phase-modulation oscillator (32HP)
+
+FourV2 is a separate module from Four. It keeps the same 11 topology order, but
+its controls and signal flow are documented independently.
+
+#### Routing and frequency
+
+- **11 algorithms** — the fixed routing choices are:
+
+| Algorithm | Phase-modulation routing | Carriers in the output mix |
+| ---: | --- | --- |
+| 1 | `4 → 3 → 2 → 1` | 1 |
+| 2 | `(3 + 4) → 2 → 1` | 1 |
+| 3 | `4 → 2 → 1` and `3 → 1` | 1 |
+| 4 | `4 → 3 → 1` and `2 → 1` | 1 |
+| 5 | `4 → 3` and `2 → 1` | 1 and 3 |
+| 6 | `4 → (1, 2, 3)` | 1, 2, and 3 |
+| 7 | `4 → 3`, plus independent 2 and 1 | 1, 2, and 3 |
+| 8 | no internal modulation | 1, 2, 3, and 4 |
+| 9 | `4 → 3 → (1, 2)` | 1 and 2 |
+| 10 | `(3 + 4) → (1, 2)` | 1 and 2 |
+| 11 | `(2 + 3 + 4) → 1` | 1 |
+
+- **15 curated harmonic ratios** — Ratio mode selects equally sized zones in
+  this exact order: `4:1`, `3:1`, `2:1`, `3:2`, `4:3`, `1:1`, `3:4`, `2:3`, `1:2`, `1:3`, `1:4`, `1:5`, `1:6`, `1:7`, `1:8`. The values are reduced canonical ratios, so `1:4` is used instead of `0.25:1`.
+- **Ratio mode** quantises the continuous Coarse control to the nearest one of
+  those 15 zones. `1:1` is the sixth selection; it is not moved to the knob's
+  geometric centre.
+- **Fixed mode** uses the same Coarse control continuously and maps it
+  exponentially from approximately 1 Hz to 10 kHz. It is not quantised to the
+  ratio zones. Fine tuning is in cents and applies in both modes.
+- Each operator has a read-only frequency display showing its selected ratio or
+  fixed frequency; the routing display is also informational.
+
+#### Output, Warp, Fold, and Feedback CV patchbay
+
+- **OUTPUT** controls every destination of its operator. For a carrier it sets
+  audible mix level; for a modulator it sets modulation depth; an operator with
+  both roles uses the same level for both. Operators continue running when
+  their Output is zero, so restoring a level does not restart their phase.
+- **WARP** continuously morphs Sine → Triangle → Saw → Pulse. **FOLD** adds
+  wavefolding, with Symmetric, Asymmetric, and Soft Clip types. **FEEDBACK**
+  adds self-phase modulation for that operator.
+- The **CV PATCHBAY** is a separate four-row matrix: Output, Warp, Fold, and
+  Feedback. Every operator/row cell has a CV input and bipolar attenuverter;
+  the effective control is the knob plus scaled CV, clamped to its documented
+  range.
+
+#### PM, output level, and polyphony
+
+- **PM DEPTH** scales the internal operator-to-operator phase modulation after
+  each source operator's Output level. Its CV input uses a bipolar attenuverter.
+- **External PM affects every carrier** directly in phase, before waveform
+  generation, Warp, and Fold. It is signed: the external phase contribution is
+  `input volts × attenuverter × 0.1` cycles, so a negative attenuverter inverts
+  the modulation instead of rectifying it. PM DEPTH and External PM are
+  independent controls.
+- The **raw carrier sum** is sent through **MASTER**, the only automatic
+  post-mix gain control. FourV2 does not divide by carrier count, normalise, or
+  soft-clip when carriers are added. One full-scale carrier is approximately
+  ±5 V at full Master; four phase-aligned carriers can reach approximately
+  ±20 V.
+- **OVER** monitors the post-Master voltage on every lane. It lights at or above
+  ±10 V and holds for approximately 250 ms; it never clips, limits, compresses,
+  or changes the audio.
+- **16-channel polyphony** — voice count follows the **V/OCT** input, with one
+  lane when it is unpatched and up to 16 lanes when it is polyphonic. Mono and
+  shorter polyphonic CV inputs broadcast lane 0 to the additional lanes; this
+  applies to PM Depth, External PM, and every CV PATCHBAY row.
+
+#### Patch compatibility
+
+Four remains the original V1 module with its existing model, parameters, signal
+behaviour, and patch compatibility. Existing Four patches continue to load as
+Four; FourV2 is an independent model and does not replace or reinterpret them.
+
 ### Vortex
 12-mode multi-mode filter (6HP)
 

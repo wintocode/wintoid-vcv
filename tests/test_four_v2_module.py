@@ -11,6 +11,8 @@ SOURCE_PATH = ROOT / "src" / "FourV2" / "FourV2.cpp"
 PLUGIN_HEADER_PATH = ROOT / "src" / "plugin.hpp"
 PLUGIN_SOURCE_PATH = ROOT / "src" / "plugin.cpp"
 MANIFEST_PATH = ROOT / "plugin.json"
+README_PATH = ROOT / "README.md"
+COMPATIBILITY_PATH = ROOT / "docs" / "metamodule-compatibility.md"
 
 
 PARAM_IDS = [
@@ -84,6 +86,8 @@ class FourV2ModuleContractTest(unittest.TestCase):
         cls.plugin_header = PLUGIN_HEADER_PATH.read_text(encoding="utf-8")
         cls.plugin_source = PLUGIN_SOURCE_PATH.read_text(encoding="utf-8")
         cls.manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        cls.readme = README_PATH.read_text(encoding="utf-8")
+        cls.compatibility = COMPATIBILITY_PATH.read_text(encoding="utf-8")
 
     @staticmethod
     def _assert_source_exists(test_case):
@@ -279,6 +283,56 @@ class FourV2ModuleContractTest(unittest.TestCase):
             four_v2_entries[0],
         )
         self.assertEqual("2.2.1", self.manifest["version"])
+
+    def test_readme_documents_four_v2_without_rewriting_four(self):
+        four_v2_start = self.readme.index("### FourV2")
+        vortex_start = self.readme.index("### Vortex")
+        self.assertLess(four_v2_start, vortex_start)
+        four_v2 = self.readme[four_v2_start:vortex_start]
+
+        for contract in (
+            "11 algorithms",
+            "15 curated harmonic ratios",
+            (
+                "`4:1`, `3:1`, `2:1`, `3:2`, `4:3`, `1:1`, `3:4`, `2:3`, "
+                "`1:2`, `1:3`, `1:4`, `1:5`, `1:6`, `1:7`, `1:8`"
+            ),
+            "Ratio mode",
+            "Fixed mode",
+            "Output, Warp, Fold, and Feedback",
+            "CV PATCHBAY",
+            "PM DEPTH",
+            "External PM affects every carrier",
+            "signed",
+            "raw carrier sum",
+            "MASTER",
+            "OVER",
+            "16-channel polyphony",
+            "voice count follows the **V/OCT** input",
+            "broadcast lane 0",
+            "Four remains",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, four_v2)
+
+    def test_compatibility_doc_records_four_v2_handoff_boundary(self):
+        for contract in (
+            "FourV2",
+            "src/FourV2/layout.h",
+            "PNG",
+            "same revision",
+            "240 px",
+            "AlgorithmRoutingDisplay",
+            "OperatorFrequencyDisplay",
+            "ordinary static parameters",
+            "supported SDK",
+            "memory",
+            "refresh",
+            "../wintoid-metamodule",
+            "read-only",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, self.compatibility)
 
     def test_makefile_runs_this_contract(self):
         makefile = (ROOT / "tests" / "Makefile").read_text(encoding="utf-8")
