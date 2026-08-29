@@ -9,7 +9,7 @@ manifest = json.loads((ROOT / "plugin.json").read_text(encoding="utf-8"))
 modules = {module["name"]: module for module in manifest["modules"]}
 
 assert manifest["version"] == "2.2.1"
-for name in ("Four", "Vortex"):
+for name in ("Four", "Vortex", "FourV2"):
     assert "Polyphonic" in modules[name]["tags"]
     assert "16-channel polyphonic" in modules[name]["description"].lower()
 
@@ -21,7 +21,9 @@ assert "shorter polyphonic CV inputs broadcast lane 0" in readme
 
 four_source = (ROOT / "src/Four/Four.cpp").read_text(encoding="utf-8")
 vortex_source = (ROOT / "src/Vortex/Vortex.cpp").read_text(encoding="utf-8")
+four_v2_source = (ROOT / "src/FourV2/FourV2.cpp").read_text(encoding="utf-8")
 assert "V/OCT (polyphonic voice count, 1 to 16 channels)" in four_source
 assert "Audio (polyphonic voice count, 1 to 16 channels)" in vortex_source
+assert "V/OCT (polyphonic voice count, 1 to 16 channels)" in four_v2_source
 
 print("polyphony metadata tests passed")
