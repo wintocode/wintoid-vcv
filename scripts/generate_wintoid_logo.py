@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture and deterministically generate the outlined lowercase Wintoid mark.
+"""Capture and deterministically generate the outlined lowercase wintoid mark.
 
 The one-time ``--capture-font`` path is deliberately separate from normal
 generation.  It limits Fontconfig to the supplied font directory, verifies
@@ -128,7 +128,7 @@ def _shape_with_pango(font_path: Path, environment: dict[str, str], output: Path
     runs = lines[0].get("runs", [])
     if len(runs) != 1 or runs[0].get("text") != WORD:
         raise RuntimeError(
-            "Pango shaped Wintoid into more than one run; independent word "
+            "Pango shaped wintoid into more than one run; independent word "
             "spacing is not allowed"
         )
     glyphs = runs[0].get("glyphs", [])
@@ -559,7 +559,7 @@ def _load_data(path: Path = DATA_PATH) -> dict:
     except FileNotFoundError as error:
         raise RuntimeError(f"missing checked-in glyph data: {path}") from error
     if data.get("schema_version") != 1:
-        raise RuntimeError("unsupported Wintoid glyph-data schema")
+        raise RuntimeError("unsupported wintoid glyph-data schema")
     if data.get("word") != WORD:
         raise RuntimeError("glyph data is not for lowercase wintoid")
     digest = data.get("source_font_sha256")

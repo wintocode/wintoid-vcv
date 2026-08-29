@@ -11,7 +11,7 @@ Outputs:
 
 All geometry in this file is millimetres.  The SVG is intentionally a quiet
 structural guide: Rack supplies the live controls and displays, while the
-static labels, framed hierarchy, and canonical outlined Wintoid mark remain
+static labels, framed hierarchy, and canonical outlined wintoid mark remain
 visible in the checked-in panel asset.
 """
 
