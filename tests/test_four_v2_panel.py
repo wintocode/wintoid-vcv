@@ -189,6 +189,20 @@ def _text_envelope(node):
     return left, baseline - font_size, right, baseline + font_size * 0.25
 
 
+def _extract_struct_body(source, marker):
+    start = source.index(marker)
+    brace = source.index("{", start)
+    depth = 0
+    for index in range(brace, len(source)):
+        if source[index] == "{":
+            depth += 1
+        elif source[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return source[brace + 1:index]
+    raise AssertionError(f"unterminated struct: {marker}")
+
+
 def _rectangle_circle_clearance(rectangle, cx, cy, radius):
     left, top, right, bottom = rectangle
     dx = max(left - cx, 0.0, cx - right)
@@ -433,6 +447,31 @@ class FourV2PanelTest(unittest.TestCase):
                          "Feedback", "PM DEPTH", "MASTER", "OVER"):
             with self.subTest(label=expected):
                 self.assertIn(expected, labels)
+
+    def test_rack_runtime_gets_static_labels_from_a_nvg_overlay(self):
+        source = self.source
+        self.assertIn(
+            "struct FourV2PanelLabels : Widget",
+            source,
+            "FourV2 must provide a Rack-rendered label overlay; NanoSVG "
+            "does not render SVG text nodes",
+        )
+        body = _extract_struct_body(source, "struct FourV2PanelLabels")
+        for contract in (
+            'asset::system("res/fonts/DejaVuSans.ttf")',
+            "nvgFontFaceId",
+            "nvgText",
+            '"FourV2"',
+            '"ROUTING"',
+            '"ALGORITHM"',
+            '"COARSE"',
+            '"FEEDBACK"',
+            '"CV PATCHBAY"',
+            '"MAIN OUT"',
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, body)
+        self.assertRegex(source, r"addChild\(\s*labels\s*\)")
 
     def test_generated_artifacts_match_generators(self):
         panel = self.require_panel()

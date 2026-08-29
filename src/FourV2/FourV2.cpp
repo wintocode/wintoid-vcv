@@ -456,6 +456,137 @@ struct FourV2 : Module {
     }
 };
 
+struct FourV2PanelLabels : Widget {
+    struct Label {
+        float x;
+        float y;
+        float size;
+        int align;
+        int red;
+        int green;
+        int blue;
+        const char* text;
+    };
+
+    FourV2PanelLabels()
+    {
+        using namespace four_v2_layout;
+        box.size = mm2px(Vec(PANEL_WIDTH, PANEL_HEIGHT));
+    }
+
+    static void drawLabel(const DrawArgs& args, const Label& label)
+    {
+        nvgFontSize(args.vg, mm2px(label.size));
+        nvgFillColor(args.vg, nvgRGB(label.red, label.green, label.blue));
+        nvgTextAlign(args.vg, label.align);
+        nvgText(args.vg, mm2px(label.x), mm2px(label.y), label.text, nullptr);
+    }
+
+    void drawLayer(const DrawArgs& args, int layer) override
+    {
+        if (layer != 1) {
+            Widget::drawLayer(args, layer);
+            return;
+        }
+
+        std::shared_ptr<Font> font = APP->window->loadFont(
+            asset::system("res/fonts/DejaVuSans.ttf"));
+        if (!font) {
+            Widget::drawLayer(args, layer);
+            return;
+        }
+        nvgFontFaceId(args.vg, font->handle);
+
+        using namespace four_v2_layout;
+        const int leftBaseline = NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE;
+        const int centerBaseline = NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE;
+        const int rightBaseline = NVG_ALIGN_RIGHT | NVG_ALIGN_BASELINE;
+
+        const Label labels[] = {
+            {TITLE_X, TITLE_Y, TITLE_FONT_SIZE, leftBaseline,
+             36, 37, 34, "FourV2"},
+            {7.5f, 12.0f, 2.0f, leftBaseline,
+             36, 37, 34, "ROUTING"},
+            {ALGORITHM_KNOB_X, 14.2f, 1.75f, centerBaseline,
+             36, 37, 34, "ALGORITHM"},
+            {TUNE_KNOB_X, 13.9f, 1.55f, centerBaseline,
+             36, 37, 34, "TUNE"},
+            {PM_DEPTH_KNOB_X, 13.9f, 1.55f, centerBaseline,
+             36, 37, 34, "PM DEPTH"},
+            {MASTER_KNOB_X, 13.9f, 1.55f, centerBaseline,
+             36, 37, 34, "MASTER"},
+            {PM_DEPTH_CV_JACK_X, 13.9f, 1.55f, centerBaseline,
+             36, 37, 34, "PM CV"},
+            {PM_DEPTH_CV_ATTEN_X, 13.9f, 1.55f, centerBaseline,
+             36, 37, 34, "PM CV"},
+            {EXTERNAL_PM_JACK_X, 33.0f, 1.65f, centerBaseline,
+             36, 37, 34, "EXT PM"},
+            {EXTERNAL_PM_ATTEN_X, 33.0f, 1.55f, centerBaseline,
+             36, 37, 34, "ATTEN"},
+        };
+        for (const Label& label : labels)
+            drawLabel(args, label);
+
+        const float operatorCenters[] = {
+            OP1_CENTER_X, OP2_CENTER_X, OP3_CENTER_X, OP4_CENTER_X
+        };
+        const char* operatorHeadings[] = {"OP1", "OP2", "OP3", "OP4"};
+        const char* firstRow[] = {"COARSE", "FINE"};
+        const char* secondRow[] = {"OUTPUT", "WARP"};
+        const char* thirdRow[] = {"FOLD", "TYPE"};
+        for (int op = 0; op < 4; ++op) {
+            drawLabel(args, {operatorCenters[op], 40.8f, 2.4f,
+                              centerBaseline, 36, 37, 34,
+                              operatorHeadings[op]});
+            drawLabel(args, {operatorCenters[op] - 10.5f, 53.9f, 1.35f,
+                              centerBaseline, 36, 37, 34, firstRow[0]});
+            drawLabel(args, {operatorCenters[op] + 10.5f, 53.9f, 1.35f,
+                              centerBaseline, 36, 37, 34, firstRow[1]});
+            drawLabel(args, {operatorCenters[op] - 9.0f, 63.0f, 1.25f,
+                              centerBaseline, 36, 37, 34, secondRow[0]});
+            drawLabel(args, {operatorCenters[op] + 9.0f, 63.0f, 1.25f,
+                              centerBaseline, 36, 37, 34, secondRow[1]});
+            drawLabel(args, {operatorCenters[op] - 9.0f, 72.1f, 1.25f,
+                              centerBaseline, 36, 37, 34, thirdRow[0]});
+            drawLabel(args, {operatorCenters[op] + 9.0f, 72.1f, 1.25f,
+                              centerBaseline, 36, 37, 34, thirdRow[1]});
+            drawLabel(args, {operatorCenters[op], 81.2f, 1.25f,
+                              centerBaseline, 36, 37, 34, "FEEDBACK"});
+        }
+
+        drawLabel(args, {7.5f, 86.5f, 2.0f, leftBaseline,
+                         36, 37, 34, "CV PATCHBAY"});
+        for (int op = 0; op < 4; ++op) {
+            drawLabel(args, {operatorCenters[op], 86.5f, 1.55f,
+                              centerBaseline, 85, 109, 128,
+                              operatorHeadings[op]});
+        }
+        const char* patchbayRows[] = {"Output", "Warp", "Fold", "Feedback"};
+        const float patchbayY[] = {
+            PATCHBAY_OUTPUT_Y, PATCHBAY_WARP_Y,
+            PATCHBAY_FOLD_Y, PATCHBAY_FEEDBACK_Y
+        };
+        for (int row = 0; row < 4; ++row) {
+            const bool output = row == 0;
+            drawLabel(args, {PATCHBAY_LABEL_RIGHT_X, patchbayY[row] + 0.8f,
+                              1.8f, rightBaseline,
+                              output ? 183 : 36,
+                              output ? 105 : 37,
+                              output ? 60 : 34,
+                              patchbayRows[row]});
+        }
+
+        drawLabel(args, {VOCT_JACK_X, 124.0f, 1.55f, centerBaseline,
+                         36, 37, 34, "V/OCT"});
+        drawLabel(args, {MAIN_OUTPUT_X, 124.0f, 1.55f, centerBaseline,
+                         36, 37, 34, "MAIN OUT"});
+        drawLabel(args, {OVER_LIGHT_X, 124.0f, 1.55f, centerBaseline,
+                         183, 105, 60, "OVER"});
+
+        Widget::drawLayer(args, layer);
+    }
+};
+
 struct AlgorithmRoutingDisplay : Widget {
     FourV2* module = nullptr;
 
@@ -639,6 +770,11 @@ struct OperatorFrequencyDisplay : Widget {
             asset::system("res/fonts/DejaVuSans.ttf"));
         if (font) {
             nvgFontFaceId(args.vg, font->handle);
+            nvgFontSize(args.vg, mm2px(1.45f));
+            nvgFillColor(args.vg, nvgRGB(85, 109, 128));
+            nvgTextAlign(args.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+            nvgText(args.vg, mm2px(1.5f), mm2px(2.7f), "FREQ", nullptr);
+
             nvgFontSize(args.vg, mm2px(1.8f));
             nvgFillColor(args.vg, nvgRGB(236, 232, 217));
             nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
@@ -872,6 +1008,9 @@ struct FourV2Widget : ModuleWidget {
         addChild(createLightCentered<MediumLight<RedLight>>(
             mm2px(Vec(OVER_LIGHT_X, OVER_LIGHT_Y)),
             module, FourV2::OVER_LIGHT));
+
+        auto* labels = new FourV2PanelLabels();
+        addChild(labels);
     }
 };
 
