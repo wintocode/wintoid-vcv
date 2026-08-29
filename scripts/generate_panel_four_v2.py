@@ -18,6 +18,7 @@ visible in the checked-in panel asset.
 from __future__ import annotations
 
 from html import escape
+import json
 import math
 from pathlib import Path
 import xml.etree.ElementTree as ET
@@ -27,6 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 LOGO_PATH = ROOT / "res" / "WintoidLogo.svg"
 SVG_PATH = ROOT / "res" / "FourV2.svg"
 HEADER_PATH = ROOT / "src" / "FourV2" / "layout.h"
+GLYPH_DATA_PATH = ROOT / "scripts" / "assets" / "wintoid_logo_glyphs.json"
 
 
 # Panel dimensions and SEM-instrument palette.
@@ -164,6 +166,21 @@ PATCHBAY_CELLS = {
     row: tuple((x, y) for x in PATCHBAY_COLUMN_XS)
     for row, y in zip(PATCHBAY_ROWS, PATCHBAY_ROW_YS)
 }
+# Keep the row labels in a real left gutter.  The right edge is derived from
+# the first port's Rack envelope, so moving the aligned operator columns or
+# changing the physical port measurement cannot silently reintroduce overlap.
+PATCHBAY_LABEL_RIGHT_X = (
+    PATCHBAY_COLUMN_XS[0]
+    - PATCHBAY_WIDGET_OFFSET
+    - RACK_PORT_RADIUS
+    - MINIMUM_LABEL_CLEARANCE_MM
+)
+PATCHBAY_LABEL_WIDTHS = {
+    "Output": 6.5,
+    "Warp": 4.8,
+    "Fold": 4.5,
+    "Feedback": 9.25,
+}
 
 
 # Shared I/O is kept at the bottom corners, outside the patchbay's physical
@@ -254,16 +271,22 @@ def _text(
     anchor: str = "middle",
     weight: str = "400",
     letter_spacing: float | None = None,
+    text_length: float | None = None,
 ) -> str:
     spacing = (
         f' letter-spacing="{_fmt(letter_spacing)}"'
         if letter_spacing is not None
         else ""
     )
+    rendered_length = (
+        f' textLength="{_fmt(text_length)}" lengthAdjust="spacingAndGlyphs"'
+        if text_length is not None
+        else ""
+    )
     return (
         f'  <text x="{_fmt(x)}" y="{_fmt(y)}" text-anchor="{anchor}" '
         f'font-family="DejaVu Sans" font-size="{_fmt(size)}" '
-        f'font-weight="{weight}" fill="{fill}"{spacing}>'
+        f'font-weight="{weight}" fill="{fill}"{spacing}{rendered_length}>'
         f"{escape(value)}"
         "</text>"
     )
@@ -448,6 +471,23 @@ def _logo_elements() -> list[str]:
     if not LOGO_PATH.exists():
         raise RuntimeError(f"missing canonical logo asset: {LOGO_PATH}")
     root = ET.parse(LOGO_PATH).getroot()
+    try:
+        glyph_data = json.loads(GLYPH_DATA_PATH.read_text(encoding="utf-8"))
+    except FileNotFoundError as error:
+        raise RuntimeError(f"missing checked-in glyph data: {GLYPH_DATA_PATH}") from error
+    expected_digest = glyph_data.get("source_font_sha256")
+    if (
+        not isinstance(expected_digest, str)
+        or len(expected_digest) != 64
+        or any(character not in "0123456789abcdef" for character in expected_digest)
+    ):
+        raise RuntimeError("glyph data has no valid source-font SHA-256")
+    actual_digest = root.attrib.get("data-source-font-sha256")
+    if actual_digest != expected_digest:
+        raise RuntimeError(
+            "canonical logo source-font digest mismatch: "
+            f"expected {expected_digest}, got {actual_digest}"
+        )
     wanted = []
     for identifier in ("wint-glyphs", "wint-underline", "oid-glyphs", "oid-underline"):
         match = next(
@@ -641,7 +681,18 @@ def generate_svg() -> str:
     for index, x in enumerate(PATCHBAY_COLUMN_XS, start=1):
         lines.append(_text(x, 86.5, f"OP{index}", size=1.55, fill=SECTION_BLUE_GREY, weight="600"))
     for row, y in zip(PATCHBAY_ROWS, PATCHBAY_ROW_YS):
-        lines.append(_text(8.0, y + 0.8, row, size=1.8, anchor="start", weight="600", fill=FUNCTION_ORANGE if row == "Output" else LEGEND_CHARCOAL))
+        lines.append(
+            _text(
+                PATCHBAY_LABEL_RIGHT_X,
+                y + 0.8,
+                row,
+                size=1.8,
+                anchor="end",
+                weight="600",
+                fill=FUNCTION_ORANGE if row == "Output" else LEGEND_CHARCOAL,
+                text_length=PATCHBAY_LABEL_WIDTHS[row],
+            )
+        )
         lines.append(_line(18.5, y, WIDTH_MM - 5.0, y, "#c5c0ae", 0.15))
 
     # Shared I/O frame and static labels.
@@ -794,6 +845,7 @@ def generate_coords_header() -> str:
             _header_float("PATCHBAY_WIDTH", PATCHBAY_SECTION[2]),
             _header_float("PATCHBAY_HEIGHT", PATCHBAY_SECTION[3]),
             _header_float("PATCHBAY_WIDGET_OFFSET", PATCHBAY_WIDGET_OFFSET),
+            _header_float("PATCHBAY_LABEL_RIGHT_X", PATCHBAY_LABEL_RIGHT_X),
         )
     )
     for index, x in enumerate(PATCHBAY_COLUMN_XS, start=1):

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 import importlib.util
+import json
+import math
 import pathlib
 import re
+import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 
@@ -22,6 +25,164 @@ RACK_SMALL_KNOB_RADIUS_MM = 22.67581 / (2.0 * RACK_PIXELS_PER_MM)
 RACK_PORT_RADIUS_MM = 23.7 / (2.0 * RACK_PIXELS_PER_MM)
 MINIMUM_EDGE_CLEARANCE_MM = 4.0
 MINIMUM_LABEL_CLEARANCE_MM = 0.25
+
+_FLOAT_TOKEN = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+_PATH_TOKEN_RE = re.compile(rf"[A-Za-z]|{_FLOAT_TOKEN}")
+
+
+def _quadratic_x_values(start, control, end):
+    values = [start, end]
+    denominator = start - 2.0 * control + end
+    if denominator:
+        t = (start - control) / denominator
+        if 0.0 < t < 1.0:
+            values.append(
+                (1.0 - t) ** 2 * start
+                + 2.0 * (1.0 - t) * t * control
+                + t ** 2 * end
+            )
+    return values
+
+
+def _cubic_value(start, control_one, control_two, end, t):
+    inverse = 1.0 - t
+    return (
+        inverse ** 3 * start
+        + 3.0 * inverse ** 2 * t * control_one
+        + 3.0 * inverse * t ** 2 * control_two
+        + t ** 3 * end
+    )
+
+
+def _cubic_x_values(start, control_one, control_two, end):
+    values = [start, end]
+    a = -start + 3.0 * control_one - 3.0 * control_two + end
+    b = 2.0 * (start - 2.0 * control_one + control_two)
+    c = control_one - start
+    if abs(a) < 1e-12:
+        roots = [-c / b] if abs(b) >= 1e-12 else []
+    else:
+        discriminant = b * b - 4.0 * a * c
+        if discriminant < 0.0:
+            roots = []
+        else:
+            root = math.sqrt(discriminant)
+            roots = [
+                (-b + root) / (2.0 * a),
+                (-b - root) / (2.0 * a),
+            ]
+    for t in roots:
+        if 0.0 < t < 1.0:
+            values.append(_cubic_value(start, control_one, control_two, end, t))
+    return values
+
+
+def _path_x_bounds(path_data):
+    """Measure absolute/relative M/L/Q/C/Z SVG path geometry locally."""
+    tokens = _PATH_TOKEN_RE.findall(path_data)
+    remainder = _PATH_TOKEN_RE.sub("", path_data).replace(",", "")
+    if remainder.strip():
+        raise ValueError(f"unsupported SVG path syntax: {remainder!r}")
+
+    arities = {"M": 2, "L": 2, "Q": 4, "C": 6}
+    cursor = 0
+    command = None
+    current = (0.0, 0.0)
+    contour_start = None
+    xs = []
+    while cursor < len(tokens):
+        token = tokens[cursor]
+        if token.isalpha():
+            command = token
+            cursor += 1
+            if command.upper() == "Z":
+                if contour_start is None:
+                    raise ValueError("closed SVG path has no contour start")
+                xs.extend((current[0], contour_start[0]))
+                current = contour_start
+                contour_start = None
+                command = None
+            continue
+        if command is None or command.upper() == "Z":
+            raise ValueError("SVG path numbers are missing a command")
+        operation = command.upper()
+        if operation not in arities:
+            raise ValueError(f"unsupported SVG path command: {command}")
+        arity = arities[operation]
+        if cursor + arity > len(tokens):
+            raise ValueError(f"incomplete SVG path command: {command}")
+        arguments = tokens[cursor:cursor + arity]
+        if any(argument.isalpha() for argument in arguments):
+            raise ValueError(f"incomplete SVG path command: {command}")
+        values = [float(argument) for argument in arguments]
+        relative = command.islower()
+
+        def point(x, y):
+            if relative:
+                return current[0] + x, current[1] + y
+            return x, y
+
+        if operation == "M":
+            current = point(values[0], values[1])
+            contour_start = current
+            xs.append(current[0])
+            command = "l" if relative else "L"
+        elif operation == "L":
+            current = point(values[0], values[1])
+            xs.append(current[0])
+        elif operation == "Q":
+            control = point(values[0], values[1])
+            end = point(values[2], values[3])
+            xs.extend(_quadratic_x_values(current[0], control[0], end[0]))
+            current = end
+        elif operation == "C":
+            control_one = point(values[0], values[1])
+            control_two = point(values[2], values[3])
+            end = point(values[4], values[5])
+            xs.extend(
+                _cubic_x_values(
+                    current[0], control_one[0], control_two[0], end[0]
+                )
+            )
+            current = end
+        cursor += arity
+    if not xs:
+        raise ValueError("SVG path has no geometry")
+    return min(xs), max(xs)
+
+
+def _text_envelope(node):
+    """Return a conservative SVG text envelope from rendered attributes."""
+    if node.attrib.get("lengthAdjust") != "spacingAndGlyphs":
+        raise AssertionError("patchbay labels must expose a rendered text envelope")
+    if "textLength" not in node.attrib:
+        raise AssertionError("patchbay labels must expose textLength")
+    x = float(node.attrib["x"])
+    width = float(node.attrib["textLength"])
+    if width <= 0.0:
+        raise AssertionError("patchbay labels must have positive textLength")
+    baseline = float(node.attrib["y"])
+    font_size = float(node.attrib["font-size"])
+    anchor = node.attrib.get("text-anchor", "start")
+    if anchor == "start":
+        left, right = x, x + width
+    elif anchor == "end":
+        left, right = x - width, x
+    elif anchor == "middle":
+        left, right = x - width / 2.0, x + width / 2.0
+    else:
+        raise AssertionError(f"unsupported text anchor: {anchor}")
+    # The top bound uses the full em; the bottom bound includes a conservative
+    # quarter-em descender allowance without falsely reaching the lower shared
+    # I/O port row.
+    return left, baseline - font_size, right, baseline + font_size * 0.25
+
+
+def _rectangle_circle_clearance(rectangle, cx, cy, radius):
+    left, top, right, bottom = rectangle
+    dx = max(left - cx, 0.0, cx - right)
+    dy = max(top - cy, 0.0, cy - bottom)
+    return math.hypot(dx, dy) - radius
 
 
 def load_generator(path, name):
@@ -155,6 +316,32 @@ class FourV2PanelTest(unittest.TestCase):
                                panel.PATCHBAY_COLUMN_XS):
                 self.assertAlmostEqual(x, cell[0])
 
+    def test_patchbay_row_labels_clear_every_real_rack_widget_envelope(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        labels = {
+            node.text: node
+            for node in root.iter()
+            if node.tag.endswith("text") and node.text in panel.PATCHBAY_ROWS
+        }
+        self.assertEqual(set(panel.PATCHBAY_ROWS), set(labels))
+        for row in panel.PATCHBAY_ROWS:
+            rectangle = _text_envelope(labels[row])
+            with self.subTest(label=row, boundary="left gutter"):
+                self.assertGreaterEqual(rectangle[0], panel.PATCHBAY_SECTION[0])
+                self.assertLessEqual(
+                    rectangle[2],
+                    panel.PATCHBAY_SECTION[0] + panel.PATCHBAY_SECTION[2],
+                )
+            for name, x, y in panel.COMPONENTS:
+                clearance = _rectangle_circle_clearance(
+                    rectangle, x, y, panel.COMPONENT_RADII[name]
+                )
+                with self.subTest(label=row, component=name):
+                    self.assertGreaterEqual(
+                        clearance + 1e-9, MINIMUM_LABEL_CLEARANCE_MM
+                    )
+
     def test_main_output_uses_established_inverted_backplate(self):
         panel = self.require_panel()
         root = ET.fromstring(panel.generate_svg())
@@ -214,13 +401,19 @@ class FourV2PanelTest(unittest.TestCase):
             xs = []
             for path in glyph_paths:
                 transform = path.attrib["transform"]
-                match = re.fullmatch(r"translate\(([-0-9.]+) ([-0-9.]+)\)",
-                                     transform)
+                match = re.fullmatch(
+                    rf"translate\(({_FLOAT_TOKEN}) ({_FLOAT_TOKEN})\)",
+                    transform,
+                )
                 self.assertIsNotNone(match)
-                min_x, _min_y, max_x, _max_y = map(
-                    float, path.attrib["data-bbox"].split(","))
+                path_min_x, path_max_x = _path_x_bounds(path.attrib["d"])
+                metadata_min_x, _metadata_min_y, metadata_max_x, _metadata_max_y = map(
+                    float, path.attrib["data-bbox"].split(",")
+                )
                 tx = float(match.group(1))
-                xs.extend((tx + min_x, tx + max_x))
+                self.assertAlmostEqual(path_min_x, metadata_min_x, delta=0.01)
+                self.assertAlmostEqual(path_max_x, metadata_max_x, delta=0.01)
+                xs.extend((tx + path_min_x, tx + path_max_x))
             expected_min = min(xs)
             expected_max = max(xs)
             self.assertAlmostEqual(expected_min, float(line.attrib["x1"]),
@@ -228,12 +421,36 @@ class FourV2PanelTest(unittest.TestCase):
             self.assertAlmostEqual(expected_max, float(line.attrib["x2"]),
                                    delta=0.01)
 
-    def test_glyph_data_has_source_font_digest(self):
+    def test_logo_source_font_digest_matches_checked_in_glyph_data(self):
         self.assertTrue(GLYPH_DATA.exists(), "shaped glyph data is missing")
-        data = GLYPH_DATA.read_text()
-        self.assertRegex(data, r'"source_font_sha256"\s*:\s*"[0-9a-f]{64}"')
-        self.assertEqual(64, len(re.search(
-            r'"source_font_sha256"\s*:\s*"([0-9a-f]{64})"', data).group(1)))
+        data = json.loads(GLYPH_DATA.read_text(encoding="utf-8"))
+        digest = data.get("source_font_sha256")
+        self.assertIsInstance(digest, str)
+        self.assertRegex(digest, r"[0-9a-f]{64}")
+        logo_root = ET.parse(LOGO_SVG).getroot()
+        self.assertEqual(digest, logo_root.attrib.get("data-source-font-sha256"))
+
+    def test_panel_generator_rejects_logo_source_font_digest_mismatch(self):
+        panel = self.require_panel()
+        original_logo_path = panel.LOGO_PATH
+        with tempfile.TemporaryDirectory() as directory:
+            temporary_logo = pathlib.Path(directory) / "WintoidLogo.svg"
+            source = LOGO_SVG.read_text(encoding="utf-8")
+            digest = json.loads(GLYPH_DATA.read_text(encoding="utf-8"))["source_font_sha256"]
+            temporary_logo.write_text(
+                source.replace(
+                    f'data-source-font-sha256="{digest}"',
+                    f'data-source-font-sha256="{"0" * 64}"',
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            panel.LOGO_PATH = temporary_logo
+            try:
+                with self.assertRaisesRegex(RuntimeError, "source-font digest"):
+                    panel._logo_elements()
+            finally:
+                panel.LOGO_PATH = original_logo_path
 
 
 if __name__ == "__main__":

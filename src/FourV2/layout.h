@@ -220,6 +220,7 @@ constexpr float PATCHBAY_Y = 84.0f;
 constexpr float PATCHBAY_WIDTH = 154.56f;
 constexpr float PATCHBAY_HEIGHT = 34.9f;
 constexpr float PATCHBAY_WIDGET_OFFSET = 4.6f;
+constexpr float PATCHBAY_LABEL_RIGHT_X = 13.894f;
 constexpr float PATCHBAY_COLUMN_1_X = 22.758f;
 constexpr float OP1_PATCHBAY_X = 22.758f;
 constexpr float PATCHBAY_COLUMN_2_X = 61.773f;
