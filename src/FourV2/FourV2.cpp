@@ -505,19 +505,21 @@ struct FourV2PanelLabels : Widget {
         const Label labels[] = {
             {TITLE_X, TITLE_Y, TITLE_FONT_SIZE, leftBaseline,
              36, 37, 34, "FourV2"},
-            {TUNE_KNOB_X, 13.9f, 1.55f, centerBaseline,
+            {ALGORITHM_KNOB_X, ALGORITHM_LABEL_Y, 1.55f, centerBaseline,
+             36, 37, 34, "ALGO"},
+            {TUNE_KNOB_X, GLOBAL_LABEL_Y, 1.55f, centerBaseline,
              36, 37, 34, "TUNE"},
-            {PM_DEPTH_KNOB_X, 13.9f, 1.55f, centerBaseline,
+            {PM_DEPTH_KNOB_X, GLOBAL_LABEL_Y, 1.55f, centerBaseline,
              36, 37, 34, "PM DEPTH"},
-            {MASTER_KNOB_X, 13.9f, 1.55f, centerBaseline,
+            {MASTER_KNOB_X, GLOBAL_LABEL_Y, 1.55f, centerBaseline,
              36, 37, 34, "MASTER"},
-            {PM_DEPTH_CV_JACK_X, 13.9f, 1.55f, centerBaseline,
+            {PM_DEPTH_CV_JACK_X, GLOBAL_LABEL_Y, 1.55f, centerBaseline,
              36, 37, 34, "PM CV"},
-            {PM_DEPTH_CV_ATTEN_X, 13.9f, 1.55f, centerBaseline,
-             36, 37, 34, "PM CV"},
-            {EXTERNAL_PM_JACK_X, 33.0f, 1.65f, centerBaseline,
+            {PM_DEPTH_CV_ATTEN_X, GLOBAL_LABEL_Y, 1.55f, centerBaseline,
+             36, 37, 34, "ATTEN"},
+            {EXTERNAL_PM_JACK_X, EXTERNAL_PM_LABEL_Y, 1.65f, centerBaseline,
              36, 37, 34, "EXT PM"},
-            {EXTERNAL_PM_ATTEN_X, 33.0f, 1.55f, centerBaseline,
+            {EXTERNAL_PM_ATTEN_X, EXTERNAL_PM_LABEL_Y, 1.55f, centerBaseline,
              36, 37, 34, "ATTEN"},
         };
         for (const Label& label : labels)
@@ -527,54 +529,84 @@ struct FourV2PanelLabels : Widget {
             OP1_CENTER_X, OP2_CENTER_X, OP3_CENTER_X, OP4_CENTER_X
         };
         const char* operatorHeadings[] = {"OP1", "OP2", "OP3", "OP4"};
-        const char* firstRow[] = {"COARSE", "FINE"};
+        const char* firstRow[] = {"COARSE", "MODE", "FINE"};
         const char* secondRow[] = {"OUTPUT", "WARP"};
         const char* thirdRow[] = {"FOLD", "TYPE"};
         for (int op = 0; op < 4; ++op) {
-            drawLabel(args, {operatorCenters[op], 40.8f, 2.4f,
+            drawLabel(args, {operatorCenters[op], OPERATOR_HEADING_Y, 2.4f,
                               centerBaseline, 36, 37, 34,
                               operatorHeadings[op]});
-            drawLabel(args, {operatorCenters[op] - 10.5f, 53.9f, 1.35f,
+            drawLabel(args, {operatorCenters[op] - 10.5f,
+                              OPERATOR_FREQUENCY_LABEL_Y,
+                              OPERATOR_LABEL_SIZE,
                               centerBaseline, 36, 37, 34, firstRow[0]});
-            drawLabel(args, {operatorCenters[op] + 10.5f, 53.9f, 1.35f,
+            drawLabel(args, {operatorCenters[op],
+                              OPERATOR_FREQUENCY_LABEL_Y,
+                              OPERATOR_MODE_LABEL_SIZE,
                               centerBaseline, 36, 37, 34, firstRow[1]});
-            drawLabel(args, {operatorCenters[op] - 9.0f, 63.0f, 1.25f,
+            drawLabel(args, {operatorCenters[op] + 10.5f,
+                              OPERATOR_FREQUENCY_LABEL_Y,
+                              OPERATOR_LABEL_SIZE,
+                              centerBaseline, 36, 37, 34, firstRow[2]});
+            drawLabel(args, {operatorCenters[op] - 9.0f,
+                              OPERATOR_OUTPUT_WARP_LABEL_Y,
+                              OPERATOR_LABEL_SIZE,
                               centerBaseline, 36, 37, 34, secondRow[0]});
-            drawLabel(args, {operatorCenters[op] + 9.0f, 63.0f, 1.25f,
+            drawLabel(args, {operatorCenters[op] + 9.0f,
+                              OPERATOR_OUTPUT_WARP_LABEL_Y,
+                              OPERATOR_LABEL_SIZE,
                               centerBaseline, 36, 37, 34, secondRow[1]});
-            drawLabel(args, {operatorCenters[op] - 9.0f, 72.1f, 1.25f,
+            drawLabel(args, {operatorCenters[op] - 9.0f,
+                              OPERATOR_FOLD_LABEL_Y,
+                              OPERATOR_LABEL_SIZE,
                               centerBaseline, 36, 37, 34, thirdRow[0]});
-            drawLabel(args, {operatorCenters[op] + 9.0f, 72.1f, 1.25f,
+            drawLabel(args, {operatorCenters[op] + 9.0f,
+                              OPERATOR_FOLD_LABEL_Y,
+                              OPERATOR_LABEL_SIZE,
                               centerBaseline, 36, 37, 34, thirdRow[1]});
-            drawLabel(args, {operatorCenters[op], 81.2f, 1.25f,
+            drawLabel(args, {operatorCenters[op],
+                              OPERATOR_FEEDBACK_LABEL_Y,
+                              OPERATOR_LABEL_SIZE,
                               centerBaseline, 36, 37, 34, "FEEDBACK"});
         }
 
-        for (int op = 0; op < 4; ++op) {
-            drawLabel(args, {operatorCenters[op], 86.5f, 1.55f,
-                              centerBaseline, 85, 109, 128,
-                              operatorHeadings[op]});
-        }
         const char* patchbayRows[] = {"Output", "Warp", "Fold", "Feedback"};
         const float patchbayY[] = {
             PATCHBAY_OUTPUT_Y, PATCHBAY_WARP_Y,
             PATCHBAY_FOLD_Y, PATCHBAY_FEEDBACK_Y
         };
-        for (int row = 0; row < 4; ++row) {
-            const bool output = row == 0;
-            drawLabel(args, {PATCHBAY_LABEL_RIGHT_X, patchbayY[row] + 0.8f,
-                              1.8f, rightBaseline,
-                              output ? 183 : 36,
-                              output ? 105 : 37,
-                              output ? 60 : 34,
-                              patchbayRows[row]});
+        const float patchbayLabelX[] = {
+            OP1_PATCHBAY_LABEL_RIGHT_X, OP2_PATCHBAY_LABEL_RIGHT_X,
+            OP3_PATCHBAY_LABEL_RIGHT_X, OP4_PATCHBAY_LABEL_RIGHT_X
+        };
+        const float patchbayHeadingX[] = {
+            OP1_PATCHBAY_SECTION_X + PATCHBAY_HEADING_OFFSET_X,
+            OP2_PATCHBAY_SECTION_X + PATCHBAY_HEADING_OFFSET_X,
+            OP3_PATCHBAY_SECTION_X + PATCHBAY_HEADING_OFFSET_X,
+            OP4_PATCHBAY_SECTION_X + PATCHBAY_HEADING_OFFSET_X
+        };
+        for (int op = 0; op < 4; ++op) {
+            drawLabel(args, {patchbayHeadingX[op], PATCHBAY_HEADING_Y,
+                              PATCHBAY_HEADING_SIZE, leftBaseline,
+                              85, 109, 128, "CV"});
+            for (int row = 0; row < 4; ++row) {
+                const bool output = row == 0;
+                drawLabel(args, {patchbayLabelX[op],
+                                  patchbayY[row] + PATCHBAY_LABEL_Y_OFFSET,
+                                  PATCHBAY_LABEL_SIZE, rightBaseline,
+                                  output ? 183 : 36,
+                                  output ? 105 : 37,
+                                  output ? 60 : 34,
+                                  patchbayRows[row]});
+            }
         }
 
-        drawLabel(args, {VOCT_JACK_X, 124.0f, 1.55f, centerBaseline,
+        drawLabel(args, {VOCT_LABEL_X, SHARED_IO_LABEL_Y, 1.55f, leftBaseline,
                          36, 37, 34, "V/OCT"});
-        drawLabel(args, {MAIN_OUTPUT_X, 124.0f, 1.55f, centerBaseline,
+        drawLabel(args, {MAIN_OUTPUT_LABEL_X, MAIN_OUTPUT_LABEL_Y,
+                         1.55f, centerBaseline,
                          36, 37, 34, "MAIN OUT"});
-        drawLabel(args, {OVER_LIGHT_X, 124.0f, 1.55f, centerBaseline,
+        drawLabel(args, {OVER_LIGHT_X, OVER_LABEL_Y, 1.55f, centerBaseline,
                          183, 105, 60, "OVER"});
 
         Widget::drawLayer(args, layer);

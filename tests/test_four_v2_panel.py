@@ -250,7 +250,13 @@ class FourV2PanelTest(unittest.TestCase):
     def test_four_operator_sections_and_patchbay_are_framed(self):
         panel = self.require_panel()
         self.assertEqual(4, len(panel.OPERATOR_SECTION_RECTS))
-        self.assertIn("CV_PATCHBAY", panel.SECTION_RECTS)
+        patchbay_sections = getattr(panel, "PATCHBAY_SECTION_RECTS", ())
+        self.assertEqual(4, len(patchbay_sections))
+        for operator, patchbay in zip(
+            panel.OPERATOR_SECTION_RECTS, patchbay_sections
+        ):
+            self.assertAlmostEqual(operator[0], patchbay[0])
+            self.assertAlmostEqual(operator[2], patchbay[2])
         self.assertEqual(4, len(panel.PATCHBAY_COLUMN_XS))
         self.assertEqual(
             ("Output", "Warp", "Fold", "Feedback"),
@@ -397,12 +403,11 @@ class FourV2PanelTest(unittest.TestCase):
         header = _emitted_header_floats(
             LAYOUT_HEADER.read_text(encoding="utf-8")
         )
-        labels = {
-            node.text: node
-            for node in root.iter()
+        labels = [
+            node for node in root.iter()
             if node.tag.endswith("text") and node.text in panel.PATCHBAY_ROWS
-        }
-        self.assertEqual(set(panel.PATCHBAY_ROWS), set(labels))
+        ]
+        self.assertEqual(16, len(labels))
 
         circles = [
             node for node in root.iter()
@@ -435,22 +440,122 @@ class FourV2PanelTest(unittest.TestCase):
                         (prefix, x, y, header[radius_name])
                     )
 
-        for row in panel.PATCHBAY_ROWS:
-            rectangle = _text_envelope(labels[row])
-            with self.subTest(label=row, boundary="left gutter"):
-                self.assertGreaterEqual(rectangle[0], panel.PATCHBAY_SECTION[0])
-                self.assertLessEqual(
-                    rectangle[2],
-                    panel.PATCHBAY_SECTION[0] + panel.PATCHBAY_SECTION[2],
-                )
-            for name, x, y, radius in components:
-                clearance = _rectangle_circle_clearance(
-                    rectangle, x, y, radius
-                )
-                with self.subTest(label=row, component=name):
-                    self.assertGreaterEqual(
-                        clearance + 1e-9, MINIMUM_LABEL_CLEARANCE_MM
+        patchbay_sections = getattr(panel, "PATCHBAY_SECTION_RECTS", ())
+        self.assertEqual(4, len(patchbay_sections))
+        for index, section in enumerate(patchbay_sections, start=1):
+            left, _top, width, _height = section
+            section_labels = [
+                node for node in labels
+                if abs(float(node.attrib["x"]) - panel.OPERATOR_CENTRES_X[index - 1])
+                > 0.01
+                and left <= float(node.attrib["x"]) <= left + width
+            ]
+            self.assertEqual(4, len(section_labels))
+            for label in section_labels:
+                rectangle = _text_envelope(label)
+                with self.subTest(operator=index, label=label.text,
+                                  boundary="operator patchbay"):
+                    self.assertGreaterEqual(rectangle[0], left)
+                    self.assertLessEqual(rectangle[2], left + width)
+                for name, x, y, radius in components:
+                    if not (left <= x <= left + width):
+                        continue
+                    clearance = _rectangle_circle_clearance(
+                        rectangle, x, y, radius
                     )
+                    with self.subTest(operator=index, label=label.text,
+                                      component=name):
+                        self.assertGreaterEqual(
+                            clearance + 1e-9, MINIMUM_LABEL_CLEARANCE_MM
+                        )
+
+    def test_operator_labels_clear_their_real_control_envelopes(self):
+        panel = self.require_panel()
+        root = ET.fromstring(PANEL_SVG.read_text(encoding="utf-8"))
+        labels = [
+            node for node in root.iter()
+            if node.tag.endswith("text") and node.text in {
+                "COARSE", "MODE", "FINE", "OUTPUT", "WARP", "FOLD", "TYPE",
+                "FEEDBACK",
+            }
+        ]
+        self.assertEqual(32, len(labels))
+        component_by_name = {
+            name: (x, y, panel.COMPONENT_RADII[name])
+            for name, x, y in panel.OPERATOR_COMPONENTS
+        }
+        label_components = {
+            "COARSE": "coarse",
+            "MODE": "freq_mode",
+            "FINE": "fine",
+            "OUTPUT": "output",
+            "WARP": "warp",
+            "FOLD": "fold",
+            "TYPE": "fold_type",
+            "FEEDBACK": "feedback",
+        }
+        for label in labels:
+            x = float(label.attrib["x"])
+            operator = min(
+                range(1, 5),
+                key=lambda index: abs(
+                    x - panel.OPERATOR_CENTRES_X[index - 1]
+                ),
+            )
+            component_name = f"op{operator}_{label_components[label.text]}"
+            component_x, component_y, radius = component_by_name[component_name]
+            self.assertAlmostEqual(component_x, x, delta=0.01)
+            baseline = float(label.attrib["y"])
+            font_size = float(label.attrib["font-size"])
+            with self.subTest(operator=operator, label=label.text,
+                              contract="readable size"):
+                self.assertGreaterEqual(font_size, 1.4)
+            label_top = baseline - font_size
+            label_bottom = baseline + font_size * 0.25
+            above_clearance = component_y - radius - label_bottom
+            below_clearance = label_top - (component_y + radius)
+            with self.subTest(operator=operator, label=label.text):
+                self.assertGreaterEqual(
+                    max(above_clearance, below_clearance) + 1e-9,
+                    MINIMUM_LABEL_CLEARANCE_MM,
+                )
+
+    def test_algorithm_label_clears_both_left_hand_controls(self):
+        panel = self.require_panel()
+        root = ET.fromstring(PANEL_SVG.read_text(encoding="utf-8"))
+        label = next(
+            node for node in root.iter()
+            if node.tag.endswith("text") and node.text == "ALGO"
+        )
+        baseline = float(label.attrib["y"])
+        font_size = float(label.attrib["font-size"])
+        label_top = baseline - font_size
+        label_bottom = baseline + font_size * 0.25
+        for component_name in ("algorithm_knob", "voct_jack"):
+            _x, component_y = panel.GLOBAL_CONTROLS[component_name]
+            radius = panel.COMPONENT_RADII[component_name]
+            above_clearance = component_y - radius - label_bottom
+            below_clearance = label_top - (component_y + radius)
+            with self.subTest(component=component_name):
+                self.assertGreaterEqual(
+                    max(above_clearance, below_clearance) + 1e-9,
+                    MINIMUM_LABEL_CLEARANCE_MM,
+                )
+
+    def test_patchbay_is_grouped_by_operator_in_the_svg(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        identifiers = {
+            node.attrib.get("id") for node in root.iter()
+            if node.tag.endswith("rect")
+        }
+        self.assertTrue({
+            "cv-patchbay-section-1",
+            "cv-patchbay-section-2",
+            "cv-patchbay-section-3",
+            "cv-patchbay-section-4",
+        }.issubset(identifiers))
+        self.assertNotIn("cv-patchbay-section", identifiers)
 
     def test_main_output_uses_established_inverted_backplate(self):
         panel = self.require_panel()
@@ -498,6 +603,8 @@ class FourV2PanelTest(unittest.TestCase):
             "nvgText",
             '"FourV2"',
             '"COARSE"',
+            '"MODE"',
+            '"CV"',
             '"FEEDBACK"',
             '"MAIN OUT"',
         ):

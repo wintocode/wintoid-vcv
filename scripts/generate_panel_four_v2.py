@@ -95,17 +95,21 @@ GLOBAL_CONTROLS = {
     "pm_depth_cv_atten": (131.0, 17.5),
     "external_pm_jack": (106.5, 29.0),
     "external_pm_atten": (118.5, 29.0),
-    "voct_jack": (8.5, 119.5),
-    "main_output": (153.0, 119.5),
-    "over_light": (145.0, 119.5),
+    "voct_jack": (8.5, 14.5),
+    "main_output": (153.0, 17.5),
+    "over_light": (145.0, 29.0),
 }
+ALGORITHM_LABEL_Y = 29.2
+GLOBAL_LABEL_Y = 12.8
+EXTERNAL_PM_LABEL_Y = 35.1
+MAIN_OUTPUT_LABEL_Y = 24.5
 
 
 # Four equal operator fields.  The inner controls use horizontal sub-columns
 # so the frequency row can contain Coarse, Frequency Mode, and Fine without
 # sacrificing the four shared parameter rows below it.
 OPERATOR_SECTION_TOP = 37.5
-OPERATOR_SECTION_HEIGHT = 44.5
+OPERATOR_SECTION_HEIGHT = 50.3
 OPERATOR_SECTION_LEFT = 4.0
 OPERATOR_SECTION_GAP = 1.5
 OPERATOR_SECTION_WIDTH = (
@@ -126,11 +130,20 @@ OPERATOR_CENTRES_X = tuple(
 )
 
 OPERATOR_ROW_YS = {
-    "frequency": 49.2,
-    "output_warp": 58.3,
-    "fold": 67.4,
-    "feedback": 76.5,
+    "frequency": 50.0,
+    "output_warp": 60.5,
+    "fold": 71.0,
+    "feedback": 81.5,
 }
+OPERATOR_LABEL_YS = {
+    "frequency": 55.85,
+    "output_warp": 66.35,
+    "fold": 76.85,
+    "feedback": 87.35,
+}
+OPERATOR_HEADING_Y = 40.8
+OPERATOR_LABEL_SIZE = 1.60
+OPERATOR_MODE_LABEL_SIZE = 1.45
 OPERATOR_X_OFFSETS = {
     "coarse": -10.5,
     "freq_mode": 0.0,
@@ -146,7 +159,7 @@ FREQUENCY_DISPLAY_WIDTH = OPERATOR_SECTION_WIDTH - 8.0
 FREQUENCY_DISPLAY_RECTS = tuple(
     (
         rect[0] + 4.0,
-        42.0,
+        41.5,
         FREQUENCY_DISPLAY_WIDTH,
         FREQUENCY_DISPLAY_HEIGHT,
     )
@@ -154,14 +167,31 @@ FREQUENCY_DISPLAY_RECTS = tuple(
 )
 
 
-# The separate patchbay keeps the operator controls visually quiet.  Each
-# cell's x coordinate is the operator centre; its two physical widgets sit on
-# either side of that alignment rail.
-PATCHBAY_SECTION = (4.0, 84.0, WIDTH_MM - 8.0, 34.9)
+# The patchbay repeats the operator grouping below the knob fields.  The
+# logical column centre remains aligned to the operator above, while the
+# labels occupy the left gutter and the jack/attenuverter pair stays at the
+# same left/right relationship inside each field.
+PATCHBAY_SECTION_TOP = 89.0
+PATCHBAY_SECTION_HEIGHT = 34.5
+PATCHBAY_SECTION = (
+    OPERATOR_SECTION_LEFT,
+    PATCHBAY_SECTION_TOP,
+    WIDTH_MM - 2.0 * OPERATOR_SECTION_LEFT,
+    PATCHBAY_SECTION_HEIGHT,
+)
+PATCHBAY_SECTION_RECTS = tuple(
+    (x, PATCHBAY_SECTION_TOP, width, PATCHBAY_SECTION_HEIGHT)
+    for x, _y, width, _height in OPERATOR_SECTION_RECTS
+)
 PATCHBAY_COLUMN_XS = OPERATOR_CENTRES_X
 PATCHBAY_ROWS = ("Output", "Warp", "Fold", "Feedback")
-PATCHBAY_ROW_YS = (88.5, 96.7, 104.9, 113.1)
+PATCHBAY_ROW_YS = (94.5, 102.7, 110.9, 119.1)
 PATCHBAY_WIDGET_OFFSET = 4.6
+PATCHBAY_HEADING_Y = 90.7
+PATCHBAY_HEADING_OFFSET_X = 2.0
+PATCHBAY_HEADING_SIZE = 1.45
+PATCHBAY_LABEL_Y_OFFSET = 0.8
+PATCHBAY_LABEL_SIZE = 1.8
 PATCHBAY_CELLS = {
     row: tuple((x, y) for x in PATCHBAY_COLUMN_XS)
     for row, y in zip(PATCHBAY_ROWS, PATCHBAY_ROW_YS)
@@ -169,7 +199,7 @@ PATCHBAY_CELLS = {
 # Keep the row labels in a real left gutter.  The right edge is derived from
 # the first port's Rack envelope, so moving the aligned operator columns or
 # changing the physical port measurement cannot silently reintroduce overlap.
-PATCHBAY_LABEL_RIGHT_X = (
+PATCHBAY_LABEL_RIGHT_OFFSET = (
     PATCHBAY_COLUMN_XS[0]
     - PATCHBAY_WIDGET_OFFSET
     - RACK_PORT_RADIUS
@@ -177,7 +207,13 @@ PATCHBAY_LABEL_RIGHT_X = (
     # to three decimals, so the emitted geometry must remain over the public
     # 0.25 mm minimum rather than merely touching it before formatting.
     - (MINIMUM_LABEL_CLEARANCE_MM + 0.05)
+    - OPERATOR_SECTION_LEFT
 )
+PATCHBAY_LABEL_RIGHT_XS = tuple(
+    rect[0] + PATCHBAY_LABEL_RIGHT_OFFSET
+    for rect in OPERATOR_SECTION_RECTS
+)
+PATCHBAY_LABEL_RIGHT_X = PATCHBAY_LABEL_RIGHT_XS[0]
 PATCHBAY_LABEL_WIDTHS = {
     "Output": 6.5,
     "Warp": 4.8,
@@ -186,9 +222,13 @@ PATCHBAY_LABEL_WIDTHS = {
 }
 
 
-# Shared I/O is kept at the bottom corners, outside the patchbay's physical
-# envelopes.  Both ports still clear the panel edge by more than 4 mm.
-SHARED_IO_SECTION = (4.0, 118.9, WIDTH_MM - 8.0, 5.0)
+# Shared I/O is integrated into the global band so the operator CV bays can
+# remain complete, repeated fields down to their bottom borders.
+SHARED_IO_SECTION = ROUTING_SECTION
+VOCT_LABEL_X = 13.0
+MAIN_OUTPUT_LABEL_X = GLOBAL_CONTROLS["main_output"][0]
+SHARED_IO_LABEL_Y = 14.5
+OVER_LABEL_Y = 35.1
 SHARED_IO = {
     "voct_jack": GLOBAL_CONTROLS["voct_jack"],
     "main_output": GLOBAL_CONTROLS["main_output"],
@@ -441,6 +481,7 @@ SECTION_RECTS = {
 # not the much smaller structural circles in the SVG.
 LABEL_CLEARANCES = {
     "title": {"clearance_mm": 0.50},
+    "algorithm": {"clearance_mm": 0.35},
     "tune": {"clearance_mm": 0.35},
     "pm_depth": {"clearance_mm": 0.35},
     "master": {"clearance_mm": 0.35},
@@ -456,10 +497,11 @@ LABEL_CLEARANCES = {
     **{
         f"op{index}_{label.lower()}": {"clearance_mm": 0.30}
         for index in range(1, 5)
-        for label in ("coarse", "fine", "output", "warp", "fold", "fold_type", "feedback")
+        for label in ("coarse", "mode", "fine", "output", "warp", "fold", "fold_type", "feedback")
     },
     **{
-        f"patchbay_{row.lower()}": {"clearance_mm": 0.30}
+        f"op{index}_patchbay_{row.lower()}": {"clearance_mm": 0.30}
+        for index in range(1, 5)
         for row in PATCHBAY_ROWS
     },
     "shared_io": {"clearance_mm": 0.30},
@@ -610,17 +652,40 @@ def generate_svg() -> str:
             stroke_width=0.35,
         )
     )
+    lines.append(
+        _text(
+            GLOBAL_CONTROLS["algorithm_knob"][0],
+            ALGORITHM_LABEL_Y,
+            "ALGO",
+            size=1.55,
+            weight="600",
+        )
+    )
     _append_routing_artwork(lines)
     for value, x in (
         ("TUNE", GLOBAL_CONTROLS["tune_knob"][0]),
         ("PM DEPTH", GLOBAL_CONTROLS["pm_depth_knob"][0]),
         ("MASTER", GLOBAL_CONTROLS["master_knob"][0]),
         ("PM CV", GLOBAL_CONTROLS["pm_depth_cv_jack"][0]),
-        ("PM CV", GLOBAL_CONTROLS["pm_depth_cv_atten"][0]),
+        ("ATTEN", GLOBAL_CONTROLS["pm_depth_cv_atten"][0]),
     ):
-        lines.append(_text(x, 13.9, value, size=1.55))
-    lines.append(_text(GLOBAL_CONTROLS["external_pm_jack"][0], 33.0, "EXT PM", size=1.65))
-    lines.append(_text(GLOBAL_CONTROLS["external_pm_atten"][0], 33.0, "ATTEN", size=1.55))
+        lines.append(_text(x, GLOBAL_LABEL_Y, value, size=1.55))
+    lines.append(
+        _text(
+            GLOBAL_CONTROLS["external_pm_jack"][0],
+            EXTERNAL_PM_LABEL_Y,
+            "EXT PM",
+            size=1.65,
+        )
+    )
+    lines.append(
+        _text(
+            GLOBAL_CONTROLS["external_pm_atten"][0],
+            EXTERNAL_PM_LABEL_Y,
+            "ATTEN",
+            size=1.55,
+        )
+    )
 
     # Four framed operator fields.
     for index, (x, y, width, height) in enumerate(OPERATOR_SECTION_RECTS, start=1):
@@ -638,7 +703,16 @@ def generate_svg() -> str:
             )
         )
         centre_x = OPERATOR_CENTRES_X[index - 1]
-        lines.append(_text(centre_x, 40.8, f"OP{index}", size=2.4, weight="600", letter_spacing=0.25))
+        lines.append(
+            _text(
+                centre_x,
+                OPERATOR_HEADING_Y,
+                f"OP{index}",
+                size=2.4,
+                weight="600",
+                letter_spacing=0.25,
+            )
+        )
         display_x, display_y, display_width, display_height = FREQUENCY_DISPLAY_RECTS[index - 1]
         lines.append(
             _rect(
@@ -656,55 +730,147 @@ def generate_svg() -> str:
         # These small legends are static; the display text itself is supplied
         # by the host widget at run time.
         lines.append(_text(display_x + 1.5, display_y + 2.7, "FREQ", size=1.45, fill=SECTION_BLUE_GREY, anchor="start"))
-        lines.append(_text(centre_x - 10.5, 53.9, "COARSE", size=1.35))
-        lines.append(_text(centre_x + 10.5, 53.9, "FINE", size=1.35))
-        lines.append(_text(centre_x - 9.0, 63.0, "OUTPUT", size=1.25))
-        lines.append(_text(centre_x + 9.0, 63.0, "WARP", size=1.25))
-        lines.append(_text(centre_x - 9.0, 72.1, "FOLD", size=1.25))
-        lines.append(_text(centre_x + 9.0, 72.1, "TYPE", size=1.25))
-        lines.append(_text(centre_x, 81.2, "FEEDBACK", size=1.25))
-
-    # Framed CV patchbay.
-    lines.append(
-        _rect(
-            *PATCHBAY_SECTION,
-            SECTION_FILL,
-            SECTION_BLUE_GREY,
-            identifier="cv-patchbay-section",
-            radius=1.4,
-            stroke_width=0.35,
-        )
-    )
-    for index, x in enumerate(PATCHBAY_COLUMN_XS, start=1):
-        lines.append(_text(x, 86.5, f"OP{index}", size=1.55, fill=SECTION_BLUE_GREY, weight="600"))
-    for row, y in zip(PATCHBAY_ROWS, PATCHBAY_ROW_YS):
         lines.append(
             _text(
-                PATCHBAY_LABEL_RIGHT_X,
-                y + 0.8,
-                row,
-                size=1.8,
-                anchor="end",
-                weight="600",
-                fill=FUNCTION_ORANGE if row == "Output" else LEGEND_CHARCOAL,
-                text_length=PATCHBAY_LABEL_WIDTHS[row],
+                centre_x - 10.5,
+                OPERATOR_LABEL_YS["frequency"],
+                "COARSE",
+                size=OPERATOR_LABEL_SIZE,
+            )
+        )
+        lines.append(
+            _text(
+                centre_x,
+                OPERATOR_LABEL_YS["frequency"],
+                "MODE",
+                size=OPERATOR_MODE_LABEL_SIZE,
+            )
+        )
+        lines.append(
+            _text(
+                centre_x + 10.5,
+                OPERATOR_LABEL_YS["frequency"],
+                "FINE",
+                size=OPERATOR_LABEL_SIZE,
+            )
+        )
+        lines.append(
+            _text(
+                centre_x - 9.0,
+                OPERATOR_LABEL_YS["output_warp"],
+                "OUTPUT",
+                size=OPERATOR_LABEL_SIZE,
+            )
+        )
+        lines.append(
+            _text(
+                centre_x + 9.0,
+                OPERATOR_LABEL_YS["output_warp"],
+                "WARP",
+                size=OPERATOR_LABEL_SIZE,
+            )
+        )
+        lines.append(
+            _text(
+                centre_x - 9.0,
+                OPERATOR_LABEL_YS["fold"],
+                "FOLD",
+                size=OPERATOR_LABEL_SIZE,
+            )
+        )
+        lines.append(
+            _text(
+                centre_x + 9.0,
+                OPERATOR_LABEL_YS["fold"],
+                "TYPE",
+                size=OPERATOR_LABEL_SIZE,
+            )
+        )
+        lines.append(
+            _text(
+                centre_x,
+                OPERATOR_LABEL_YS["feedback"],
+                "FEEDBACK",
+                size=OPERATOR_LABEL_SIZE,
             )
         )
 
-    # Shared I/O frame and static labels.
+    # Four operator-specific CV bays.  The left gutter is reserved for the
+    # row names; the existing aligned jack/attenuverter pairs remain on the
+    # right so the bay reads as a small, repeated operator instrument.
+    for index, (x, y, width, height) in enumerate(
+        PATCHBAY_SECTION_RECTS, start=1
+    ):
+        lines.append(
+            _rect(
+                x,
+                y,
+                width,
+                height,
+                SECTION_FILL if index % 2 == 0 else SECTION_FILL_ALT,
+                SECTION_BLUE_GREY,
+                identifier=f"cv-patchbay-section-{index}",
+                radius=1.2,
+                stroke_width=0.30,
+            )
+        )
+        lines.append(
+            _text(
+                x + PATCHBAY_HEADING_OFFSET_X,
+                PATCHBAY_HEADING_Y,
+                "CV",
+                size=PATCHBAY_HEADING_SIZE,
+                anchor="start",
+                weight="600",
+                fill=SECTION_BLUE_GREY,
+            )
+        )
+        label_right = PATCHBAY_LABEL_RIGHT_XS[index - 1]
+        for row, row_y in zip(PATCHBAY_ROWS, PATCHBAY_ROW_YS):
+            lines.append(
+                _text(
+                    label_right,
+                    row_y + PATCHBAY_LABEL_Y_OFFSET,
+                    row,
+                    size=PATCHBAY_LABEL_SIZE,
+                    anchor="end",
+                    weight="600",
+                    fill=FUNCTION_ORANGE if row == "Output" else LEGEND_CHARCOAL,
+                    text_length=PATCHBAY_LABEL_WIDTHS[row],
+                )
+            )
+
+    # Shared I/O labels use the open spaces around the controls in the global
+    # band rather than spending another row beneath the operator patchbays.
     lines.append(
-        _rect(
-            *SHARED_IO_SECTION,
-            SECTION_FILL_ALT,
-            SECTION_BLUE_GREY,
-            identifier="shared-io-section",
-            radius=1.1,
-            stroke_width=0.30,
+        _text(
+            VOCT_LABEL_X,
+            SHARED_IO_LABEL_Y,
+            "V/OCT",
+            size=1.55,
+            anchor="start",
+            text_length=4.5,
         )
     )
-    lines.append(_text(8.5, 124.0, "V/OCT", size=1.55))
-    lines.append(_text(GLOBAL_CONTROLS["main_output"][0], 124.0, "MAIN OUT", size=1.55))
-    lines.append(_text(GLOBAL_CONTROLS["over_light"][0], 124.0, "OVER", size=1.55, fill=FUNCTION_ORANGE))
+    lines.append(
+        _text(
+            MAIN_OUTPUT_LABEL_X,
+            MAIN_OUTPUT_LABEL_Y,
+            "MAIN OUT",
+            size=1.55,
+            anchor="middle",
+            text_length=9.5,
+        )
+    )
+    lines.append(
+        _text(
+            GLOBAL_CONTROLS["over_light"][0],
+            OVER_LABEL_Y,
+            "OVER",
+            size=1.55,
+            fill=FUNCTION_ORANGE,
+        )
+    )
 
     # Rack widget guide circles/rectangles are direct children so existing
     # output-style tests can locate the main output by its coordinate.
@@ -742,6 +908,9 @@ def generate_coords_header() -> str:
         _header_float("LOGO_SCALE", LOGO_SCALE, 4),
         _header_float("MINIMUM_EDGE_CLEARANCE_MM", MINIMUM_EDGE_CLEARANCE_MM),
         _header_float("MINIMUM_LABEL_CLEARANCE_MM", MINIMUM_LABEL_CLEARANCE_MM),
+        _header_float("ALGORITHM_LABEL_Y", ALGORITHM_LABEL_Y),
+        _header_float("GLOBAL_LABEL_Y", GLOBAL_LABEL_Y),
+        _header_float("EXTERNAL_PM_LABEL_Y", EXTERNAL_PM_LABEL_Y),
         "",
         "// Global routing display rectangle",
     ]
@@ -779,10 +948,17 @@ def generate_coords_header() -> str:
             _header_float("OPERATOR_SECTION_HEIGHT", OPERATOR_SECTION_HEIGHT),
             _header_float("OPERATOR_SECTION_WIDTH", OPERATOR_SECTION_WIDTH),
             _header_float("OPERATOR_SECTION_GAP", OPERATOR_SECTION_GAP),
+            _header_float("OPERATOR_HEADING_Y", OPERATOR_HEADING_Y),
             _header_float("OPERATOR_FREQUENCY_Y", OPERATOR_ROW_YS["frequency"]),
             _header_float("OPERATOR_OUTPUT_WARP_Y", OPERATOR_ROW_YS["output_warp"]),
             _header_float("OPERATOR_FOLD_Y", OPERATOR_ROW_YS["fold"]),
             _header_float("OPERATOR_FEEDBACK_Y", OPERATOR_ROW_YS["feedback"]),
+            _header_float("OPERATOR_FREQUENCY_LABEL_Y", OPERATOR_LABEL_YS["frequency"]),
+            _header_float("OPERATOR_OUTPUT_WARP_LABEL_Y", OPERATOR_LABEL_YS["output_warp"]),
+            _header_float("OPERATOR_FOLD_LABEL_Y", OPERATOR_LABEL_YS["fold"]),
+            _header_float("OPERATOR_FEEDBACK_LABEL_Y", OPERATOR_LABEL_YS["feedback"]),
+            _header_float("OPERATOR_LABEL_SIZE", OPERATOR_LABEL_SIZE),
+            _header_float("OPERATOR_MODE_LABEL_SIZE", OPERATOR_MODE_LABEL_SIZE),
             _header_float("FREQUENCY_DISPLAY_WIDTH", FREQUENCY_DISPLAY_WIDTH),
             _header_float("FREQUENCY_DISPLAY_HEIGHT", FREQUENCY_DISPLAY_HEIGHT),
         )
@@ -840,11 +1016,31 @@ def generate_coords_header() -> str:
             _header_float("PATCHBAY_Y", PATCHBAY_SECTION[1]),
             _header_float("PATCHBAY_WIDTH", PATCHBAY_SECTION[2]),
             _header_float("PATCHBAY_HEIGHT", PATCHBAY_SECTION[3]),
+            _header_float("PATCHBAY_SECTION_TOP", PATCHBAY_SECTION_TOP),
+            _header_float("PATCHBAY_SECTION_HEIGHT", PATCHBAY_SECTION_HEIGHT),
             _header_float("PATCHBAY_WIDGET_OFFSET", PATCHBAY_WIDGET_OFFSET),
-            _header_float("PATCHBAY_LABEL_RIGHT_X", PATCHBAY_LABEL_RIGHT_X),
+            _header_float("PATCHBAY_LABEL_RIGHT_OFFSET", PATCHBAY_LABEL_RIGHT_OFFSET),
+            _header_float("PATCHBAY_HEADING_Y", PATCHBAY_HEADING_Y),
+            _header_float("PATCHBAY_HEADING_OFFSET_X", PATCHBAY_HEADING_OFFSET_X),
+            _header_float("PATCHBAY_HEADING_SIZE", PATCHBAY_HEADING_SIZE),
+            _header_float("PATCHBAY_LABEL_Y_OFFSET", PATCHBAY_LABEL_Y_OFFSET),
+            _header_float("PATCHBAY_LABEL_SIZE", PATCHBAY_LABEL_SIZE),
         )
     )
-    for index, x in enumerate(PATCHBAY_COLUMN_XS, start=1):
+    for index, (section, x, label_right) in enumerate(
+        zip(PATCHBAY_SECTION_RECTS, PATCHBAY_COLUMN_XS, PATCHBAY_LABEL_RIGHT_XS),
+        start=1,
+    ):
+        section_x, section_y, section_width, section_height = section
+        lines.extend(
+            (
+                _header_float(f"OP{index}_PATCHBAY_SECTION_X", section_x),
+                _header_float(f"OP{index}_PATCHBAY_SECTION_Y", section_y),
+                _header_float(f"OP{index}_PATCHBAY_SECTION_WIDTH", section_width),
+                _header_float(f"OP{index}_PATCHBAY_SECTION_HEIGHT", section_height),
+                _header_float(f"OP{index}_PATCHBAY_LABEL_RIGHT_X", label_right),
+            )
+        )
         lines.append(_header_float(f"PATCHBAY_COLUMN_{index}_X", x))
         lines.append(_header_float(f"OP{index}_PATCHBAY_X", x))
     for row, y in zip(PATCHBAY_ROWS, PATCHBAY_ROW_YS):
@@ -866,6 +1062,11 @@ def generate_coords_header() -> str:
             _header_float("SHARED_IO_Y", SHARED_IO_SECTION[1]),
             _header_float("SHARED_IO_WIDTH", SHARED_IO_SECTION[2]),
             _header_float("SHARED_IO_HEIGHT", SHARED_IO_SECTION[3]),
+            _header_float("VOCT_LABEL_X", VOCT_LABEL_X),
+            _header_float("MAIN_OUTPUT_LABEL_X", MAIN_OUTPUT_LABEL_X),
+            _header_float("SHARED_IO_LABEL_Y", SHARED_IO_LABEL_Y),
+            _header_float("MAIN_OUTPUT_LABEL_Y", MAIN_OUTPUT_LABEL_Y),
+            _header_float("OVER_LABEL_Y", OVER_LABEL_Y),
             _header_float("RACK_SMALL_KNOB_RADIUS", RACK_SMALL_KNOB_RADIUS, 6),
             _header_float("RACK_PORT_RADIUS", RACK_PORT_RADIUS, 6),
             _header_float("OUTPUT_BACKPLATE_RADIUS", OUTPUT_BACKPLATE_RADIUS, 6),
