@@ -1,5 +1,6 @@
 #include "../plugin.hpp"
 #include "../polyphony.h"
+#include "../ui_geometry.h"
 #include "engine.h"
 #include "layout.h"
 
@@ -455,6 +456,200 @@ struct FourV2 : Module {
     }
 };
 
+struct AlgorithmRoutingDisplay : Widget {
+    FourV2* module = nullptr;
+
+    AlgorithmRoutingDisplay()
+    {
+        using namespace four_v2_layout;
+        box.size = mm2px(Vec(ROUTING_DISPLAY_WIDTH, ROUTING_DISPLAY_HEIGHT));
+    }
+
+    void drawLayer(const DrawArgs& args, int layer) override
+    {
+        if (layer != 1)
+            return;
+
+        const float strokeWidth = mm2px(0.35f);
+        const float inset = wintoid::ui::stroke_inset(strokeWidth);
+        nvgBeginPath(args.vg);
+        nvgRoundedRect(
+            args.vg, inset, inset,
+            wintoid::ui::inset_extent(box.size.x, strokeWidth),
+            wintoid::ui::inset_extent(box.size.y, strokeWidth),
+            mm2px(1.0f));
+        nvgFillColor(args.vg, nvgRGB(36, 37, 34));
+        nvgFill(args.vg);
+        nvgStrokeColor(args.vg, nvgRGB(85, 109, 128));
+        nvgStrokeWidth(args.vg, strokeWidth);
+        nvgStroke(args.vg);
+
+        const float edgeStroke = mm2px(0.45f);
+        const float nodeStroke = mm2px(0.35f);
+        const float nodeRadius = mm2px(1.35f);
+        const float nodeInset = nodeRadius + nodeStroke * 0.5f;
+        const float left = inset + mm2px(2.4f) + nodeInset;
+        const float right = box.size.x - inset - mm2px(2.4f) - nodeInset;
+        const float spacing = (right - left) / 3.f;
+        const float nodeX[] = {
+            left, left + spacing, left + spacing * 2.f, right
+        };
+        const float nodeY = inset + mm2px(8.5f);
+        const float railY = wintoid::ui::clamp_stroke_center(
+            box.size.y - mm2px(3.4f), box.size.y, edgeStroke);
+        const float arrowLength = mm2px(1.35f);
+        const float arrowWidth = mm2px(0.75f);
+
+        const int algorithmIndex = four_v2::algorithm_index(
+            module ? module->params[FourV2::ALGORITHM_PARAM].getValue() : 0.f);
+        const four_v2::Algorithm& algorithm =
+            four_v2::ALGORITHMS[algorithmIndex];
+
+        // Orange edges run from each modulator to its destination. Curves
+        // separate the serial and fan-in routes while staying inside the
+        // display's clipped drawing box.
+        nvgStrokeColor(args.vg, nvgRGB(237, 91, 34));
+        nvgStrokeWidth(args.vg, edgeStroke);
+        for (int source = 0; source < four_v2::OPERATOR_COUNT; ++source) {
+            for (int destination = 0;
+                 destination < four_v2::OPERATOR_COUNT; ++destination) {
+                if (!algorithm.mod[source][destination] || source == destination)
+                    continue;
+
+                const float direction = destination > source ? 1.f : -1.f;
+                const float startX = nodeX[source]
+                    + direction * (nodeRadius + edgeStroke);
+                const float endX = nodeX[destination]
+                    - direction * (nodeRadius + edgeStroke);
+                const int span = source > destination
+                    ? source - destination : destination - source;
+                const float controlX = mm2px(2.4f);
+                const float controlY = nodeY
+                    - mm2px(2.2f + 1.3f * static_cast<float>(span));
+
+                nvgBeginPath(args.vg);
+                nvgMoveTo(args.vg, startX, nodeY);
+                nvgBezierTo(
+                    args.vg,
+                    startX + direction * controlX, controlY,
+                    endX - direction * controlX, controlY,
+                    endX, nodeY);
+                nvgStroke(args.vg);
+
+                const float arrowBaseX = endX - direction * arrowLength;
+                nvgBeginPath(args.vg);
+                nvgMoveTo(args.vg, endX, nodeY);
+                nvgLineTo(args.vg, arrowBaseX, nodeY - arrowWidth);
+                nvgMoveTo(args.vg, endX, nodeY);
+                nvgLineTo(args.vg, arrowBaseX, nodeY + arrowWidth);
+                nvgStroke(args.vg);
+            }
+        }
+
+        // Gold carrier paths drop separately into one shared output rail.
+        nvgStrokeColor(args.vg, nvgRGB(224, 182, 73));
+        nvgStrokeWidth(args.vg, edgeStroke);
+        nvgBeginPath(args.vg);
+        nvgMoveTo(args.vg, nodeX[0], railY);
+        nvgLineTo(args.vg, nodeX[3], railY);
+        nvgStroke(args.vg);
+        for (int op = 0; op < four_v2::OPERATOR_COUNT; ++op) {
+            if (!algorithm.carrier[op])
+                continue;
+            nvgBeginPath(args.vg);
+            nvgMoveTo(args.vg, nodeX[op], nodeY + nodeRadius + edgeStroke);
+            nvgLineTo(args.vg, nodeX[op], railY);
+            nvgStroke(args.vg);
+        }
+
+        for (int op = 0; op < four_v2::OPERATOR_COUNT; ++op) {
+            nvgBeginPath(args.vg);
+            nvgCircle(args.vg, nodeX[op], nodeY, nodeRadius);
+            nvgFillColor(args.vg, nvgRGB(36, 37, 34));
+            nvgFill(args.vg);
+            nvgStrokeColor(args.vg, algorithm.carrier[op]
+                ? nvgRGB(224, 182, 73) : nvgRGB(237, 91, 34));
+            nvgStrokeWidth(args.vg, nodeStroke);
+            nvgStroke(args.vg);
+        }
+
+        std::shared_ptr<Font> font = APP->window->loadFont(
+            asset::system("res/fonts/DejaVuSans.ttf"));
+        if (font) {
+            nvgFontFaceId(args.vg, font->handle);
+            nvgFontSize(args.vg, mm2px(1.8f));
+            nvgFillColor(args.vg, nvgRGB(236, 232, 217));
+            nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            for (int op = 0; op < four_v2::OPERATOR_COUNT; ++op) {
+                const char label[] = {static_cast<char>('1' + op), '\0'};
+                nvgText(args.vg, nodeX[op], nodeY, label, nullptr);
+            }
+        }
+
+        Widget::drawLayer(args, layer);
+    }
+};
+
+struct OperatorFrequencyDisplay : Widget {
+    FourV2* module = nullptr;
+    int opIndex = 0;
+    int coarseParamId = 0;
+    int freqModeParamId = 0;
+
+    OperatorFrequencyDisplay()
+    {
+        using namespace four_v2_layout;
+        box.size = mm2px(Vec(FREQUENCY_DISPLAY_WIDTH,
+                             FREQUENCY_DISPLAY_HEIGHT));
+    }
+
+    void drawLayer(const DrawArgs& args, int layer) override
+    {
+        if (layer != 1)
+            return;
+
+        const float strokeWidth = mm2px(0.30f);
+        const float inset = wintoid::ui::stroke_inset(strokeWidth);
+        nvgBeginPath(args.vg);
+        nvgRoundedRect(
+            args.vg, inset, inset,
+            wintoid::ui::inset_extent(box.size.x, strokeWidth),
+            wintoid::ui::inset_extent(box.size.y, strokeWidth),
+            mm2px(0.5f));
+        nvgFillColor(args.vg, nvgRGB(36, 37, 34));
+        nvgFill(args.vg);
+        nvgStrokeColor(args.vg, nvgRGB(85, 109, 128));
+        nvgStrokeWidth(args.vg, strokeWidth);
+        nvgStroke(args.vg);
+
+        const int mode = four_v2::clamp_mode(
+            module ? module->params[freqModeParamId].getValue()
+                   : (float)four_v2::RATIO_MODE);
+        const float coarse = clamp(
+            four_v2::finite_or(
+                module ? module->params[coarseParamId].getValue()
+                       : (float)four_v2::DEFAULT_RATIO_INDEX,
+                (float)four_v2::DEFAULT_RATIO_INDEX),
+            four_v2::COARSE_MIN, four_v2::COARSE_MAX);
+        const std::string text = mode == four_v2::RATIO_MODE
+            ? std::string(four_v2::ratio_label(coarse))
+            : four_v2::frequency_label(coarse, mode);
+
+        std::shared_ptr<Font> font = APP->window->loadFont(
+            asset::system("res/fonts/DejaVuSans.ttf"));
+        if (font) {
+            nvgFontFaceId(args.vg, font->handle);
+            nvgFontSize(args.vg, mm2px(1.8f));
+            nvgFillColor(args.vg, nvgRGB(236, 232, 217));
+            nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            nvgText(args.vg, box.size.x * 0.5f, box.size.y * 0.5f,
+                    text.c_str(), nullptr);
+        }
+
+        Widget::drawLayer(args, layer);
+    }
+};
+
 struct FourV2Widget : ModuleWidget {
     FourV2Widget(FourV2* module)
     {
@@ -462,6 +657,38 @@ struct FourV2Widget : ModuleWidget {
         setPanel(createPanel(asset::plugin(pluginInstance, "res/FourV2.svg")));
 
         using namespace four_v2_layout;
+
+        auto* routing = new AlgorithmRoutingDisplay();
+        routing->module = module;
+        routing->box.pos = mm2px(Vec(ROUTING_DISPLAY_X, ROUTING_DISPLAY_Y));
+        addChild(routing);
+
+        const int frequency_coarse_ids[] = {
+            FourV2::OP1_COARSE_PARAM, FourV2::OP2_COARSE_PARAM,
+            FourV2::OP3_COARSE_PARAM, FourV2::OP4_COARSE_PARAM
+        };
+        const int frequency_mode_ids[] = {
+            FourV2::OP1_FREQ_MODE_PARAM, FourV2::OP2_FREQ_MODE_PARAM,
+            FourV2::OP3_FREQ_MODE_PARAM, FourV2::OP4_FREQ_MODE_PARAM
+        };
+        const float frequency_display_x[] = {
+            OP1_FREQUENCY_DISPLAY_X, OP2_FREQUENCY_DISPLAY_X,
+            OP3_FREQUENCY_DISPLAY_X, OP4_FREQUENCY_DISPLAY_X
+        };
+        const float frequency_display_y[] = {
+            OP1_FREQUENCY_DISPLAY_Y, OP2_FREQUENCY_DISPLAY_Y,
+            OP3_FREQUENCY_DISPLAY_Y, OP4_FREQUENCY_DISPLAY_Y
+        };
+        for (int op = 0; op < 4; ++op) {
+            auto* display = new OperatorFrequencyDisplay();
+            display->module = module;
+            display->opIndex = op;
+            display->coarseParamId = frequency_coarse_ids[op];
+            display->freqModeParamId = frequency_mode_ids[op];
+            display->box.pos = mm2px(Vec(
+                frequency_display_x[op], frequency_display_y[op]));
+            addChild(display);
+        }
 
         addParam(createParamCentered<RoundSmallBlackKnob>(
             mm2px(Vec(ALGORITHM_KNOB_X, ALGORITHM_KNOB_Y)),

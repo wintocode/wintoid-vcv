@@ -19,6 +19,7 @@ PANEL_SVG = ROOT / "res" / "FourV2.svg"
 LOGO_SVG = ROOT / "res" / "WintoidLogo.svg"
 LAYOUT_HEADER = ROOT / "src" / "FourV2" / "layout.h"
 GLYPH_DATA = ROOT / "scripts" / "assets" / "wintoid_logo_glyphs.json"
+SOURCE_CPP = ROOT / "src" / "FourV2" / "FourV2.cpp"
 
 RACK_PIXELS_PER_MM = 15.0 / 5.08
 RACK_SMALL_KNOB_RADIUS_MM = 22.67581 / (2.0 * RACK_PIXELS_PER_MM)
@@ -208,6 +209,7 @@ class FourV2PanelTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.panel = load_generator(SCRIPT, "four_v2_panel")
+        cls.source = SOURCE_CPP.read_text(encoding="utf-8")
 
     def require_panel(self):
         self.assertIsNotNone(
@@ -315,6 +317,23 @@ class FourV2PanelTest(unittest.TestCase):
             self.assertGreaterEqual(y, 0.0)
             self.assertLessEqual(x + width, panel.WIDTH_MM)
             self.assertLessEqual(y + height, panel.HEIGHT_MM)
+
+    def test_live_displays_use_generated_display_rectangles(self):
+        self.require_panel()
+        for contract in (
+            "box.size = mm2px(Vec(ROUTING_DISPLAY_WIDTH, ROUTING_DISPLAY_HEIGHT))",
+            "mm2px(Vec(ROUTING_DISPLAY_X, ROUTING_DISPLAY_Y))",
+            "OP1_FREQUENCY_DISPLAY_X",
+            "OP1_FREQUENCY_DISPLAY_Y",
+            "OP2_FREQUENCY_DISPLAY_X",
+            "OP2_FREQUENCY_DISPLAY_Y",
+            "OP3_FREQUENCY_DISPLAY_X",
+            "OP3_FREQUENCY_DISPLAY_Y",
+            "OP4_FREQUENCY_DISPLAY_X",
+            "OP4_FREQUENCY_DISPLAY_Y",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, self.source)
 
     def test_patchbay_rows_and_columns_align_to_operator_centres(self):
         panel = self.require_panel()

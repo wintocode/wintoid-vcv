@@ -226,6 +226,30 @@ class FourV2ModuleContractTest(unittest.TestCase):
         self.assertNotIn("onButton(", source)
         self.assertNotIn("appendContextMenu(", source)
 
+    def test_dynamic_displays_use_generated_rectangles_and_read_module_state(self):
+        source = self.require_source()
+        for contract in (
+            "struct AlgorithmRoutingDisplay",
+            "struct OperatorFrequencyDisplay",
+            "ROUTING_DISPLAY_WIDTH",
+            "ROUTING_DISPLAY_HEIGHT",
+            "ROUTING_DISPLAY_X",
+            "ROUTING_DISPLAY_Y",
+            "OP1_FREQUENCY_DISPLAY_X",
+            "OP1_FREQUENCY_DISPLAY_Y",
+            "OP4_FREQUENCY_DISPLAY_X",
+            "OP4_FREQUENCY_DISPLAY_Y",
+            "display->box.pos",
+            "four_v2::ALGORITHMS",
+            "four_v2::ratio_label(coarse)",
+            "four_v2::frequency_label(coarse, mode)",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, source)
+
+        self.assertNotIn("onDrag(", source)
+        self.assertNotIn("appendContextMenu(", source)
+
     def test_registration_and_manifest_are_added_after_existing_models(self):
         source = self.require_source()
         self.assertIn("extern Model* modelFourV2;", self.plugin_header)

@@ -15,7 +15,7 @@ import unittest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-MODULES = ("Four", "Vortex", "Brink")
+MODULES = ("Four", "Vortex", "Brink", "FourV2")
 
 
 def extract_struct(source, marker):
@@ -64,6 +64,8 @@ class MetaModuleGraphicsTest(unittest.TestCase):
             ("Four", "struct FoldTypeDisplay"),
             ("Vortex", "struct ModeDisplay"),
             ("Brink", "struct WindowRail"),
+            ("FourV2", "struct AlgorithmRoutingDisplay"),
+            ("FourV2", "struct OperatorFrequencyDisplay"),
         )
 
         for name, marker in widgets:
@@ -78,16 +80,46 @@ class MetaModuleGraphicsTest(unittest.TestCase):
             ("Four", "struct AlgoDisplay"),
             ("Four", "struct FoldTypeDisplay"),
             ("Vortex", "struct ModeDisplay"),
-            ("Brink", "struct WindowRail"),
+            ("FourV2", "struct AlgorithmRoutingDisplay"),
+            ("FourV2", "struct OperatorFrequencyDisplay"),
         )
 
-        for name, marker in widgets[:3]:
+        for name, marker in widgets:
             with self.subTest(module=name, widget=marker):
                 body = extract_struct(self.sources[name], marker)
                 self.assertIn("res/fonts/DejaVuSans.ttf", body)
                 self.assertIn("nvgFontFaceId", body)
                 self.assertIn("stroke_inset", body)
                 self.assertIn("inset_extent", body)
+
+    def test_four_v2_displays_are_read_only_and_use_algorithm_table(self):
+        for marker in ("struct AlgorithmRoutingDisplay",
+                       "struct OperatorFrequencyDisplay"):
+            with self.subTest(widget=marker):
+                body = extract_struct(self.sources["FourV2"], marker)
+                self.assertIn("drawLayer", body)
+                self.assertIn("layer != 1", body)
+                self.assertIn("res/fonts/DejaVuSans.ttf", body)
+                self.assertIn("nvgFontFaceId", body)
+                self.assertIn("wintoid::ui::stroke_inset", body)
+                self.assertNotIn("onButton", body)
+                self.assertNotIn("onDrag", body)
+                self.assertNotIn("appendContextMenu", body)
+                self.assertNotIn("setValue", body)
+
+        routing = extract_struct(
+            self.sources["FourV2"], "struct AlgorithmRoutingDisplay")
+        self.assertIn("four_v2::ALGORITHMS", routing)
+        self.assertIn("four_v2::algorithm_index", routing)
+        self.assertIn("inset_extent", routing)
+
+        frequency = extract_struct(
+            self.sources["FourV2"], "struct OperatorFrequencyDisplay")
+        self.assertIn("four_v2::clamp_mode", frequency)
+        self.assertIn("four_v2::ratio_label(coarse)", frequency)
+        self.assertIn("four_v2::frequency_label(coarse, mode)", frequency)
+        self.assertIn("params[coarseParamId].getValue()", frequency)
+        self.assertIn("params[freqModeParamId].getValue()", frequency)
 
     def test_window_rail_uses_all_stroke_geometry_helpers(self):
         rail = extract_struct(self.sources["Brink"], "struct WindowRail")
