@@ -855,38 +855,12 @@ struct OperatorFrequencyDisplay : Widget {
     int coarseParamId = 0;
     int freqModeParamId = 0;
     int fineParamId = 0;
-    std::string text;
 
     OperatorFrequencyDisplay()
     {
         using namespace four_v2_layout;
         box.size = mm2px(Vec(FREQUENCY_DISPLAY_WIDTH,
                              FREQUENCY_DISPLAY_HEIGHT));
-    }
-
-    void updateText()
-    {
-        const int mode = four_v2::clamp_mode(
-            module ? module->params[freqModeParamId].getValue()
-                   : (float)four_v2::RATIO_MODE);
-        const float coarse = clamp(
-            four_v2::finite_or(
-                module ? module->params[coarseParamId].getValue()
-                       : (float)four_v2::DEFAULT_RATIO_INDEX,
-                (float)four_v2::DEFAULT_RATIO_INDEX),
-            four_v2::COARSE_MIN, four_v2::COARSE_MAX);
-        const float fine = module
-            ? module->params[fineParamId].getValue()
-            : 0.f;
-        text = mode == four_v2::RATIO_MODE
-            ? std::string(four_v2::ratio_label(coarse))
-            : four_v2::frequency_label(coarse, mode, fine);
-    }
-
-    void step() override
-    {
-        updateText();
-        Widget::step();
     }
 
     void drawLayer(const DrawArgs& args, int layer) override
@@ -910,8 +884,21 @@ struct OperatorFrequencyDisplay : Widget {
         nvgStrokeWidth(args.vg, strokeWidth);
         nvgStroke(args.vg);
 
-        if (text.empty())
-            updateText();
+        const int mode = four_v2::clamp_mode(
+            module ? module->getParamQuantity(freqModeParamId)->getValue()
+                   : (float)four_v2::RATIO_MODE);
+        const float coarse = clamp(
+            four_v2::finite_or(
+                module ? module->getParamQuantity(coarseParamId)->getValue()
+                       : (float)four_v2::DEFAULT_RATIO_INDEX,
+                (float)four_v2::DEFAULT_RATIO_INDEX),
+            four_v2::COARSE_MIN, four_v2::COARSE_MAX);
+        const float fine = module
+            ? module->getParamQuantity(fineParamId)->getValue()
+            : 0.f;
+        const std::string text = mode == four_v2::RATIO_MODE
+            ? std::string(four_v2::ratio_label(coarse))
+            : four_v2::frequency_label(coarse, mode, fine);
 
         std::shared_ptr<Font> font = APP->window->loadFont(
             asset::system("res/fonts/DejaVuSans.ttf"));

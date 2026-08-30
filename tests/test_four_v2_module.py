@@ -83,6 +83,20 @@ def ordered_enum_names(body, expected):
     return positions
 
 
+def block_body(source, marker, start=0):
+    marker_start = source.index(marker, start)
+    brace_start = source.index("{", marker_start)
+    depth = 0
+    for index in range(brace_start, len(source)):
+        if source[index] == "{":
+            depth += 1
+        elif source[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return source[brace_start + 1:index]
+    raise AssertionError(f"Unclosed block after {marker!r}")
+
+
 class FourV2ModuleContractTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -285,6 +299,36 @@ class FourV2ModuleContractTest(unittest.TestCase):
         self.assertNotIn("onButton(", source)
         self.assertNotIn("appendContextMenu(", source)
 
+    def test_frequency_display_reads_live_param_quantities_in_layer_draw(self):
+        source = self.require_source()
+        display_start = source.index("struct OperatorFrequencyDisplay")
+        display_body = block_body(
+            source,
+            "struct OperatorFrequencyDisplay",
+            display_start,
+        )
+
+        self.assertIn(
+            "void drawLayer(const DrawArgs& args, int layer) override",
+            display_body,
+        )
+        draw_body = block_body(
+            display_body,
+            "void drawLayer(const DrawArgs& args, int layer) override",
+        )
+        for param_id in (
+            "coarseParamId",
+            "freqModeParamId",
+            "fineParamId",
+        ):
+            with self.subTest(param_id=param_id):
+                self.assertIn(
+                    f"module->getParamQuantity({param_id})->getValue()",
+                    draw_body,
+                )
+        self.assertIn("const std::string text =", draw_body)
+        self.assertNotIn("std::string text;", display_body)
+
     def test_dynamic_displays_use_generated_rectangles_and_read_module_state(self):
         source = self.require_source()
         for contract in (
@@ -304,8 +348,7 @@ class FourV2ModuleContractTest(unittest.TestCase):
             "four_v2::frequency_label(coarse, mode, fine)",
             "int fineParamId",
             "params[fineParamId].getValue()",
-            "void step() override",
-            "updateText()",
+            "getParamQuantity(coarseParamId)->getValue()",
         ):
             with self.subTest(contract=contract):
                 self.assertIn(contract, source)
