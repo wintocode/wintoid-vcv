@@ -112,6 +112,18 @@ TEST(indices_modes_and_labels_are_defensive)
     ASSERT(four_v2::frequency_label(10.51f, four_v2::FIXED_MODE) == "1.0 kHz");
 }
 
+TEST(fixed_frequency_labels_include_fine_tuning)
+{
+    ASSERT_NEAR(four_v2::fine_multiplier(1200.f), 2.f, 1e-6f);
+    ASSERT_NEAR(four_v2::fine_multiplier(-1200.f), 0.5f, 1e-6f);
+    ASSERT(four_v2::frequency_label(
+               0.f, four_v2::FIXED_MODE, 1200.f) == "2.0 Hz");
+    ASSERT(four_v2::frequency_label(
+               0.f, four_v2::FIXED_MODE, -1200.f) == "0.5 Hz");
+    ASSERT(four_v2::frequency_label(
+               5.f, four_v2::RATIO_MODE, 1200.f) == "1:1");
+}
+
 int main()
 {
     printf("Four V2 model tests:\n");
@@ -120,6 +132,7 @@ int main()
     run_ratio_positions_round_and_clamp();
     run_fixed_frequency_is_continuous_and_exponential();
     run_indices_modes_and_labels_are_defensive();
+    run_fixed_frequency_labels_include_fine_tuning();
 
     printf("\n%d/%d tests passed.\n", tests_passed, tests_run);
     return tests_passed == tests_run ? 0 : 1;

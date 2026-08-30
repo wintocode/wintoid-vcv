@@ -198,8 +198,8 @@ class FourV2PanelTest(unittest.TestCase):
         self.assertEqual("#242522", panel.LEGEND_CHARCOAL)
         self.assertEqual("#556d80", panel.SECTION_BLUE_GREY)
         self.assertEqual("#b7693c", panel.FUNCTION_ORANGE)
-        self.assertEqual("#155f91", panel.LOGO_BLUE)
-        self.assertEqual("#ed5b22", panel.LOGO_ORANGE)
+        self.assertEqual("#1a1a2e", panel.LOGO_BLUE)
+        self.assertEqual("#ff4d00", panel.LOGO_ORANGE)
 
     def test_four_operator_sections_are_framed(self):
         panel = self.require_panel()
@@ -226,7 +226,7 @@ class FourV2PanelTest(unittest.TestCase):
                                  node.attrib.get("data-glyph")]))
         colours = {node.attrib.get("fill") for node in logo.iter()
                    if node.tag.endswith("path")}
-        self.assertEqual({"#155f91", "#ed5b22"}, colours)
+        self.assertEqual({"#1a1a2e", "#ff4d00"}, colours)
 
     def test_panel_logo_is_rendered_at_half_size(self):
         panel = self.require_panel()
@@ -474,6 +474,55 @@ class FourV2PanelTest(unittest.TestCase):
                 self.assertAlmostEqual(expected_width, group_width, delta=0.001)
                 self.assertAlmostEqual(9.126, group_height, delta=0.001)
 
+    def test_coarse_and_fine_controls_have_their_own_rounded_group_boxes(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        group_boxes = {
+            node.attrib.get("id"): node
+            for node in root.iter()
+            if node.tag.endswith("rect")
+            and node.attrib.get("id", "").endswith("-coarse-fine-group")
+        }
+        self.assertEqual(
+            {f"op{operator}-coarse-fine-group" for operator in range(1, 5)},
+            set(group_boxes),
+        )
+        components = {
+            name: (x, y)
+            for name, x, y in panel.COMPONENTS
+        }
+        for operator in range(1, 5):
+            identifier = f"op{operator}-coarse-fine-group"
+            group = group_boxes[identifier]
+            group_x = float(group.attrib["x"])
+            group_y = float(group.attrib["y"])
+            group_width = float(group.attrib["width"])
+            group_height = float(group.attrib["height"])
+            coarse_x, coarse_y = components[f"op{operator}_coarse"]
+            fine_x, fine_y = components[f"op{operator}_fine"]
+            coarse_radius = panel.COMPONENT_RADII[f"op{operator}_coarse"]
+            fine_radius = panel.COMPONENT_RADII[f"op{operator}_fine"]
+            mode_x, _mode_y = components[f"op{operator}_freq_mode"]
+            with self.subTest(operator=operator, style="outline"):
+                self.assertEqual("none", group.attrib["fill"])
+                self.assertEqual(panel.SECTION_BLUE_GREY,
+                                 group.attrib["stroke"])
+                self.assertGreater(float(group.attrib["rx"]), 0.0)
+            with self.subTest(operator=operator, enclosure="controls"):
+                self.assertLessEqual(group_x, coarse_x - coarse_radius)
+                self.assertGreaterEqual(
+                    group_x + group_width,
+                    fine_x + fine_radius,
+                )
+                self.assertLessEqual(group_y, coarse_y - coarse_radius)
+                self.assertGreaterEqual(
+                    group_y + group_height,
+                    fine_y + fine_radius,
+                )
+            with self.subTest(operator=operator, separation="mode"):
+                self.assertLess(group_x + group_width,
+                                mode_x - panel.STATE_SWITCH_WIDTH / 2.0)
+
     def test_routing_display_uses_readable_nodes_and_branch_lanes(self):
         panel = self.require_panel()
         root = ET.fromstring(panel.generate_svg())
@@ -652,7 +701,8 @@ class FourV2PanelTest(unittest.TestCase):
         labels = [
             node for node in root.iter()
             if node.tag.endswith("text") and node.text in {
-                "COARSE", "MODE", "FINE", "LEVEL", "WARP", "FOLD", "TYPE",
+                "COARSE", "MODE", "FINE", "LEVEL", "WARP", "FOLD",
+                "FOLD TYPE",
                 "FEEDBACK",
             }
         ]
@@ -668,7 +718,7 @@ class FourV2PanelTest(unittest.TestCase):
             "LEVEL": "output",
             "WARP": "warp",
             "FOLD": "fold",
-            "TYPE": "fold_type",
+            "FOLD TYPE": "fold_type",
             "FEEDBACK": "feedback",
         }
         for label in labels:
@@ -692,7 +742,7 @@ class FourV2PanelTest(unittest.TestCase):
             with self.subTest(operator=operator, label=label.text,
                               contract="readable size"):
                 self.assertGreaterEqual(font_size, 1.4)
-                expected_size = 1.9 if label.text in {"MODE", "TYPE"} else 2.0
+                expected_size = 1.9 if label.text in {"MODE", "FOLD TYPE"} else 2.0
                 self.assertAlmostEqual(expected_size, font_size)
             label_top = baseline - font_size
             label_bottom = baseline + font_size * 0.25
@@ -767,6 +817,7 @@ class FourV2PanelTest(unittest.TestCase):
                   if node.tag.endswith("text") and node.text}
         for expected in ("FourV2", "OP1", "OP2", "OP3", "OP4",
                          "LEVEL", "WARP", "FOLD", "FEEDBACK",
+                         "FOLD TYPE",
                          "PM DEPTH", "MASTER", "PM CV", "EXT PM"):
             with self.subTest(label=expected):
                 self.assertIn(expected, labels)
@@ -791,6 +842,7 @@ class FourV2PanelTest(unittest.TestCase):
             '"FourV2"',
             '"COARSE"',
             '"MODE"',
+            '"FOLD TYPE"',
             '"FEEDBACK"',
             '"LEVEL"',
             '"PM CV"',
@@ -813,7 +865,25 @@ class FourV2PanelTest(unittest.TestCase):
             "const float attenX[]",
             body,
         )
+        self.assertIn('"FOLD TYPE"', body)
+        self.assertNotIn('"TYPE"', body)
         self.assertRegex(source, r"addChild\(\s*labels\s*\)")
+
+    def test_title_and_operator_headings_are_bold_in_the_static_panel(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        for text in ("FourV2", "OP1", "OP2", "OP3", "OP4"):
+            label = next(
+                node for node in root.iter()
+                if node.tag.endswith("text") and node.text == text
+            )
+            with self.subTest(label=text):
+                self.assertEqual("700", label.attrib.get("font-weight"))
+
+        body = _extract_struct_body(self.source, "struct FourV2PanelLabels")
+        self.assertIn("bool bold", body)
+        self.assertIn("label.bold", body)
+        self.assertIn('"FourV2", true', body)
 
     def test_generated_artifacts_match_generators(self):
         panel = self.require_panel()

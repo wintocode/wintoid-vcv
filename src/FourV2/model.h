@@ -87,12 +87,22 @@ inline float fixed_hz(float coarse) {
     return expf(coarse / COARSE_MAX * logf(10000.f));
 }
 
-inline std::string frequency_label(float coarse, int mode) {
+inline float fine_multiplier(float cents) {
+    cents = finite_or(cents, 0.f);
+    return finite_or(exp2f(cents / 1200.f), 1.f);
+}
+
+inline float fixed_frequency(float coarse, float fineCents) {
+    return finite_or(fixed_hz(coarse) * fine_multiplier(fineCents), 0.f);
+}
+
+inline std::string frequency_label(float coarse, int mode,
+                                   float fineCents = 0.f) {
     char buffer[32];
     if (clamp_mode((float)mode) == RATIO_MODE)
         return std::string(ratio_label(coarse));
 
-    const float hz = fixed_hz(coarse);
+    const float hz = fixed_frequency(coarse, fineCents);
     if (hz < 1000.f)
         snprintf(buffer, sizeof(buffer), "%.1f Hz", (double)hz);
     else

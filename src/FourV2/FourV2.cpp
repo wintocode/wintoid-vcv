@@ -29,8 +29,7 @@ inline float bipolar_param(float value, float fallback = 0.f)
 
 inline float cents_multiplier(float cents)
 {
-    cents = four_v2::finite_or(cents, 0.f);
-    return four_v2::finite_or(exp2f(cents / 1200.f), 1.f);
+    return four_v2::fine_multiplier(cents);
 }
 
 inline int fold_type_index(float value)
@@ -42,13 +41,18 @@ inline int fold_type_index(float value)
 
 struct CoarseParamQuantity : ParamQuantity {
     int freqModeParamId = 0;
+    int fineParamId = 0;
 
     std::string getDisplayValueString() override {
         int mode = four_v2::RATIO_MODE;
+        float fine = 0.f;
         if (module)
+        {
             mode = four_v2::clamp_mode(
                 module->params[freqModeParamId].getValue());
-        return four_v2::frequency_label(getValue(), mode);
+            fine = module->params[fineParamId].getValue();
+        }
+        return four_v2::frequency_label(getValue(), mode, fine);
     }
 };
 
@@ -236,6 +240,7 @@ struct FourV2 : Module {
                 coarse_ids[op], 0.f, 14.f, 5.f,
                 name + " Coarse");
             coarse_quantity->freqModeParamId = freq_mode_ids[op];
+            coarse_quantity->fineParamId = fine_ids[op];
             configParam(fine_ids[op], -100.f, 100.f, 0.f,
                         name + " Fine", " cents");
             configParam(output_ids[op], 0.f, 1.f, output_default,
@@ -490,6 +495,7 @@ struct FourV2PanelLabels : Widget {
         int green;
         int blue;
         const char* text;
+        bool bold;
     };
 
     FourV2PanelLabels()
@@ -503,6 +509,13 @@ struct FourV2PanelLabels : Widget {
         nvgFontSize(args.vg, mm2px(label.size));
         nvgFillColor(args.vg, nvgRGB(label.red, label.green, label.blue));
         nvgTextAlign(args.vg, label.align);
+        if (label.bold) {
+            const float weightOffset = mm2px(0.10f);
+            nvgText(args.vg, mm2px(label.x) - weightOffset,
+                    mm2px(label.y), label.text, nullptr);
+            nvgText(args.vg, mm2px(label.x) + weightOffset,
+                    mm2px(label.y), label.text, nullptr);
+        }
         nvgText(args.vg, mm2px(label.x), mm2px(label.y), label.text, nullptr);
     }
 
@@ -527,19 +540,19 @@ struct FourV2PanelLabels : Widget {
 
         const Label labels[] = {
             {TITLE_X, TITLE_Y, TITLE_FONT_SIZE, leftBaseline,
-             36, 37, 34, "FourV2"},
+             36, 37, 34, "FourV2", true},
             {ALGORITHM_KNOB_X, ALGORITHM_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
-             36, 37, 34, "ALGO"},
+             36, 37, 34, "ALGO", false},
             {TUNE_KNOB_X, GLOBAL_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
-             36, 37, 34, "TUNE"},
+             36, 37, 34, "TUNE", false},
             {PM_DEPTH_KNOB_X, GLOBAL_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
-             36, 37, 34, "PM DEPTH"},
+             36, 37, 34, "PM DEPTH", false},
             {MASTER_KNOB_X, GLOBAL_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
-             36, 37, 34, "MASTER"},
+             36, 37, 34, "MASTER", false},
             {PM_DEPTH_CV_JACK_X, GLOBAL_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
-             36, 37, 34, "PM CV"},
+             36, 37, 34, "PM CV", false},
             {EXTERNAL_PM_JACK_X, EXTERNAL_PM_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
-             36, 37, 34, "EXT PM"},
+             36, 37, 34, "EXT PM", false},
         };
         for (const Label& label : labels)
             drawLabel(args, label);
@@ -582,32 +595,32 @@ struct FourV2PanelLabels : Widget {
             drawLabel(args, {operatorHeadingX[op], OPERATOR_HEADING_Y,
                               OPERATOR_HEADING_SIZE, leftBaseline,
                               36, 37, 34,
-                              operatorHeadings[op]});
+                              operatorHeadings[op], true});
             drawLabel(args, {coarseX[op], OPERATOR_COARSE_MODE_LABEL_Y,
                               OPERATOR_LABEL_SIZE,
-                              centerBaseline, 36, 37, 34, "COARSE"});
+                              centerBaseline, 36, 37, 34, "COARSE", false});
             drawLabel(args, {modeX[op], OPERATOR_COARSE_MODE_LABEL_Y,
                               OPERATOR_MODE_LABEL_SIZE,
-                              centerBaseline, 36, 37, 34, "MODE"});
+                              centerBaseline, 36, 37, 34, "MODE", false});
             drawLabel(args, {fineX[op], OPERATOR_FINE_FOLD_TYPE_LABEL_Y,
                               OPERATOR_LABEL_SIZE,
-                              centerBaseline, 36, 37, 34, "FINE"});
+                              centerBaseline, 36, 37, 34, "FINE", false});
             drawLabel(args, {foldTypeX[op], OPERATOR_FINE_FOLD_TYPE_LABEL_Y,
                               OPERATOR_MODE_LABEL_SIZE,
-                              centerBaseline, 36, 37, 34, "TYPE"});
+                              centerBaseline, 36, 37, 34, "FOLD TYPE", false});
             for (int row = 0; row < 4; ++row) {
                 drawLabel(args, {parameterX[row][op], parameterLabelY[row],
                                   OPERATOR_LABEL_SIZE,
                                   centerBaseline, 36, 37, 34,
-                                  parameterLabels[row]});
+                                  parameterLabels[row], false});
             }
         }
 
         drawLabel(args, {VOCT_LABEL_X, SHARED_IO_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
-                         36, 37, 34, "V/OCT"});
+                         36, 37, 34, "V/OCT", false});
         drawLabel(args, {MAIN_OUTPUT_LABEL_X, MAIN_OUTPUT_LABEL_Y,
                          GLOBAL_LABEL_SIZE, centerBaseline,
-                         36, 37, 34, "MAIN OUT"});
+                         36, 37, 34, "MAIN OUT", false});
 
         Widget::drawLayer(args, layer);
     }
@@ -776,11 +789,73 @@ struct AlgorithmRoutingDisplay : Widget {
     }
 };
 
+struct FourV2FrequencyControlGroups : Widget {
+    FourV2FrequencyControlGroups()
+    {
+        using namespace four_v2_layout;
+        box.size = mm2px(Vec(PANEL_WIDTH, PANEL_HEIGHT));
+    }
+
+    void drawLayer(const DrawArgs& args, int layer) override
+    {
+        if (layer != 1) {
+            Widget::drawLayer(args, layer);
+            return;
+        }
+
+        using namespace four_v2_layout;
+        const float strokeWidth = mm2px(FREQUENCY_CONTROL_GROUP_STROKE_WIDTH);
+        const float inset = wintoid::ui::stroke_inset(strokeWidth);
+        const float groupX[] = {
+            OP1_FREQUENCY_CONTROL_GROUP_X,
+            OP2_FREQUENCY_CONTROL_GROUP_X,
+            OP3_FREQUENCY_CONTROL_GROUP_X,
+            OP4_FREQUENCY_CONTROL_GROUP_X
+        };
+        const float groupY[] = {
+            OP1_FREQUENCY_CONTROL_GROUP_Y,
+            OP2_FREQUENCY_CONTROL_GROUP_Y,
+            OP3_FREQUENCY_CONTROL_GROUP_Y,
+            OP4_FREQUENCY_CONTROL_GROUP_Y
+        };
+        const float groupWidth[] = {
+            OP1_FREQUENCY_CONTROL_GROUP_WIDTH,
+            OP2_FREQUENCY_CONTROL_GROUP_WIDTH,
+            OP3_FREQUENCY_CONTROL_GROUP_WIDTH,
+            OP4_FREQUENCY_CONTROL_GROUP_WIDTH
+        };
+        const float groupHeight[] = {
+            OP1_FREQUENCY_CONTROL_GROUP_HEIGHT,
+            OP2_FREQUENCY_CONTROL_GROUP_HEIGHT,
+            OP3_FREQUENCY_CONTROL_GROUP_HEIGHT,
+            OP4_FREQUENCY_CONTROL_GROUP_HEIGHT
+        };
+
+        nvgStrokeColor(args.vg, nvgRGB(85, 109, 128));
+        nvgStrokeWidth(args.vg, strokeWidth);
+        for (int op = 0; op < 4; ++op) {
+            nvgBeginPath(args.vg);
+            nvgRoundedRect(
+                args.vg,
+                mm2px(groupX[op]) + inset,
+                mm2px(groupY[op]) + inset,
+                wintoid::ui::inset_extent(mm2px(groupWidth[op]), strokeWidth),
+                wintoid::ui::inset_extent(mm2px(groupHeight[op]), strokeWidth),
+                mm2px(FREQUENCY_CONTROL_GROUP_RADIUS));
+            nvgStroke(args.vg);
+        }
+
+        Widget::drawLayer(args, layer);
+    }
+};
+
 struct OperatorFrequencyDisplay : Widget {
     FourV2* module = nullptr;
     int opIndex = 0;
     int coarseParamId = 0;
     int freqModeParamId = 0;
+    int fineParamId = 0;
+    std::string text;
 
     OperatorFrequencyDisplay()
     {
@@ -789,10 +864,37 @@ struct OperatorFrequencyDisplay : Widget {
                              FREQUENCY_DISPLAY_HEIGHT));
     }
 
+    void updateText()
+    {
+        const int mode = four_v2::clamp_mode(
+            module ? module->params[freqModeParamId].getValue()
+                   : (float)four_v2::RATIO_MODE);
+        const float coarse = clamp(
+            four_v2::finite_or(
+                module ? module->params[coarseParamId].getValue()
+                       : (float)four_v2::DEFAULT_RATIO_INDEX,
+                (float)four_v2::DEFAULT_RATIO_INDEX),
+            four_v2::COARSE_MIN, four_v2::COARSE_MAX);
+        const float fine = module
+            ? module->params[fineParamId].getValue()
+            : 0.f;
+        text = mode == four_v2::RATIO_MODE
+            ? std::string(four_v2::ratio_label(coarse))
+            : four_v2::frequency_label(coarse, mode, fine);
+    }
+
+    void step() override
+    {
+        updateText();
+        Widget::step();
+    }
+
     void drawLayer(const DrawArgs& args, int layer) override
     {
-        if (layer != 1)
+        if (layer != 1) {
+            Widget::drawLayer(args, layer);
             return;
+        }
 
         const float strokeWidth = mm2px(0.30f);
         const float inset = wintoid::ui::stroke_inset(strokeWidth);
@@ -808,18 +910,8 @@ struct OperatorFrequencyDisplay : Widget {
         nvgStrokeWidth(args.vg, strokeWidth);
         nvgStroke(args.vg);
 
-        const int mode = four_v2::clamp_mode(
-            module ? module->params[freqModeParamId].getValue()
-                   : (float)four_v2::RATIO_MODE);
-        const float coarse = clamp(
-            four_v2::finite_or(
-                module ? module->params[coarseParamId].getValue()
-                       : (float)four_v2::DEFAULT_RATIO_INDEX,
-                (float)four_v2::DEFAULT_RATIO_INDEX),
-            four_v2::COARSE_MIN, four_v2::COARSE_MAX);
-        const std::string text = mode == four_v2::RATIO_MODE
-            ? std::string(four_v2::ratio_label(coarse))
-            : four_v2::frequency_label(coarse, mode);
+        if (text.empty())
+            updateText();
 
         std::shared_ptr<Font> font = APP->window->loadFont(
             asset::system("res/fonts/DejaVuSans.ttf"));
@@ -850,6 +942,8 @@ struct FourV2Widget : ModuleWidget {
         routing->box.pos = mm2px(Vec(ROUTING_DISPLAY_X, ROUTING_DISPLAY_Y));
         addChild(routing);
 
+        addChild(new FourV2FrequencyControlGroups());
+
         const int frequency_coarse_ids[] = {
             FourV2::OP1_COARSE_PARAM, FourV2::OP2_COARSE_PARAM,
             FourV2::OP3_COARSE_PARAM, FourV2::OP4_COARSE_PARAM
@@ -857,6 +951,10 @@ struct FourV2Widget : ModuleWidget {
         const int frequency_mode_ids[] = {
             FourV2::OP1_FREQ_MODE_PARAM, FourV2::OP2_FREQ_MODE_PARAM,
             FourV2::OP3_FREQ_MODE_PARAM, FourV2::OP4_FREQ_MODE_PARAM
+        };
+        const int frequency_fine_ids[] = {
+            FourV2::OP1_FINE_PARAM, FourV2::OP2_FINE_PARAM,
+            FourV2::OP3_FINE_PARAM, FourV2::OP4_FINE_PARAM
         };
         const float frequency_display_x[] = {
             OP1_FREQUENCY_DISPLAY_X, OP2_FREQUENCY_DISPLAY_X,
@@ -872,6 +970,7 @@ struct FourV2Widget : ModuleWidget {
             display->opIndex = op;
             display->coarseParamId = frequency_coarse_ids[op];
             display->freqModeParamId = frequency_mode_ids[op];
+            display->fineParamId = frequency_fine_ids[op];
             display->box.pos = mm2px(Vec(
                 frequency_display_x[op], frequency_display_y[op]));
             addChild(display);

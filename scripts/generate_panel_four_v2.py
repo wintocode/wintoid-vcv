@@ -67,8 +67,8 @@ PANEL_IVORY = "#ece8d9"
 LEGEND_CHARCOAL = "#242522"
 SECTION_BLUE_GREY = "#556d80"
 FUNCTION_ORANGE = "#b7693c"
-LOGO_BLUE = "#155f91"
-LOGO_ORANGE = "#ed5b22"
+LOGO_BLUE = "#1a1a2e"
+LOGO_ORANGE = "#ff4d00"
 DISPLAY_CHARCOAL = "#242522"
 DISPLAY_TEXT = PANEL_IVORY
 SECTION_FILL = "#e3e0d1"
@@ -217,6 +217,46 @@ FREQUENCY_DISPLAY_RECTS = tuple(
     )
     for rect in OPERATOR_SECTION_RECTS
 )
+
+# Outline-only enclosures group the left-hand frequency controls.  MODE and
+# FOLD TYPE deliberately remain outside these boxes as the two state selectors.
+FREQUENCY_CONTROL_GROUP_PADDING_X = 1.0
+FREQUENCY_CONTROL_GROUP_PADDING_TOP = 1.0
+FREQUENCY_CONTROL_GROUP_PADDING_BOTTOM = 1.0
+FREQUENCY_CONTROL_GROUP_RADIUS = 1.0
+FREQUENCY_CONTROL_GROUP_STROKE_WIDTH = 0.25
+FREQUENCY_CONTROL_GROUP_FILL = "none"
+FREQUENCY_CONTROL_GROUP_STROKE = SECTION_BLUE_GREY
+
+
+def _frequency_control_group_rect(center_x: float) -> tuple[float, ...]:
+    left = (
+        center_x + OPERATOR_X_OFFSETS["coarse"]
+        - SMALL_KNOB_RADIUS - FREQUENCY_CONTROL_GROUP_PADDING_X
+    )
+    right = (
+        center_x + OPERATOR_X_OFFSETS["coarse"]
+        + SMALL_KNOB_RADIUS + FREQUENCY_CONTROL_GROUP_PADDING_X
+    )
+    top = (
+        OPERATOR_LABEL_YS["coarse_mode"] - OPERATOR_LABEL_SIZE
+        - FREQUENCY_CONTROL_GROUP_PADDING_TOP
+    )
+    bottom = (
+        OPERATOR_ROW_YS["fine_fold_type"] + SMALL_KNOB_RADIUS
+        + FREQUENCY_CONTROL_GROUP_PADDING_BOTTOM
+    )
+    return left, top, right - left, bottom - top
+
+
+FREQUENCY_CONTROL_GROUP_RECTS = tuple(
+    (
+        f"op{index}-coarse-fine-group",
+        _frequency_control_group_rect(center_x),
+    )
+    for index, center_x in enumerate(OPERATOR_CENTRES_X, start=1)
+)
+FREQUENCY_CONTROL_GROUP_RECT_BY_ID = dict(FREQUENCY_CONTROL_GROUP_RECTS)
 
 
 # CV controls remain a logical four-row matrix for the generated coordinates,
@@ -776,7 +816,7 @@ def generate_svg() -> str:
             size=TITLE_FONT_SIZE,
             fill=LEGEND_CHARCOAL,
             anchor="start",
-            weight="600",
+            weight="700",
         )
     )
 
@@ -854,7 +894,7 @@ def generate_svg() -> str:
                 f"OP{index}",
                 size=OPERATOR_HEADING_SIZE,
                 anchor="start",
-                weight="600",
+                weight="700",
             )
         )
         display_x, display_y, display_width, display_height = FREQUENCY_DISPLAY_RECTS[index - 1]
@@ -869,6 +909,23 @@ def generate_svg() -> str:
                 identifier=f"op{index}-frequency-display",
                 radius=0.6,
                 stroke_width=0.25,
+            )
+        )
+        group_x, group_y, group_width, group_height = \
+            FREQUENCY_CONTROL_GROUP_RECT_BY_ID[
+                f"op{index}-coarse-fine-group"
+            ]
+        lines.append(
+            _rect(
+                group_x,
+                group_y,
+                group_width,
+                group_height,
+                FREQUENCY_CONTROL_GROUP_FILL,
+                FREQUENCY_CONTROL_GROUP_STROKE,
+                identifier=f"op{index}-coarse-fine-group",
+                radius=FREQUENCY_CONTROL_GROUP_RADIUS,
+                stroke_width=FREQUENCY_CONTROL_GROUP_STROKE_WIDTH,
             )
         )
         for parameter in ("output", "warp", "fold", "feedback"):
@@ -917,7 +974,7 @@ def generate_svg() -> str:
             _text(
                 centre_x + OPERATOR_X_OFFSETS["fold_type"],
                 OPERATOR_LABEL_YS["fine_fold_type"],
-                "TYPE",
+                "FOLD TYPE",
                 size=OPERATOR_MODE_LABEL_SIZE,
             )
         )
@@ -1058,6 +1115,8 @@ def generate_coords_header() -> str:
             _header_float("FREQUENCY_DISPLAY_WIDTH", FREQUENCY_DISPLAY_WIDTH),
             _header_float("FREQUENCY_DISPLAY_HEIGHT", FREQUENCY_DISPLAY_HEIGHT),
             _header_float("FREQUENCY_DISPLAY_FONT_SIZE", FREQUENCY_DISPLAY_FONT_SIZE),
+            _header_float("FREQUENCY_CONTROL_GROUP_RADIUS", FREQUENCY_CONTROL_GROUP_RADIUS),
+            _header_float("FREQUENCY_CONTROL_GROUP_STROKE_WIDTH", FREQUENCY_CONTROL_GROUP_STROKE_WIDTH),
             "constexpr float OPERATOR_FREQUENCY_Y = OPERATOR_COARSE_MODE_Y;",
             "constexpr float OPERATOR_OUTPUT_WARP_Y = OPERATOR_OUTPUT_Y;",
             "constexpr float OPERATOR_FREQUENCY_LABEL_Y = OPERATOR_COARSE_MODE_LABEL_Y;",
@@ -1070,6 +1129,10 @@ def generate_coords_header() -> str:
     ):
         section_x, section_y, section_width, section_height = section
         display_x, display_y, display_width, display_height = display
+        group_x, group_y, group_width, group_height = \
+            FREQUENCY_CONTROL_GROUP_RECT_BY_ID[
+                f"op{index}-coarse-fine-group"
+            ]
         lines.extend(
             (
                 _header_float(f"OP{index}_CENTER_X", centre_x),
@@ -1082,6 +1145,10 @@ def generate_coords_header() -> str:
                 _header_float(f"OP{index}_FREQUENCY_DISPLAY_Y", display_y),
                 _header_float(f"OP{index}_FREQUENCY_DISPLAY_WIDTH", display_width),
                 _header_float(f"OP{index}_FREQUENCY_DISPLAY_HEIGHT", display_height),
+                _header_float(f"OP{index}_FREQUENCY_CONTROL_GROUP_X", group_x),
+                _header_float(f"OP{index}_FREQUENCY_CONTROL_GROUP_Y", group_y),
+                _header_float(f"OP{index}_FREQUENCY_CONTROL_GROUP_WIDTH", group_width),
+                _header_float(f"OP{index}_FREQUENCY_CONTROL_GROUP_HEIGHT", group_height),
             )
         )
         for control, offset in OPERATOR_X_OFFSETS.items():

@@ -247,7 +247,7 @@ class FourV2ModuleContractTest(unittest.TestCase):
             "wintoid::polyphony::reset_changed_lanes",
             "const float global_tune = cents_multiplier(",
             "common.opFine[op] = cents_multiplier(",
-            "exp2f(cents / 1200.f)",
+            "four_v2::fine_multiplier(cents)",
             "external_pm_volts * external_pm_atten * 0.1f",
             "four_v2::engine_process",
             "const float volts = out * 5.f",
@@ -277,6 +277,10 @@ class FourV2ModuleContractTest(unittest.TestCase):
         source = self.require_source()
         self.assertIn("struct CoarseParamQuantity", source)
         self.assertIn("four_v2::frequency_label", source)
+        self.assertIn("int fineParamId = 0", source)
+        self.assertIn("module->params[fineParamId].getValue()", source)
+        self.assertIn("frequency_label(getValue(), mode, fine)", source)
+        self.assertIn("coarse_quantity->fineParamId = fine_ids[op]", source)
         self.assertNotIn("void setValue", source)
         self.assertNotIn("onButton(", source)
         self.assertNotIn("appendContextMenu(", source)
@@ -297,7 +301,11 @@ class FourV2ModuleContractTest(unittest.TestCase):
             "display->box.pos",
             "four_v2::ALGORITHMS",
             "four_v2::ratio_label(coarse)",
-            "four_v2::frequency_label(coarse, mode)",
+            "four_v2::frequency_label(coarse, mode, fine)",
+            "int fineParamId",
+            "params[fineParamId].getValue()",
+            "void step() override",
+            "updateText()",
         ):
             with self.subTest(contract=contract):
                 self.assertIn(contract, source)

@@ -35,8 +35,8 @@ PANGO_SCALE = 1024.0
 BASELINE_Y = 70.0
 UNDERLINE_Y = BASELINE_Y + 4.0
 VIEW_PADDING = 2.0
-LOGO_BLUE = "#155f91"
-LOGO_ORANGE = "#ed5b22"
+LOGO_BLUE = "#1a1a2e"
+LOGO_ORANGE = "#ff4d00"
 
 
 def _number(value: float, digits: int = 4) -> str:
@@ -625,7 +625,7 @@ def generate_svg(data: dict | None = None) -> str:
         f'{_number(view_y)} {_number(view_width)} {_number(view_height)}" '
         f'data-source-font-sha256="{data["source_font_sha256"]}">',
         '  <title>lowercase wintoid outlined logo</title>',
-        '  <g id="wint-glyphs" fill="#155f91">',
+        f'  <g id="wint-glyphs" fill="{LOGO_BLUE}">',
     ]
     for use in uses[:4]:
         definition = definitions[str(use["glyph_index"])]
@@ -635,17 +635,17 @@ def generate_svg(data: dict | None = None) -> str:
             f'data-glyph-index="{use["glyph_index"]}" data-bbox="{bbox}" '
             f'transform="translate({_number(float(use["x"]))} '
             f'{_number(BASELINE_Y + float(use["y"]))})" '
-            f'fill="#155f91" d="{definition["path"]}" />'
+            f'fill="{LOGO_BLUE}" d="{definition["path"]}" />'
         )
     lines.append('  </g>')
     wint_min, wint_max = _group_bounds(data, "wint")
     lines.append(
         f'  <line id="wint-underline" x1="{_number(wint_min)}" '
         f'y1="{_number(UNDERLINE_Y)}" x2="{_number(wint_max)}" '
-        f'y2="{_number(UNDERLINE_Y)}" stroke="#155f91" '
+        f'y2="{_number(UNDERLINE_Y)}" stroke="{LOGO_BLUE}" '
         'stroke-width="1.4" stroke-linecap="square" />'
     )
-    lines.append('  <g id="oid-glyphs" fill="#ed5b22">')
+    lines.append(f'  <g id="oid-glyphs" fill="{LOGO_ORANGE}">')
     for use in uses[4:]:
         definition = definitions[str(use["glyph_index"])]
         bbox = ",".join(_number(float(value)) for value in definition["bbox"])
@@ -654,14 +654,14 @@ def generate_svg(data: dict | None = None) -> str:
             f'data-glyph-index="{use["glyph_index"]}" data-bbox="{bbox}" '
             f'transform="translate({_number(float(use["x"]))} '
             f'{_number(BASELINE_Y + float(use["y"]))})" '
-            f'fill="#ed5b22" d="{definition["path"]}" />'
+            f'fill="{LOGO_ORANGE}" d="{definition["path"]}" />'
         )
     lines.append('  </g>')
     oid_min, oid_max = _group_bounds(data, "oid")
     lines.append(
         f'  <line id="oid-underline" x1="{_number(oid_min)}" '
         f'y1="{_number(UNDERLINE_Y)}" x2="{_number(oid_max)}" '
-        f'y2="{_number(UNDERLINE_Y)}" stroke="#ed5b22" '
+        f'y2="{_number(UNDERLINE_Y)}" stroke="{LOGO_ORANGE}" '
         'stroke-width="1.4" stroke-linecap="square" />'
     )
     lines.append('</svg>')

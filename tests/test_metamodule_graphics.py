@@ -66,6 +66,7 @@ class MetaModuleGraphicsTest(unittest.TestCase):
             ("Brink", "struct WindowRail"),
             ("FourV2", "struct AlgorithmRoutingDisplay"),
             ("FourV2", "struct OperatorFrequencyDisplay"),
+            ("FourV2", "struct FourV2FrequencyControlGroups"),
         )
 
         for name, marker in widgets:
@@ -117,9 +118,11 @@ class MetaModuleGraphicsTest(unittest.TestCase):
             self.sources["FourV2"], "struct OperatorFrequencyDisplay")
         self.assertIn("four_v2::clamp_mode", frequency)
         self.assertIn("four_v2::ratio_label(coarse)", frequency)
-        self.assertIn("four_v2::frequency_label(coarse, mode)", frequency)
+        self.assertIn("four_v2::frequency_label(coarse, mode, fine)", frequency)
         self.assertIn("params[coarseParamId].getValue()", frequency)
         self.assertIn("params[freqModeParamId].getValue()", frequency)
+        self.assertIn("params[fineParamId].getValue()", frequency)
+        self.assertIn("void step() override", frequency)
 
     def test_window_rail_uses_all_stroke_geometry_helpers(self):
         rail = extract_struct(self.sources["Brink"], "struct WindowRail")
