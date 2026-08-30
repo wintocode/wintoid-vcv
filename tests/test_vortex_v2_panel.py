@@ -29,6 +29,11 @@ def circles_by_position(svg):
     return [node for node in root.iter() if node.tag.endswith("circle")]
 
 
+def text_nodes(svg):
+    root = ET.fromstring(svg)
+    return [node for node in root.iter() if node.tag.endswith("text")]
+
+
 def circle_at(circles, coordinate):
     x, y = coordinate
     for circle in circles:
@@ -124,6 +129,10 @@ class VortexV2PanelTest(unittest.TestCase):
                 circle = circle_at(circles, (x, y))
                 self.assertEqual(OUTPUT_FILL, circle.attrib["fill"])
                 self.assertEqual(OUTPUT_STROKE, circle.attrib["stroke"])
+
+    def test_svg_defers_all_labels_to_the_runtime_overlay(self):
+        panel = self.require_panel()
+        self.assertEqual([], text_nodes(panel.generate_svg()))
 
     def test_generated_artifacts_match_checked_in_files(self):
         panel = self.require_panel()

@@ -3,8 +3,9 @@
 #include "../ui_geometry.h"
 #include "dsp.h"
 #include "layout.h"
+#include "runtime.h"
 
-struct CutoffParamQuantity : ParamQuantity {
+struct VortexV2CutoffParamQuantity : ParamQuantity {
     std::string getDisplayValueString() override {
         const float hz = getValue();
         if (hz >= 1000.f)
@@ -74,18 +75,22 @@ struct VortexV2 : Module {
         clearRuntimeState();
     }
 
+    void resetOutputBranch(int output)
+    {
+        for (int lane = 0; lane < wintoid::polyphony::MAX_CHANNELS; ++lane)
+            voiceStates[lane].branches[output].reset();
+    }
+
     static float readBroadcast(Input& input, int lane)
     {
-        const int channels = input.getChannels();
-        if (channels <= 0)
-            return 0.f;
-        return input.getVoltage(
-            wintoid::polyphony::broadcast_lane(lane, channels));
+        return vortex_v2::runtime::read_broadcast(
+            lane, input.getChannels(),
+            [&](int sourceLane) { return input.getVoltage(sourceLane); });
     }
 
     void prepareLanes(int channels)
     {
-        wintoid::polyphony::reset_changed_lanes(
+        vortex_v2::runtime::prepare_lanes(
             previousChannels, channels,
             [&](int lane) { voiceStates[lane].reset(); });
         previousChannels = channels;
@@ -95,7 +100,7 @@ struct VortexV2 : Module {
     {
         config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 
-        auto* cutoff = configParam<CutoffParamQuantity>(
+        auto* cutoff = configParam<VortexV2CutoffParamQuantity>(
             CUTOFF_PARAM, 20.f, 20000.f, 1000.f, "Cutoff");
         (void) cutoff;
         configParam(RESONANCE_PARAM, 0.f, 1.f, 0.f,
@@ -148,20 +153,17 @@ struct VortexV2 : Module {
             BP_OUTPUT, BP_PLUS_OUTPUT, NOTCH_OUTPUT, NOTCH_PLUS_OUTPUT,
             AP_OUTPUT, AP_PLUS_OUTPUT
         };
+        bool activeOutputs[vortex_v2::OUTPUT_COUNT] = {};
         for (int output = 0; output < vortex_v2::OUTPUT_COUNT; ++output) {
             const int outputId = outputIds[output];
-            const bool connected = outputs[outputId].isConnected();
-            if (!connected) {
-                if (previousOutputConnected[output]) {
-                    for (int lane = 0;
-                         lane < wintoid::polyphony::MAX_CHANNELS; ++lane)
-                        voiceStates[lane].branches[output].reset();
-                }
-                previousOutputConnected[output] = false;
-                continue;
-            }
-            outputs[outputId].setChannels(channels);
-            previousOutputConnected[output] = true;
+            activeOutputs[output] = vortex_v2::runtime::select_output_branch(
+                outputs[outputId].isConnected(),
+                previousOutputConnected[output],
+                channels,
+                [&](int channels) {
+                    outputs[outputId].setChannels(channels);
+                },
+                [&]() { resetOutputBranch(output); });
         }
 
         const float cutoffKnob = params[CUTOFF_PARAM].getValue();
@@ -207,7 +209,7 @@ struct VortexV2 : Module {
                 signal = vortex::soft_clip(signal * (1.f + drive * 9.f));
 
             for (int output = 0; output < vortex_v2::OUTPUT_COUNT; ++output) {
-                if (!previousOutputConnected[output])
+                if (!activeOutputs[output])
                     continue;
                 const float wet = vortex_v2::process_branch(
                     voiceStates[lane].branches[output],
@@ -241,12 +243,23 @@ struct VortexV2PanelLabels : Widget {
         box.size = mm2px(Vec(PANEL_WIDTH, PANEL_HEIGHT));
     }
 
-    static void drawLabel(const DrawArgs& args, float x, float y,
-                          float size, int align, const char* text)
+    void drawLabel(const DrawArgs& args, float x, float y,
+                   float size, int align, const char* text) const
     {
+        const float strokeWidth = 0.f;
+        const float inset = wintoid::ui::stroke_inset(strokeWidth);
+        const float width = wintoid::ui::inset_extent(
+            box.size.x, strokeWidth);
+        const float height = wintoid::ui::inset_extent(
+            box.size.y, strokeWidth);
         nvgFontSize(args.vg, mm2px(size));
         nvgTextAlign(args.vg, align);
-        nvgText(args.vg, mm2px(x), mm2px(y), text, nullptr);
+        nvgText(args.vg,
+                wintoid::ui::clamp_stroke_center(mm2px(x) + inset,
+                                                 width, strokeWidth),
+                wintoid::ui::clamp_stroke_center(mm2px(y) + inset,
+                                                 height, strokeWidth),
+                text, nullptr);
     }
 
     void drawLayer(const DrawArgs& args, int layer) override
@@ -262,47 +275,43 @@ struct VortexV2PanelLabels : Widget {
         nvgFontFaceId(args.vg, font->handle);
 
         const int centerBaseline = NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE;
+        const int leftBaseline = NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE;
+        const char* controlLabels[3] = {"CUTOFF", "RESO", "DRIVE"};
+        const float controlXs[3] = {
+            CUTOFF_KNOB_X, RESONANCE_KNOB_X, DRIVE_KNOB_X
+        };
+        const float cvXs[3] = {
+            CUTOFF_CV_X, RESONANCE_CV_X, DRIVE_CV_X
+        };
         nvgFillColor(args.vg, nvgRGB(36, 37, 34));
         drawLabel(args, TITLE_X, TITLE_Y, TITLE_FONT_SIZE,
-                  NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE, "VortexV2");
+                  leftBaseline, "VortexV2");
 
         nvgFillColor(args.vg, nvgRGB(255, 255, 255));
         drawLabel(args, LOGO_X, LOGO_Y, LOGO_FONT_SIZE,
-                  NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE, "wint");
+                  leftBaseline, "wint");
         nvgFillColor(args.vg, nvgRGB(255, 77, 0));
-        drawLabel(args, LOGO_X + 6.0f, LOGO_Y, LOGO_FONT_SIZE,
-                  NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE, "oid");
+        drawLabel(args, LOGO_OID_X, LOGO_Y, LOGO_FONT_SIZE,
+                  leftBaseline, "oid");
 
-        nvgFillColor(args.vg, nvgRGB(36, 37, 34));
-        drawLabel(args, CUTOFF_KNOB_X, CUTOFF_KNOB_Y - 7.f, 2.8f,
-                  centerBaseline, "CUTOFF");
-        drawLabel(args, RESONANCE_KNOB_X, RESONANCE_KNOB_Y - 7.f, 2.8f,
-                  centerBaseline, "RESO");
-        drawLabel(args, DRIVE_KNOB_X, DRIVE_KNOB_Y - 7.f, 2.8f,
-                  centerBaseline, "DRIVE");
-        drawLabel(args, AUDIO_IN_X, AUDIO_IN_Y - 5.f, 2.8f,
-                  centerBaseline, "IN");
-
-        const float strokeWidth = mm2px(0.35f);
-        const float inset = wintoid::ui::stroke_inset(strokeWidth);
-        const float headerWidth = mm2px(33.f);
-        const float headerHeight = mm2px(5.5f);
-        nvgBeginPath(args.vg);
-        nvgRoundedRect(args.vg, mm2px(OUTPUTS_SECTION_X) + inset,
-                       mm2px(OUTPUTS_SECTION_Y) + inset,
-                       wintoid::ui::inset_extent(headerWidth, strokeWidth),
-                       wintoid::ui::inset_extent(headerHeight, strokeWidth),
-                       mm2px(0.8f));
-        nvgFillColor(args.vg, nvgRGB(36, 37, 34));
-        nvgFill(args.vg);
-        nvgStrokeColor(args.vg, nvgRGB(85, 109, 128));
-        nvgStrokeWidth(args.vg, strokeWidth);
-        nvgStroke(args.vg);
-
-        nvgFillColor(args.vg, nvgRGB(236, 232, 217));
-        drawLabel(args, OUTPUTS_SECTION_X + 16.5f,
-                  OUTPUTS_SECTION_Y + 3.7f, 2.8f, centerBaseline,
+        nvgFillColor(args.vg, nvgRGB(183, 105, 60));
+        drawLabel(args, GLOBAL_SECTION_LABEL_X, GLOBAL_SECTION_LABEL_Y,
+                  SECTION_LABEL_FONT_SIZE, leftBaseline,
+                  "GLOBAL CONTROLS");
+        drawLabel(args, OUTPUT_SECTION_LABEL_X, OUTPUT_SECTION_LABEL_Y,
+                  SECTION_LABEL_FONT_SIZE, leftBaseline,
                   "FILTER OUTPUTS");
+
+        nvgFillColor(args.vg, nvgRGB(36, 37, 34));
+        for (int index = 0; index < 3; ++index)
+            drawLabel(args, controlXs[index], CONTROL_LABEL_Y,
+                      CONTROL_LABEL_FONT_SIZE, centerBaseline,
+                      controlLabels[index]);
+        for (int index = 0; index < 3; ++index)
+            drawLabel(args, cvXs[index], CV_LABEL_Y, CV_LABEL_FONT_SIZE,
+                      centerBaseline, "CV");
+        drawLabel(args, AUDIO_IN_X, AUDIO_IN_LABEL_Y, AUDIO_IN_LABEL_FONT_SIZE,
+                  centerBaseline, "IN");
 
         const char* outputLabels[vortex_v2::OUTPUT_COUNT] = {
             "LP 6dB", "LP 12dB", "LP 24dB",
@@ -315,7 +324,8 @@ struct VortexV2PanelLabels : Widget {
             const int row = output / 3;
             drawLabel(args, OUTPUT_COLUMN_XS[column],
                       OUTPUT_ROW_YS[row] - OUTPUT_LABEL_OFFSET,
-                      2.6f, centerBaseline, outputLabels[output]);
+                      OUTPUT_LABEL_FONT_SIZE, centerBaseline,
+                      outputLabels[output]);
         }
 
         Widget::drawLayer(args, layer);

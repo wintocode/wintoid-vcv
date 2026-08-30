@@ -140,7 +140,10 @@ class VortexV2ModuleContractTest(unittest.TestCase):
     def test_connection_gating_contract_is_explicit(self):
         source = self.require_source()
         for marker in (
-            "isConnected()",
+            '#include "runtime.h"',
+            "vortex_v2::runtime::select_output_branch",
+            "vortex_v2::runtime::prepare_lanes",
+            "vortex_v2::runtime::read_broadcast",
             "previousOutputConnected",
             "setChannels(channels)",
             "process_branch",
@@ -150,6 +153,12 @@ class VortexV2ModuleContractTest(unittest.TestCase):
         for forbidden in ("MODE_PARAM", "ModeDisplay", "onButton(", "Filter Mode"):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, source)
+
+    def test_cutoff_param_quantity_is_vortex_v2_specific(self):
+        source = self.require_source()
+        self.assertIn("struct VortexV2CutoffParamQuantity : ParamQuantity", source)
+        self.assertIn("configParam<VortexV2CutoffParamQuantity>", source)
+        self.assertNotIn("struct CutoffParamQuantity : ParamQuantity", source)
 
     def test_disconnected_branches_are_reset_and_connected_states_flush(self):
         """Removing a cable must reset only its branch; active branches flush.
@@ -169,6 +178,36 @@ class VortexV2ModuleContractTest(unittest.TestCase):
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, source)
+
+    def test_overlay_draws_panel_labels_from_generated_layout_constants(self):
+        source = self.require_source()
+        for marker in (
+            "GLOBAL_SECTION_LABEL_X",
+            "GLOBAL_SECTION_LABEL_Y",
+            "OUTPUT_SECTION_LABEL_X",
+            "OUTPUT_SECTION_LABEL_Y",
+            "CONTROL_LABEL_Y",
+            "CV_LABEL_Y",
+            "AUDIO_IN_LABEL_Y",
+            "OUTPUT_LABEL_OFFSET",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, source)
+        for label in (
+            "VortexV2",
+            "wint",
+            "oid",
+            "GLOBAL CONTROLS",
+            "FILTER OUTPUTS",
+            "CUTOFF",
+            "RESO",
+            "DRIVE",
+            "CV",
+            "IN",
+            *OUTPUT_LABELS,
+        ):
+            with self.subTest(label=label):
+                self.assertIn(f'"{label}"', source)
 
     def test_widget_uses_generated_layout_and_standard_controls(self):
         source = self.require_source()
@@ -248,6 +287,10 @@ class VortexV2ModuleContractTest(unittest.TestCase):
         )
         self.assertEqual(["Filter", "Effect", "Polyphonic"], module["tags"])
         self.assertIn("### VortexV2", self.readme)
+        self.assertIn(
+            "### VortexV2\nIndependent twelve-output multi-mode filter (20HP)",
+            self.readme,
+        )
         self.assertIn("LP 6/12/24dB", self.readme)
         self.assertIn("BP, BP+, Notch, Notch+, AP, AP+", self.readme)
         self.assertIn("extern Model* modelVortexV2;", self.plugin_header)

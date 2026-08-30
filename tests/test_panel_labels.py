@@ -188,6 +188,40 @@ class PanelLabelTest(unittest.TestCase):
         self.assertIn("drawLabel(args, LOGO_X, LOGO_Y, LOGO_FONT_SIZE,",
                       self.vortex_v2_source)
 
+    def test_vortex_v2_emits_and_consumes_label_geometry_constants(self):
+        self.assertEqual(8.0, self.vortex_v2.TITLE_Y)
+        self.assertEqual(18.0, self.vortex_v2.CONTROL_LABEL_Y)
+        self.assertEqual(34.0, self.vortex_v2.CV_LABEL_Y)
+        self.assertEqual(34.0, self.vortex_v2.AUDIO_IN_LABEL_Y)
+        self.assertEqual(5.5, self.vortex_v2.OUTPUT_LABEL_OFFSET)
+
+        header = self.vortex_v2.generate_coords_header()
+        for contract in (
+            "constexpr float GLOBAL_SECTION_LABEL_X = 7.175f;",
+            "constexpr float GLOBAL_SECTION_LABEL_Y = 17.4f;",
+            "constexpr float OUTPUT_SECTION_LABEL_X = 7.175f;",
+            "constexpr float OUTPUT_SECTION_LABEL_Y = 57.4f;",
+            "constexpr float CONTROL_LABEL_Y = 18.0f;",
+            "constexpr float CV_LABEL_Y = 34.0f;",
+            "constexpr float AUDIO_IN_LABEL_Y = 34.0f;",
+            "constexpr float OUTPUT_LABEL_OFFSET = 5.5f;",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, header)
+
+        for expression in (
+            "GLOBAL_SECTION_LABEL_X",
+            "GLOBAL_SECTION_LABEL_Y",
+            "OUTPUT_SECTION_LABEL_X",
+            "OUTPUT_SECTION_LABEL_Y",
+            "CONTROL_LABEL_Y",
+            "CV_LABEL_Y",
+            "AUDIO_IN_LABEL_Y",
+            "OUTPUT_LABEL_OFFSET",
+        ):
+            with self.subTest(expression=expression):
+                self.assertIn(expression, self.vortex_v2_source)
+
     def test_four_generator_documentation_names_the_real_paths(self):
         for path in ("scripts/generate_panel_four.py",
                      "res/Four.svg",

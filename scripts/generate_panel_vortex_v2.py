@@ -7,7 +7,8 @@ Run from the project root or any other working directory with::
 
 All geometry in this file is millimetres. Rack widget code consumes the
 generated coordinates through ``mm2px()``; the SVG supplies only static panel
-artwork and structural guides.
+artwork and structural guides, while the Rack overlay is the sole label
+renderer at runtime.
 """
 
 from __future__ import annotations
@@ -53,6 +54,7 @@ TITLE_FONT_SIZE = 6.6
 LOGO_X = 79.0
 LOGO_Y = 8.0
 LOGO_FONT_SIZE = 3.0
+LOGO_OID_X = 85.0
 SECTION_STROKE_WIDTH = 0.35
 # SVG strokes are centred on their geometry. Keep the visible frame boundary
 # within the same 4 mm safe edge clearance as the real Rack widget envelopes.
@@ -60,18 +62,30 @@ SECTION_HORIZONTAL_INSET = MINIMUM_EDGE_CLEARANCE_MM + SECTION_STROKE_WIDTH / 2.
 SECTION_WIDTH = WIDTH_MM - 2.0 * SECTION_HORIZONTAL_INSET
 GLOBAL_CONTROLS_SECTION = (SECTION_HORIZONTAL_INSET, 13.0, SECTION_WIDTH, 34.0)
 OUTPUTS_SECTION = (SECTION_HORIZONTAL_INSET, 53.0, SECTION_WIDTH, 68.0)
+GLOBAL_SECTION_LABEL_X = GLOBAL_CONTROLS_SECTION[0] + 3.0
+GLOBAL_SECTION_LABEL_Y = GLOBAL_CONTROLS_SECTION[1] + 4.4
+OUTPUT_SECTION_LABEL_X = OUTPUTS_SECTION[0] + 3.0
+OUTPUT_SECTION_LABEL_Y = OUTPUTS_SECTION[1] + 4.4
+SECTION_LABEL_FONT_SIZE = 2.4
 
 # First-fit widget coordinate contract.
 CONTROL_XS = (17.0, 42.5, 68.0)
 CONTROL_KNOB_Y = 24.0
 CONTROL_CV_Y = 39.0
 CONTROL_ATTEN_OFFSET_X = 8.5
+CONTROL_LABEL_Y = 18.0
+CONTROL_LABEL_FONT_SIZE = 2.8
+CV_LABEL_Y = 34.0
+CV_LABEL_FONT_SIZE = 1.8
 AUDIO_IN_X = 91.0
 AUDIO_IN_Y = 39.0
+AUDIO_IN_LABEL_Y = 34.0
+AUDIO_IN_LABEL_FONT_SIZE = 2.8
 
 OUTPUT_COLUMN_XS = (17.0, 50.8, 84.6)
 OUTPUT_ROW_YS = (64.0, 79.0, 94.0, 109.0)
 OUTPUT_LABEL_OFFSET = 5.5
+OUTPUT_LABEL_FONT_SIZE = 2.6
 OUTPUT_LABELS = (
     "LP 6dB", "LP 12dB", "LP 24dB",
     "HP 6dB", "HP 12dB", "HP 24dB",
@@ -134,15 +148,6 @@ def _rect(rect: tuple[float, float, float, float], fill: str, stroke: str) -> st
     )
 
 
-def _text(x: float, y: float, content: str, size: float, fill: str,
-          anchor: str = "middle") -> str:
-    return (
-        f'  <text x="{_fmt(x)}" y="{_fmt(y)}" fill="{fill}" '
-        f'font-family="sans-serif" font-size="{_fmt(size)}" '
-        f'font-weight="bold" text-anchor="{anchor}">{content}</text>'
-    )
-
-
 def _control_guide(name: str, x: float, y: float) -> str:
     if name.endswith("_knob"):
         return _circle(x, y, 3.4, LEGEND_CHARCOAL, SECTION_BLUE_GREY, 0.30)
@@ -174,27 +179,17 @@ def generate_svg() -> str:
         f'width="{_fmt(WIDTH_MM)}mm" height="{_fmt(HEIGHT_MM)}mm" '
         f'viewBox="0 0 {_fmt(WIDTH_MM)} {_fmt(HEIGHT_MM)}">',
         f'  <rect width="{_fmt(WIDTH_MM)}" height="{_fmt(HEIGHT_MM)}" fill="{PANEL_IVORY}" />',
-        '  <!-- Static identity and structural hierarchy; Rack draws live widgets. -->',
-        _text(TITLE_X, TITLE_Y, "VORTEX", TITLE_FONT_SIZE, LOGO_BLUE, "start"),
-        _text(LOGO_X, LOGO_Y, "wintoid", LOGO_FONT_SIZE, LOGO_ORANGE, "start"),
+        '  <!-- Static structural hierarchy only; Rack draws all labels at runtime. -->',
         _rect(GLOBAL_CONTROLS_SECTION, "none", SECTION_BLUE_GREY),
-        _text(GLOBAL_CONTROLS_SECTION[0] + 3.0, GLOBAL_CONTROLS_SECTION[1] + 4.4,
-              "GLOBAL CONTROLS", 2.4, FUNCTION_ORANGE, "start"),
         _rect(OUTPUTS_SECTION, "none", SECTION_BLUE_GREY),
-        _text(OUTPUTS_SECTION[0] + 3.0, OUTPUTS_SECTION[1] + 4.4,
-              "FILTER OUTPUTS", 2.4, FUNCTION_ORANGE, "start"),
     ]
     for name, x in zip(CONTROL_NAMES, CONTROL_XS):
-        lines.append(_text(x, 18.0, name, 2.0, LEGEND_CHARCOAL))
         lines.append(_control_guide(f"{name.lower()}_knob", x, CONTROL_KNOB_Y))
     for name, x in zip(CONTROL_NAMES, CONTROL_XS):
-        lines.append(_text(x, 34.0, "CV", 1.8, LEGEND_CHARCOAL))
         lines.append(_control_guide(f"{name.lower()}_cv", x, CONTROL_CV_Y))
         lines.append(_control_guide(f"{name.lower()}_atten", x + CONTROL_ATTEN_OFFSET_X, CONTROL_CV_Y))
-    lines.append(_text(AUDIO_IN_X, 34.0, "AUDIO IN", 1.8, LEGEND_CHARCOAL))
     lines.append(_control_guide("audio_in", AUDIO_IN_X, AUDIO_IN_Y))
     for label, x, y in OUTPUT_COMPONENTS:
-        lines.append(_text(x, y - OUTPUT_LABEL_OFFSET, label, 1.8, LEGEND_CHARCOAL))
         lines.append(_circle(x, y, OUTPUT_BACKPLATE_RADIUS, OUTPUT_BACKPLATE_FILL,
                              OUTPUT_BACKPLATE_STROKE, OUTPUT_STROKE_WIDTH))
     lines.append('</svg>')
@@ -219,6 +214,19 @@ def generate_coords_header() -> str:
         f'constexpr float LOGO_X = {_cpp_float(LOGO_X)}f;',
         f'constexpr float LOGO_Y = {_cpp_float(LOGO_Y)}f;',
         f'constexpr float LOGO_FONT_SIZE = {_cpp_float(LOGO_FONT_SIZE)}f;',
+        f'constexpr float LOGO_OID_X = {_cpp_float(LOGO_OID_X)}f;',
+        f'constexpr float GLOBAL_SECTION_LABEL_X = {_cpp_float(GLOBAL_SECTION_LABEL_X)}f;',
+        f'constexpr float GLOBAL_SECTION_LABEL_Y = {_cpp_float(GLOBAL_SECTION_LABEL_Y)}f;',
+        f'constexpr float OUTPUT_SECTION_LABEL_X = {_cpp_float(OUTPUT_SECTION_LABEL_X)}f;',
+        f'constexpr float OUTPUT_SECTION_LABEL_Y = {_cpp_float(OUTPUT_SECTION_LABEL_Y)}f;',
+        f'constexpr float SECTION_LABEL_FONT_SIZE = {_cpp_float(SECTION_LABEL_FONT_SIZE)}f;',
+        f'constexpr float CONTROL_LABEL_Y = {_cpp_float(CONTROL_LABEL_Y)}f;',
+        f'constexpr float CONTROL_LABEL_FONT_SIZE = {_cpp_float(CONTROL_LABEL_FONT_SIZE)}f;',
+        f'constexpr float CV_LABEL_Y = {_cpp_float(CV_LABEL_Y)}f;',
+        f'constexpr float CV_LABEL_FONT_SIZE = {_cpp_float(CV_LABEL_FONT_SIZE)}f;',
+        f'constexpr float AUDIO_IN_LABEL_Y = {_cpp_float(AUDIO_IN_LABEL_Y)}f;',
+        f'constexpr float AUDIO_IN_LABEL_FONT_SIZE = {_cpp_float(AUDIO_IN_LABEL_FONT_SIZE)}f;',
+        f'constexpr float OUTPUT_LABEL_FONT_SIZE = {_cpp_float(OUTPUT_LABEL_FONT_SIZE)}f;',
         '',
     ]
     for prefix, rect in (("GLOBAL_CONTROLS_SECTION", GLOBAL_CONTROLS_SECTION),

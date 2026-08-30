@@ -1,51 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="101.6mm" height="128.5mm" viewBox="0 0 101.6 128.5">
   <rect width="101.6" height="128.5" fill="#ece8d9" />
-  <!-- Static identity and structural hierarchy; Rack draws live widgets. -->
-  <text x="6" y="8" fill="#1a1a2e" font-family="sans-serif" font-size="6.6" font-weight="bold" text-anchor="start">VORTEX</text>
-  <text x="79" y="8" fill="#ff4d00" font-family="sans-serif" font-size="3" font-weight="bold" text-anchor="start">wintoid</text>
+  <!-- Static structural hierarchy only; Rack draws all labels at runtime. -->
   <rect x="4.175" y="13" width="93.25" height="34" rx="1.5" fill="none" stroke="#556d80" stroke-width="0.35" />
-  <text x="7.175" y="17.4" fill="#b7693c" font-family="sans-serif" font-size="2.4" font-weight="bold" text-anchor="start">GLOBAL CONTROLS</text>
   <rect x="4.175" y="53" width="93.25" height="68" rx="1.5" fill="none" stroke="#556d80" stroke-width="0.35" />
-  <text x="7.175" y="57.4" fill="#b7693c" font-family="sans-serif" font-size="2.4" font-weight="bold" text-anchor="start">FILTER OUTPUTS</text>
-  <text x="17" y="18" fill="#242522" font-family="sans-serif" font-size="2" font-weight="bold" text-anchor="middle">CUTOFF</text>
   <circle cx="17" cy="24" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <text x="42.5" y="18" fill="#242522" font-family="sans-serif" font-size="2" font-weight="bold" text-anchor="middle">RESONANCE</text>
   <circle cx="42.5" cy="24" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <text x="68" y="18" fill="#242522" font-family="sans-serif" font-size="2" font-weight="bold" text-anchor="middle">DRIVE</text>
   <circle cx="68" cy="24" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <text x="17" y="34" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">CV</text>
   <circle cx="17" cy="39" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
   <circle cx="25.5" cy="39" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
-  <text x="42.5" y="34" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">CV</text>
   <circle cx="42.5" cy="39" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
   <circle cx="51" cy="39" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
-  <text x="68" y="34" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">CV</text>
   <circle cx="68" cy="39" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
   <circle cx="76.5" cy="39" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
-  <text x="91" y="34" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">AUDIO IN</text>
   <circle cx="91" cy="39" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <text x="17" y="58.5" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">LP 6dB</text>
   <circle cx="17" cy="64" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="50.8" y="58.5" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">LP 12dB</text>
   <circle cx="50.8" cy="64" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="84.6" y="58.5" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">LP 24dB</text>
   <circle cx="84.6" cy="64" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="17" y="73.5" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">HP 6dB</text>
   <circle cx="17" cy="79" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="50.8" y="73.5" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">HP 12dB</text>
   <circle cx="50.8" cy="79" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="84.6" y="73.5" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">HP 24dB</text>
   <circle cx="84.6" cy="79" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="17" y="88.5" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">BP</text>
   <circle cx="17" cy="94" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="50.8" y="88.5" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">BP+</text>
   <circle cx="50.8" cy="94" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="84.6" y="88.5" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">Notch</text>
   <circle cx="84.6" cy="94" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="17" y="103.5" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">Notch+</text>
   <circle cx="17" cy="109" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="50.8" y="103.5" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">AP</text>
   <circle cx="50.8" cy="109" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="84.6" y="103.5" fill="#242522" font-family="sans-serif" font-size="1.8" font-weight="bold" text-anchor="middle">AP+</text>
   <circle cx="84.6" cy="109" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
 </svg>
