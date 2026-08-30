@@ -48,12 +48,33 @@ def enum_body(source, enum_name):
 
 
 def assert_ordered_names(test_case, body, names):
-    positions = []
-    for name in names:
-        match = re.search(rf"\b{re.escape(name)}\b", body)
-        test_case.assertIsNotNone(match, f"missing enum identifier {name}")
-        positions.append(match.start())
-    test_case.assertEqual(sorted(positions), positions)
+    body = re.sub(r"//[^\n]*|/\*.*?\*/", "", body, flags=re.DOTALL)
+    actual = []
+    for declaration in body.split(","):
+        declaration = declaration.strip()
+        if not declaration:
+            continue
+        match = re.fullmatch(
+            r"([A-Za-z_]\w*)\s*(?:=.*)?", declaration, re.DOTALL
+        )
+        test_case.assertIsNotNone(
+            match, f"could not parse enum declaration {declaration!r}"
+        )
+        actual.append(match.group(1))
+    test_case.assertEqual(names, actual)
+
+
+def block_body(source, start):
+    brace_start = source.index("{", start)
+    depth = 0
+    for index in range(brace_start, len(source)):
+        if source[index] == "{":
+            depth += 1
+        elif source[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return source[brace_start + 1:index]
+    raise AssertionError("unclosed source block")
 
 
 class VortexV2ModuleContractTest(unittest.TestCase):
@@ -95,15 +116,26 @@ class VortexV2ModuleContractTest(unittest.TestCase):
         )
         self.assertEqual(len(PARAM_IDS), enum_body(source, "ParamId").count("_PARAM"))
         self.assertEqual(len(INPUT_IDS), enum_body(source, "InputId").count("_INPUT"))
-        self.assertEqual(len(OUTPUT_IDS), enum_body(source, "OutputId").count("_OUTPUT"))
+        self.assertEqual(
+            len(OUTPUT_IDS), enum_body(source, "OutputId").count("_OUTPUT")
+        )
 
-    def test_outputs_have_the_full_static_labels(self):
+    def test_outputs_are_configured_with_their_exact_labels_in_order(self):
         source = self.require_source()
-        for label in OUTPUT_LABELS:
-            with self.subTest(label=label):
-                self.assertIn(f'"{label}"', source)
-        self.assertIn("configOutput", source)
-        self.assertIn("outputLabels", source)
+        positions = []
+        for output_id, label in zip(OUTPUT_IDS, OUTPUT_LABELS):
+            pattern = (
+                rf"configOutput\s*\(\s*{re.escape(output_id)}\s*,\s*"
+                rf"\"{re.escape(label)}\"\s*\)"
+            )
+            with self.subTest(output_id=output_id, label=label):
+                match = re.search(pattern, source)
+                self.assertIsNotNone(
+                    match,
+                    f"missing configOutput association for {output_id}: {label}",
+                )
+                positions.append(match.start())
+        self.assertEqual(sorted(positions), positions)
 
     def test_connection_gating_contract_is_explicit(self):
         source = self.require_source()
@@ -132,21 +164,60 @@ class VortexV2ModuleContractTest(unittest.TestCase):
             with self.subTest(contract=contract):
                 self.assertIn(contract, source)
 
-        output_loop = re.search(
-            r"for\s*\(int output\s*=\s*0;.*?\n\s*\}", source, re.DOTALL
+        output_loop_pattern = re.compile(
+            r"""
+            for\s*\(\s*int\s+output\s*=\s*0\s*;
+            \s*output\s*<\s*vortex_v2::OUTPUT_COUNT\s*;
+            \s*(?:\+\+\s*output|output\s*\+\+)\s*\)\s*\{
+            """,
+            re.DOTALL | re.VERBOSE,
         )
-        self.assertIsNotNone(output_loop, "missing output widget loop")
-        output_body = output_loop.group(0)
-        self.assertIn("OUTPUT_COLUMN_XS", output_body)
-        self.assertIn("OUTPUT_ROW_YS", output_body)
+        output_bodies = [
+            block_body(source, match.start())
+            for match in output_loop_pattern.finditer(source)
+        ]
+        output_body = next(
+            (
+                body for body in output_bodies
+                if "createOutputCentered" in body
+                and "OUTPUT_COLUMN_XS" in body
+                and "OUTPUT_ROW_YS" in body
+            ),
+            None,
+        )
+        self.assertIsNotNone(output_body, "missing twelve-output widget loop")
+        self.assertIn("outputIds[output]", output_body)
+        self.assertRegex(
+            output_body,
+            r"OUTPUT_COLUMN_XS\s*\[\s*(?:column|output\s*%\s*3)\s*\]",
+        )
+        self.assertRegex(
+            output_body,
+            r"OUTPUT_ROW_YS\s*\[\s*(?:row|output\s*/\s*3)\s*\]",
+        )
+        has_derived_grid = (
+            re.search(r"\bcolumn\s*=\s*output\s*%\s*3\b", output_body)
+            and re.search(r"\brow\s*=\s*output\s*/\s*3\b", output_body)
+        )
+        has_direct_grid = (
+            re.search(r"OUTPUT_COLUMN_XS\s*\[\s*output\s*%\s*3\s*\]", output_body)
+            and re.search(r"OUTPUT_ROW_YS\s*\[\s*output\s*/\s*3\s*\]", output_body)
+        )
+        self.assertTrue(
+            has_derived_grid or has_direct_grid,
+            "output loop must derive a 3x4 grid index from output",
+        )
         self.assertNotRegex(
             output_body,
-            r"createOutputCentered<[^>]+>\s*\(\s*mm2px\(Vec\([^)]*[0-9]f",
+            r"mm2px\s*\(\s*Vec\s*\([^)]*(?:\d+(?:\.\d*)?|\.\d+)",
         )
 
     def test_model_is_registered_and_metadata_is_documented(self):
         module = next(
-            (item for item in self.manifest["modules"] if item.get("slug") == "VortexV2"),
+            (
+                item for item in self.manifest["modules"]
+                if item.get("slug") == "VortexV2"
+            ),
             None,
         )
         self.assertIsNotNone(module, "VortexV2 metadata is missing from plugin.json")
