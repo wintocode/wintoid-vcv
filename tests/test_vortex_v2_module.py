@@ -151,6 +151,25 @@ class VortexV2ModuleContractTest(unittest.TestCase):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, source)
 
+    def test_disconnected_branches_are_reset_and_connected_states_flush(self):
+        """Removing a cable must reset only its branch; active branches flush.
+
+        A change that removes the disconnect-transition reset or any of the
+        denormal flushes would otherwise allow stale state or denormals to
+        survive in one independently gated output branch.
+        """
+        source = self.require_source()
+        for marker in (
+            "voiceStates[lane].branches[output].reset()",
+            "voiceStates[lane].branches[output].f1.z",
+            "voiceStates[lane].branches[output].f2a.z0",
+            "voiceStates[lane].branches[output].f2a.z1",
+            "voiceStates[lane].branches[output].f2b.z0",
+            "voiceStates[lane].branches[output].f2b.z1",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, source)
+
     def test_widget_uses_generated_layout_and_standard_controls(self):
         source = self.require_source()
         self.assertIn('#include "layout.h"', source)
