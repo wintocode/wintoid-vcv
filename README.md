@@ -105,7 +105,7 @@ Four; FourV2 is an independent model and does not replace or reinterpret them.
 - **Filter DSP** by Yuriy Ivantsov ([ivantsov-filters](https://github.com/yIvantsov/ivantsov-filters)) — state-space design with Sigma frequency warping
 
 ### VortexV2
-Independent twelve-output multi-mode filter (20HP)
+Independent twelve-output multi-mode filter (12HP)
 
 - **Controls**: Cutoff (20 Hz – 20 kHz), Resonance, Drive — each with CV input and attenuverter
 - **Outputs**: LP 6/12/24dB, HP 6/12/24dB, BP, BP+, Notch, Notch+, AP, AP+ — in that order

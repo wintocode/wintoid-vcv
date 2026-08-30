@@ -179,15 +179,27 @@ class VortexV2ModuleContractTest(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, source)
 
-    def test_overlay_draws_panel_labels_from_generated_layout_constants(self):
+    def test_overlay_uses_four_v2_label_treatment_without_section_headings(self):
         source = self.require_source()
         for marker in (
-            "GLOBAL_SECTION_LABEL_X",
-            "GLOBAL_SECTION_LABEL_Y",
-            "OUTPUT_SECTION_LABEL_X",
-            "OUTPUT_SECTION_LABEL_Y",
-            "CONTROL_LABEL_Y",
-            "CV_LABEL_Y",
+            "bool bold",
+            "label.bold",
+            '"VortexV2", true',
+            "const float textX = mm2px(label.x);",
+            "draw(textX - weightOffset)",
+            "draw(textX + weightOffset)",
+            "CUTOFF_KNOB_Y",
+            "CUTOFF_CV_Y",
+            "CUTOFF_ATTEN_Y",
+            "RESONANCE_KNOB_Y",
+            "RESONANCE_CV_Y",
+            "RESONANCE_ATTEN_Y",
+            "DRIVE_KNOB_Y",
+            "DRIVE_CV_Y",
+            "DRIVE_ATTEN_Y",
+            "CUTOFF_LABEL_Y",
+            "RESONANCE_LABEL_Y",
+            "DRIVE_LABEL_Y",
             "AUDIO_IN_LABEL_Y",
             "OUTPUT_LABEL_OFFSET",
         ):
@@ -195,19 +207,22 @@ class VortexV2ModuleContractTest(unittest.TestCase):
                 self.assertIn(marker, source)
         for label in (
             "VortexV2",
-            "wint",
-            "oid",
-            "GLOBAL CONTROLS",
-            "FILTER OUTPUTS",
             "CUTOFF",
             "RESO",
             "DRIVE",
-            "CV",
             "IN",
             *OUTPUT_LABELS,
         ):
             with self.subTest(label=label):
                 self.assertIn(f'"{label}"', source)
+        self.assertNotIn('"GLOBAL CONTROLS"', source)
+        self.assertNotIn('"FILTER OUTPUTS"', source)
+        self.assertNotIn('"wint"', source)
+        self.assertNotIn('"oid"', source)
+
+    def test_overlay_omits_cv_label_text(self):
+        source = self.require_source()
+        self.assertNotIn('"CV"', source)
 
     def test_widget_uses_generated_layout_and_standard_controls(self):
         source = self.require_source()
@@ -288,7 +303,7 @@ class VortexV2ModuleContractTest(unittest.TestCase):
         self.assertEqual(["Filter", "Effect", "Polyphonic"], module["tags"])
         self.assertIn("### VortexV2", self.readme)
         self.assertIn(
-            "### VortexV2\nIndependent twelve-output multi-mode filter (20HP)",
+            "### VortexV2\nIndependent twelve-output multi-mode filter (12HP)",
             self.readme,
         )
         self.assertIn("LP 6/12/24dB", self.readme)

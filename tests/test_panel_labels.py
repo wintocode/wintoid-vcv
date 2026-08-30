@@ -181,46 +181,67 @@ class PanelLabelTest(unittest.TestCase):
         self.assertIn("LOGO_FONT_SIZE", self.vortex_source)
         self.assertNotIn("nvgFontSize(args.vg, 10)", self.vortex_source)
 
-    def test_vortex_v2_uses_the_generated_logo_font_size(self):
-        self.assertEqual(3.0, self.vortex_v2.LOGO_FONT_SIZE)
-        self.assertIn("constexpr float LOGO_FONT_SIZE = 3.0f;",
+    def test_vortex_v2_uses_the_canonical_logo_scale(self):
+        self.assertEqual(0.06, self.vortex_v2.LOGO_SCALE)
+        self.assertIn("constexpr float LOGO_SCALE = 0.06f;",
                       self.vortex_v2.generate_coords_header())
-        self.assertIn("drawLabel(args, LOGO_X, LOGO_Y, LOGO_FONT_SIZE,",
-                      self.vortex_v2_source)
+        self.assertNotIn('"wint"', self.vortex_v2_source)
+        self.assertNotIn('"oid"', self.vortex_v2_source)
 
     def test_vortex_v2_emits_and_consumes_label_geometry_constants(self):
-        self.assertEqual(8.0, self.vortex_v2.TITLE_Y)
-        self.assertEqual(18.0, self.vortex_v2.CONTROL_LABEL_Y)
-        self.assertEqual(34.0, self.vortex_v2.CV_LABEL_Y)
-        self.assertEqual(34.0, self.vortex_v2.AUDIO_IN_LABEL_Y)
+        self.assertEqual(7.0, self.vortex_v2.TITLE_Y)
+        self.assertEqual((20.0, 31.0, 42.0),
+                         self.vortex_v2.CONTROL_ROW_YS)
         self.assertEqual(5.5, self.vortex_v2.OUTPUT_LABEL_OFFSET)
 
         header = self.vortex_v2.generate_coords_header()
         for contract in (
-            "constexpr float GLOBAL_SECTION_LABEL_X = 7.175f;",
-            "constexpr float GLOBAL_SECTION_LABEL_Y = 17.4f;",
-            "constexpr float OUTPUT_SECTION_LABEL_X = 7.175f;",
-            "constexpr float OUTPUT_SECTION_LABEL_Y = 57.4f;",
-            "constexpr float CONTROL_LABEL_Y = 18.0f;",
-            "constexpr float CV_LABEL_Y = 34.0f;",
-            "constexpr float AUDIO_IN_LABEL_Y = 34.0f;",
+            "constexpr int PANEL_HP = 12;",
+            "constexpr float PANEL_WIDTH = 60.96f;",
+            "constexpr float TITLE_Y = 7.0f;",
+            "constexpr float CUTOFF_KNOB_X = 13.0f;",
+            "constexpr float CUTOFF_CV_X = 27.0f;",
+            "constexpr float CUTOFF_ATTEN_X = 35.5f;",
+            "constexpr float CUTOFF_KNOB_Y = 20.0f;",
+            "constexpr float RESONANCE_KNOB_Y = 31.0f;",
+            "constexpr float DRIVE_KNOB_Y = 42.0f;",
+            "constexpr float OUTPUT_COLUMN_XS[3] = {12.0f, 30.48f, 48.96f};",
             "constexpr float OUTPUT_LABEL_OFFSET = 5.5f;",
         ):
             with self.subTest(contract=contract):
                 self.assertIn(contract, header)
 
         for expression in (
-            "GLOBAL_SECTION_LABEL_X",
-            "GLOBAL_SECTION_LABEL_Y",
-            "OUTPUT_SECTION_LABEL_X",
-            "OUTPUT_SECTION_LABEL_Y",
-            "CONTROL_LABEL_Y",
-            "CV_LABEL_Y",
+            "CUTOFF_KNOB_X",
+            "CUTOFF_CV_X",
+            "CUTOFF_ATTEN_X",
+            "CUTOFF_KNOB_Y",
+            "CUTOFF_CV_Y",
+            "CUTOFF_ATTEN_Y",
+            "RESONANCE_KNOB_Y",
+            "RESONANCE_CV_Y",
+            "RESONANCE_ATTEN_Y",
+            "DRIVE_KNOB_Y",
+            "DRIVE_CV_Y",
+            "DRIVE_ATTEN_Y",
             "AUDIO_IN_LABEL_Y",
             "OUTPUT_LABEL_OFFSET",
         ):
             with self.subTest(expression=expression):
                 self.assertIn(expression, self.vortex_v2_source)
+
+        for removed in (
+            "GLOBAL_SECTION_LABEL_X",
+            "GLOBAL_SECTION_LABEL_Y",
+            "OUTPUT_SECTION_LABEL_X",
+            "OUTPUT_SECTION_LABEL_Y",
+            "GLOBAL CONTROLS",
+            "FILTER OUTPUTS",
+        ):
+            with self.subTest(removed=removed):
+                self.assertNotIn(removed, self.vortex_v2_source)
+
+        self.assertNotIn('"CV"', self.vortex_v2_source)
 
     def test_four_generator_documentation_names_the_real_paths(self):
         for path in ("scripts/generate_panel_four.py",

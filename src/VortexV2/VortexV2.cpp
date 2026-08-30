@@ -237,14 +237,25 @@ struct VortexV2 : Module {
 };
 
 struct VortexV2PanelLabels : Widget {
+    struct Label {
+        float x;
+        float y;
+        float size;
+        int align;
+        int red;
+        int green;
+        int blue;
+        const char* text;
+        bool bold;
+    };
+
     VortexV2PanelLabels()
     {
         using namespace vortex_v2_layout;
         box.size = mm2px(Vec(PANEL_WIDTH, PANEL_HEIGHT));
     }
 
-    void drawLabel(const DrawArgs& args, float x, float y,
-                   float size, int align, const char* text) const
+    void drawLabel(const DrawArgs& args, const Label& label) const
     {
         const float strokeWidth = 0.f;
         const float inset = wintoid::ui::stroke_inset(strokeWidth);
@@ -252,66 +263,59 @@ struct VortexV2PanelLabels : Widget {
             box.size.x, strokeWidth);
         const float height = wintoid::ui::inset_extent(
             box.size.y, strokeWidth);
-        nvgFontSize(args.vg, mm2px(size));
-        nvgTextAlign(args.vg, align);
-        nvgText(args.vg,
-                wintoid::ui::clamp_stroke_center(mm2px(x) + inset,
-                                                 width, strokeWidth),
-                wintoid::ui::clamp_stroke_center(mm2px(y) + inset,
-                                                 height, strokeWidth),
-                text, nullptr);
+        nvgFontSize(args.vg, mm2px(label.size));
+        nvgFillColor(args.vg, nvgRGB(label.red, label.green, label.blue));
+        nvgTextAlign(args.vg, label.align);
+        const float textX = mm2px(label.x);
+        const float textY = mm2px(label.y);
+        auto draw = [&](float x) {
+            nvgText(args.vg,
+                    wintoid::ui::clamp_stroke_center(x + inset,
+                                                     width, strokeWidth),
+                    wintoid::ui::clamp_stroke_center(textY + inset,
+                                                     height, strokeWidth),
+                    label.text, nullptr);
+        };
+        if (label.bold) {
+            const float weightOffset = mm2px(0.10f);
+            draw(textX - weightOffset);
+            draw(textX + weightOffset);
+        }
+        draw(textX);
     }
 
     void drawLayer(const DrawArgs& args, int layer) override
     {
-        if (layer != 1)
+        if (layer != 1) {
+            Widget::drawLayer(args, layer);
             return;
+        }
 
         using namespace vortex_v2_layout;
         std::shared_ptr<Font> font = APP->window->loadFont(
             asset::system("res/fonts/DejaVuSans.ttf"));
-        if (!font)
+        if (!font) {
+            Widget::drawLayer(args, layer);
             return;
+        }
         nvgFontFaceId(args.vg, font->handle);
 
         const int centerBaseline = NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE;
         const int leftBaseline = NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE;
-        const char* controlLabels[3] = {"CUTOFF", "RESO", "DRIVE"};
-        const float controlXs[3] = {
-            CUTOFF_KNOB_X, RESONANCE_KNOB_X, DRIVE_KNOB_X
+        const Label labels[] = {
+            {TITLE_X, TITLE_Y, TITLE_FONT_SIZE, leftBaseline,
+             36, 37, 34, "VortexV2", true},
+            {CUTOFF_KNOB_X, CUTOFF_LABEL_Y, CONTROL_LABEL_FONT_SIZE,
+             centerBaseline, 36, 37, 34, "CUTOFF", false},
+            {RESONANCE_KNOB_X, RESONANCE_LABEL_Y, CONTROL_LABEL_FONT_SIZE,
+             centerBaseline, 36, 37, 34, "RESO", false},
+            {DRIVE_KNOB_X, DRIVE_LABEL_Y, CONTROL_LABEL_FONT_SIZE,
+             centerBaseline, 36, 37, 34, "DRIVE", false},
+            {AUDIO_IN_X, AUDIO_IN_LABEL_Y, AUDIO_IN_LABEL_FONT_SIZE,
+             centerBaseline, 36, 37, 34, "IN", false},
         };
-        const float cvXs[3] = {
-            CUTOFF_CV_X, RESONANCE_CV_X, DRIVE_CV_X
-        };
-        nvgFillColor(args.vg, nvgRGB(36, 37, 34));
-        drawLabel(args, TITLE_X, TITLE_Y, TITLE_FONT_SIZE,
-                  leftBaseline, "VortexV2");
-
-        nvgFillColor(args.vg, nvgRGB(255, 255, 255));
-        drawLabel(args, LOGO_X, LOGO_Y, LOGO_FONT_SIZE,
-                  leftBaseline, "wint");
-        nvgFillColor(args.vg, nvgRGB(255, 77, 0));
-        drawLabel(args, LOGO_OID_X, LOGO_Y, LOGO_FONT_SIZE,
-                  leftBaseline, "oid");
-
-        nvgFillColor(args.vg, nvgRGB(183, 105, 60));
-        drawLabel(args, GLOBAL_SECTION_LABEL_X, GLOBAL_SECTION_LABEL_Y,
-                  SECTION_LABEL_FONT_SIZE, leftBaseline,
-                  "GLOBAL CONTROLS");
-        drawLabel(args, OUTPUT_SECTION_LABEL_X, OUTPUT_SECTION_LABEL_Y,
-                  SECTION_LABEL_FONT_SIZE, leftBaseline,
-                  "FILTER OUTPUTS");
-
-        nvgFillColor(args.vg, nvgRGB(36, 37, 34));
-        for (int index = 0; index < 3; ++index)
-            drawLabel(args, controlXs[index], CONTROL_LABEL_Y,
-                      CONTROL_LABEL_FONT_SIZE, centerBaseline,
-                      controlLabels[index]);
-        for (int index = 0; index < 3; ++index)
-            drawLabel(args, cvXs[index], CV_LABEL_Y, CV_LABEL_FONT_SIZE,
-                      centerBaseline, "CV");
-        drawLabel(args, AUDIO_IN_X, AUDIO_IN_LABEL_Y, AUDIO_IN_LABEL_FONT_SIZE,
-                  centerBaseline, "IN");
+        for (const Label& label : labels)
+            drawLabel(args, label);
 
         const char* outputLabels[vortex_v2::OUTPUT_COUNT] = {
             "LP 6dB", "LP 12dB", "LP 24dB",
@@ -322,10 +326,15 @@ struct VortexV2PanelLabels : Widget {
         for (int output = 0; output < vortex_v2::OUTPUT_COUNT; ++output) {
             const int column = output % 3;
             const int row = output / 3;
-            drawLabel(args, OUTPUT_COLUMN_XS[column],
-                      OUTPUT_ROW_YS[row] - OUTPUT_LABEL_OFFSET,
-                      OUTPUT_LABEL_FONT_SIZE, centerBaseline,
-                      outputLabels[output]);
+            drawLabel(args, {
+                OUTPUT_COLUMN_XS[column],
+                OUTPUT_ROW_YS[row] - OUTPUT_LABEL_OFFSET,
+                OUTPUT_LABEL_FONT_SIZE,
+                centerBaseline,
+                36, 37, 34,
+                outputLabels[output],
+                false,
+            });
         }
 
         Widget::drawLayer(args, layer);

@@ -34,6 +34,14 @@ def text_nodes(svg):
     return [node for node in root.iter() if node.tag.endswith("text")]
 
 
+def element_by_id(svg, identifier):
+    root = ET.fromstring(svg)
+    for node in root.iter():
+        if node.attrib.get("id") == identifier:
+            return node
+    raise AssertionError(f"no SVG element found with id {identifier!r}")
+
+
 def circle_at(circles, coordinate):
     x, y = coordinate
     for circle in circles:
@@ -56,11 +64,33 @@ class VortexV2PanelTest(unittest.TestCase):
         )
         return self.panel
 
-    def test_dimensions_are_20_hp(self):
+    def test_dimensions_are_12_hp(self):
         panel = self.require_panel()
-        self.assertEqual(20, panel.HP)
-        self.assertAlmostEqual(101.6, panel.WIDTH_MM)
+        self.assertEqual(12, panel.HP)
+        self.assertAlmostEqual(60.96, panel.WIDTH_MM)
         self.assertAlmostEqual(128.5, panel.HEIGHT_MM)
+
+    def test_control_triplets_are_horizontal_and_keep_their_order(self):
+        panel = self.require_panel()
+        expected = (
+            ("cutoff", 13.0, 27.0, 35.5, 20.0),
+            ("resonance", 13.0, 27.0, 35.5, 31.0),
+            ("drive", 13.0, 27.0, 35.5, 42.0),
+        )
+        actual = tuple(
+            (
+                name,
+                knob[0],
+                cv[0],
+                atten[0],
+                knob[1],
+            )
+            for name, knob, cv, atten in panel.CONTROL_GROUPS
+        )
+        self.assertEqual(expected, actual)
+        for _name, knob, cv, atten in panel.CONTROL_GROUPS:
+            self.assertEqual(knob[1], cv[1])
+            self.assertEqual(cv[1], atten[1])
 
     def test_outputs_are_the_twelve_modes_in_row_major_order(self):
         panel = self.require_panel()
@@ -86,6 +116,7 @@ class VortexV2PanelTest(unittest.TestCase):
         rows = sorted({y for _, y in positions})
         self.assertEqual(3, len(columns))
         self.assertEqual(4, len(rows))
+        self.assertEqual([12.0, 30.48, 48.96], columns)
         self.assertEqual(
             [(x, y) for y in rows for x in columns],
             positions,
@@ -130,9 +161,85 @@ class VortexV2PanelTest(unittest.TestCase):
                 self.assertEqual(OUTPUT_FILL, circle.attrib["fill"])
                 self.assertEqual(OUTPUT_STROKE, circle.attrib["stroke"])
 
-    def test_svg_defers_all_labels_to_the_runtime_overlay(self):
+    def test_control_pairs_have_four_v2_style_rounded_boxes(self):
         panel = self.require_panel()
-        self.assertEqual([], text_nodes(panel.generate_svg()))
+        svg = panel.generate_svg()
+        expected_ids = {
+            "cutoff-cv-group": panel.CONTROL_GROUPS[0],
+            "resonance-cv-group": panel.CONTROL_GROUPS[1],
+            "drive-cv-group": panel.CONTROL_GROUPS[2],
+        }
+        self.assertEqual(
+            set(expected_ids),
+            set(panel.PAIR_GROUP_RECT_BY_ID),
+        )
+        for identifier, (_name, _knob, cv, atten) in expected_ids.items():
+            group = element_by_id(svg, identifier)
+            self.assertEqual("rect", group.tag.rsplit("}", 1)[-1])
+            self.assertEqual("none", group.attrib["fill"])
+            self.assertEqual("#556d80", group.attrib["stroke"])
+            self.assertGreater(float(group.attrib["rx"]), 0.0)
+            x = float(group.attrib["x"])
+            y = float(group.attrib["y"])
+            width = float(group.attrib["width"])
+            height = float(group.attrib["height"])
+            cv_x, cv_y = cv
+            atten_x, atten_y = atten
+            self.assertLessEqual(x, cv_x - panel.RACK_PORT_RADIUS)
+            self.assertGreaterEqual(
+                x + width,
+                atten_x + panel.RACK_SMALL_KNOB_RADIUS,
+            )
+            self.assertLessEqual(y, cv_y - panel.RACK_PORT_RADIUS)
+            self.assertGreaterEqual(
+                y + height,
+                atten_y + panel.RACK_SMALL_KNOB_RADIUS,
+            )
+
+    def test_svg_matches_four_v2_identity_and_removes_section_headings(self):
+        panel = self.require_panel()
+        svg = panel.generate_svg()
+        labels = text_nodes(svg)
+        title = next(node for node in labels if node.text == "VortexV2")
+        self.assertEqual("700", title.attrib.get("font-weight"))
+        label_text = {node.text for node in labels if node.text}
+        self.assertNotIn("GLOBAL CONTROLS", label_text)
+        self.assertNotIn("FILTER OUTPUTS", label_text)
+        for expected in ("VortexV2", "CUTOFF", "RESO", "DRIVE", "IN",
+                          *panel.OUTPUT_LABELS):
+            with self.subTest(label=expected):
+                self.assertIn(expected, label_text)
+
+    def test_svg_omits_cv_captions(self):
+        panel = self.require_panel()
+        svg = panel.generate_svg()
+        label_text = {node.text for node in text_nodes(svg) if node.text}
+        self.assertNotIn("CV", label_text)
+        self.assertNotIn(">CV<", svg)
+
+    def test_svg_embeds_the_canonical_four_v2_logo(self):
+        panel = self.require_panel()
+        svg = panel.generate_svg()
+        self.assertIn('id="wintoid-logo"', svg)
+        self.assertIn('id="wint-glyphs"', svg)
+        self.assertIn('id="oid-glyphs"', svg)
+        self.assertIn('id="wint-underline"', svg)
+        self.assertIn('id="oid-underline"', svg)
+        self.assertNotIn("WintoidLogo.svg", svg)
+        self.assertNotIn("<image", svg)
+
+    def test_svg_uses_filled_four_v2_style_sections(self):
+        panel = self.require_panel()
+        svg = panel.generate_svg()
+        for identifier, fill in (
+            ("controls-section", "#e3e0d1"),
+            ("outputs-section", "#e7e3d4"),
+        ):
+            with self.subTest(section=identifier):
+                section = element_by_id(svg, identifier)
+                self.assertEqual(fill, section.attrib["fill"])
+                self.assertEqual("#556d80", section.attrib["stroke"])
+                self.assertGreater(float(section.attrib["rx"]), 0.0)
 
     def test_generated_artifacts_match_checked_in_files(self):
         panel = self.require_panel()
