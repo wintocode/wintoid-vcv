@@ -7,49 +7,49 @@ namespace vortex_v2_layout {
 constexpr int PANEL_HP = 20;
 constexpr float PANEL_WIDTH = 101.6f;
 constexpr float PANEL_HEIGHT = 128.5f;
-constexpr float TITLE_X = 6f;
-constexpr float TITLE_Y = 8f;
+constexpr float TITLE_X = 6.0f;
+constexpr float TITLE_Y = 8.0f;
 constexpr float TITLE_FONT_SIZE = 6.6f;
-constexpr float LOGO_X = 79f;
-constexpr float LOGO_Y = 8f;
-constexpr float LOGO_FONT_SIZE = 3f;
+constexpr float LOGO_X = 79.0f;
+constexpr float LOGO_Y = 8.0f;
+constexpr float LOGO_FONT_SIZE = 3.0f;
 
 constexpr float GLOBAL_CONTROLS_SECTION_X = 4.175f;
-constexpr float GLOBAL_CONTROLS_SECTION_Y = 13f;
+constexpr float GLOBAL_CONTROLS_SECTION_Y = 13.0f;
 constexpr float GLOBAL_CONTROLS_SECTION_WIDTH = 93.25f;
-constexpr float GLOBAL_CONTROLS_SECTION_HEIGHT = 34f;
+constexpr float GLOBAL_CONTROLS_SECTION_HEIGHT = 34.0f;
 
 constexpr float OUTPUTS_SECTION_X = 4.175f;
-constexpr float OUTPUTS_SECTION_Y = 53f;
+constexpr float OUTPUTS_SECTION_Y = 53.0f;
 constexpr float OUTPUTS_SECTION_WIDTH = 93.25f;
-constexpr float OUTPUTS_SECTION_HEIGHT = 68f;
+constexpr float OUTPUTS_SECTION_HEIGHT = 68.0f;
 
-constexpr float CUTOFF_KNOB_X = 17f;
-constexpr float CUTOFF_KNOB_Y = 24f;
-constexpr float CUTOFF_CV_X = 17f;
-constexpr float CUTOFF_CV_Y = 39f;
+constexpr float CUTOFF_KNOB_X = 17.0f;
+constexpr float CUTOFF_KNOB_Y = 24.0f;
+constexpr float CUTOFF_CV_X = 17.0f;
+constexpr float CUTOFF_CV_Y = 39.0f;
 constexpr float CUTOFF_ATTEN_X = 25.5f;
-constexpr float CUTOFF_ATTEN_Y = 39f;
+constexpr float CUTOFF_ATTEN_Y = 39.0f;
 
 constexpr float RESONANCE_KNOB_X = 42.5f;
-constexpr float RESONANCE_KNOB_Y = 24f;
+constexpr float RESONANCE_KNOB_Y = 24.0f;
 constexpr float RESONANCE_CV_X = 42.5f;
-constexpr float RESONANCE_CV_Y = 39f;
-constexpr float RESONANCE_ATTEN_X = 51f;
-constexpr float RESONANCE_ATTEN_Y = 39f;
+constexpr float RESONANCE_CV_Y = 39.0f;
+constexpr float RESONANCE_ATTEN_X = 51.0f;
+constexpr float RESONANCE_ATTEN_Y = 39.0f;
 
-constexpr float DRIVE_KNOB_X = 68f;
-constexpr float DRIVE_KNOB_Y = 24f;
-constexpr float DRIVE_CV_X = 68f;
-constexpr float DRIVE_CV_Y = 39f;
+constexpr float DRIVE_KNOB_X = 68.0f;
+constexpr float DRIVE_KNOB_Y = 24.0f;
+constexpr float DRIVE_CV_X = 68.0f;
+constexpr float DRIVE_CV_Y = 39.0f;
 constexpr float DRIVE_ATTEN_X = 76.5f;
-constexpr float DRIVE_ATTEN_Y = 39f;
+constexpr float DRIVE_ATTEN_Y = 39.0f;
 
-constexpr float AUDIO_IN_X = 91f;
-constexpr float AUDIO_IN_Y = 39f;
+constexpr float AUDIO_IN_X = 91.0f;
+constexpr float AUDIO_IN_Y = 39.0f;
 
-constexpr float OUTPUT_COLUMN_XS[3] = {17f, 50.8f, 84.6f};
-constexpr float OUTPUT_ROW_YS[4] = {64f, 79f, 94f, 109f};
+constexpr float OUTPUT_COLUMN_XS[3] = {17.0f, 50.8f, 84.6f};
+constexpr float OUTPUT_ROW_YS[4] = {64.0f, 79.0f, 94.0f, 109.0f};
 constexpr float OUTPUT_LABEL_OFFSET = 5.5f;
 
 } // namespace vortex_v2_layout

@@ -111,6 +111,12 @@ def _fmt(value: float, digits: int = 3) -> str:
     return text if text and text != "-0" else "0"
 
 
+def _cpp_float(value: float) -> str:
+    """Format a valid C++11 float literal without changing SVG formatting."""
+    text = _fmt(value)
+    return text if "." in text else f"{text}.0"
+
+
 def _circle(x: float, y: float, radius: float, fill: str, stroke: str,
             stroke_width: float) -> str:
     return (
@@ -205,39 +211,39 @@ def generate_coords_header() -> str:
         'namespace vortex_v2_layout {',
         '',
         f'constexpr int PANEL_HP = {HP};',
-        f'constexpr float PANEL_WIDTH = {_fmt(WIDTH_MM)}f;',
-        f'constexpr float PANEL_HEIGHT = {_fmt(HEIGHT_MM)}f;',
-        f'constexpr float TITLE_X = {_fmt(TITLE_X)}f;',
-        f'constexpr float TITLE_Y = {_fmt(TITLE_Y)}f;',
-        f'constexpr float TITLE_FONT_SIZE = {_fmt(TITLE_FONT_SIZE)}f;',
-        f'constexpr float LOGO_X = {_fmt(LOGO_X)}f;',
-        f'constexpr float LOGO_Y = {_fmt(LOGO_Y)}f;',
-        f'constexpr float LOGO_FONT_SIZE = {_fmt(LOGO_FONT_SIZE)}f;',
+        f'constexpr float PANEL_WIDTH = {_cpp_float(WIDTH_MM)}f;',
+        f'constexpr float PANEL_HEIGHT = {_cpp_float(HEIGHT_MM)}f;',
+        f'constexpr float TITLE_X = {_cpp_float(TITLE_X)}f;',
+        f'constexpr float TITLE_Y = {_cpp_float(TITLE_Y)}f;',
+        f'constexpr float TITLE_FONT_SIZE = {_cpp_float(TITLE_FONT_SIZE)}f;',
+        f'constexpr float LOGO_X = {_cpp_float(LOGO_X)}f;',
+        f'constexpr float LOGO_Y = {_cpp_float(LOGO_Y)}f;',
+        f'constexpr float LOGO_FONT_SIZE = {_cpp_float(LOGO_FONT_SIZE)}f;',
         '',
     ]
     for prefix, rect in (("GLOBAL_CONTROLS_SECTION", GLOBAL_CONTROLS_SECTION),
                          ("OUTPUTS_SECTION", OUTPUTS_SECTION)):
         for suffix, value in zip(("X", "Y", "WIDTH", "HEIGHT"), rect):
-            lines.append(f'constexpr float {prefix}_{suffix} = {_fmt(value)}f;')
+            lines.append(f'constexpr float {prefix}_{suffix} = {_cpp_float(value)}f;')
         lines.append('')
     for name, x in zip(CONTROL_NAMES, CONTROL_XS):
         constant = name.replace(" ", "_")
-        lines.append(f'constexpr float {constant}_KNOB_X = {_fmt(x)}f;')
-        lines.append(f'constexpr float {constant}_KNOB_Y = {_fmt(CONTROL_KNOB_Y)}f;')
-        lines.append(f'constexpr float {constant}_CV_X = {_fmt(x)}f;')
-        lines.append(f'constexpr float {constant}_CV_Y = {_fmt(CONTROL_CV_Y)}f;')
-        lines.append(f'constexpr float {constant}_ATTEN_X = {_fmt(x + CONTROL_ATTEN_OFFSET_X)}f;')
-        lines.append(f'constexpr float {constant}_ATTEN_Y = {_fmt(CONTROL_CV_Y)}f;')
+        lines.append(f'constexpr float {constant}_KNOB_X = {_cpp_float(x)}f;')
+        lines.append(f'constexpr float {constant}_KNOB_Y = {_cpp_float(CONTROL_KNOB_Y)}f;')
+        lines.append(f'constexpr float {constant}_CV_X = {_cpp_float(x)}f;')
+        lines.append(f'constexpr float {constant}_CV_Y = {_cpp_float(CONTROL_CV_Y)}f;')
+        lines.append(f'constexpr float {constant}_ATTEN_X = {_cpp_float(x + CONTROL_ATTEN_OFFSET_X)}f;')
+        lines.append(f'constexpr float {constant}_ATTEN_Y = {_cpp_float(CONTROL_CV_Y)}f;')
         lines.append('')
     lines.extend([
-        f'constexpr float AUDIO_IN_X = {_fmt(AUDIO_IN_X)}f;',
-        f'constexpr float AUDIO_IN_Y = {_fmt(AUDIO_IN_Y)}f;',
+        f'constexpr float AUDIO_IN_X = {_cpp_float(AUDIO_IN_X)}f;',
+        f'constexpr float AUDIO_IN_Y = {_cpp_float(AUDIO_IN_Y)}f;',
         '',
         'constexpr float OUTPUT_COLUMN_XS[3] = {'
-        + ', '.join(f'{_fmt(x)}f' for x in OUTPUT_COLUMN_XS) + '};',
+        + ', '.join(f'{_cpp_float(x)}f' for x in OUTPUT_COLUMN_XS) + '};',
         'constexpr float OUTPUT_ROW_YS[4] = {'
-        + ', '.join(f'{_fmt(y)}f' for y in OUTPUT_ROW_YS) + '};',
-        f'constexpr float OUTPUT_LABEL_OFFSET = {_fmt(OUTPUT_LABEL_OFFSET)}f;',
+        + ', '.join(f'{_cpp_float(y)}f' for y in OUTPUT_ROW_YS) + '};',
+        f'constexpr float OUTPUT_LABEL_OFFSET = {_cpp_float(OUTPUT_LABEL_OFFSET)}f;',
         '',
         '} // namespace vortex_v2_layout',
         '',
