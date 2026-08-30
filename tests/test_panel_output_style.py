@@ -44,6 +44,7 @@ class PanelOutputStyleTest(unittest.TestCase):
         cls.four = load_generator("four")
         cls.four_v2 = load_generator("four_v2")
         cls.vortex = load_generator("vortex")
+        cls.vortex_v2 = load_generator("vortex_v2")
         cls.brink = load_generator("brink")
 
     def assert_output_style(self, circles, module, coordinate):
@@ -88,6 +89,12 @@ class PanelOutputStyleTest(unittest.TestCase):
         self.assert_input_style(
             circles, (self.vortex.AUDIO_IN_X, self.vortex.Y_AUDIO_IO))
 
+    def test_vortex_v2_outputs_have_inverted_backplates(self):
+        circles = circles_by_position(self.vortex_v2.generate_svg())
+        for name, x, y in self.vortex_v2.OUTPUT_COMPONENTS:
+            with self.subTest(output=name):
+                self.assert_output_style(circles, self.vortex_v2, (x, y))
+
     def test_generators_preserve_current_panel_layout_contracts(self):
         self.assertAlmostEqual(16.0, self.four.Y_ALGO)
         self.assertEqual(6, self.vortex.HP)
@@ -102,6 +109,7 @@ class PanelOutputStyleTest(unittest.TestCase):
             ("FourV2", self.four_v2, ""),
             ("Brink", self.brink, "\n"),
             ("Vortex", self.vortex, ""),
+            ("VortexV2", self.vortex_v2, ""),
         )
         for name, module, svg_suffix in generated:
             with self.subTest(panel=name):

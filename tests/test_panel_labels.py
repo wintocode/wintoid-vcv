@@ -27,8 +27,12 @@ class PanelLabelTest(unittest.TestCase):
     def setUpClass(cls):
         cls.four = load_generator("four")
         cls.vortex = load_generator("vortex")
+        cls.vortex_v2 = load_generator("vortex_v2")
         cls.four_source = (ROOT / "src" / "Four" / "Four.cpp").read_text()
         cls.vortex_source = (ROOT / "src" / "Vortex" / "Vortex.cpp").read_text()
+        cls.vortex_v2_source = (
+            ROOT / "src" / "VortexV2" / "VortexV2.cpp"
+        ).read_text()
 
     def test_four_global_label_offsets_clear_the_real_controls(self):
         self.assertEqual(5.0, self.four.GLOBAL_KNOB_LABEL_OFFSET)
@@ -167,7 +171,7 @@ class PanelLabelTest(unittest.TestCase):
         self.assertIn("nvgFontSize(args.vg, 10);", brink_source)
 
     def test_modules_do_not_draw_decorative_screws(self):
-        for name in ("Four", "Vortex", "Brink"):
+        for name in ("Four", "Vortex", "VortexV2", "Brink"):
             with self.subTest(module=name):
                 source = (ROOT / "src" / name / f"{name}.cpp").read_text()
                 self.assertNotIn("ScrewSilver", source)
@@ -176,6 +180,13 @@ class PanelLabelTest(unittest.TestCase):
     def test_vortex_uses_the_generated_logo_font_size(self):
         self.assertIn("LOGO_FONT_SIZE", self.vortex_source)
         self.assertNotIn("nvgFontSize(args.vg, 10)", self.vortex_source)
+
+    def test_vortex_v2_uses_the_generated_logo_font_size(self):
+        self.assertEqual(3.0, self.vortex_v2.LOGO_FONT_SIZE)
+        self.assertIn("constexpr float LOGO_FONT_SIZE = 3.0f;",
+                      self.vortex_v2.generate_coords_header())
+        self.assertIn("drawLabel(args, LOGO_X, LOGO_Y, LOGO_FONT_SIZE,",
+                      self.vortex_v2_source)
 
     def test_four_generator_documentation_names_the_real_paths(self):
         for path in ("scripts/generate_panel_four.py",
@@ -189,6 +200,8 @@ class PanelLabelTest(unittest.TestCase):
                       self.four.generate_coords_header())
         self.assertIn("scripts/generate_panel_vortex.py",
                       self.vortex.generate_coords_header())
+        self.assertIn("scripts/generate_panel_vortex_v2.py",
+                      self.vortex_v2.generate_coords_header())
 
 
 if __name__ == "__main__":

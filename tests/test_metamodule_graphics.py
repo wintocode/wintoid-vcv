@@ -15,7 +15,7 @@ import unittest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-MODULES = ("Four", "Vortex", "Brink", "FourV2")
+MODULES = ("Four", "Vortex", "VortexV2", "Brink", "FourV2")
 
 
 def extract_struct(source, marker):
@@ -63,6 +63,7 @@ class MetaModuleGraphicsTest(unittest.TestCase):
             ("Four", "struct AlgoDisplay"),
             ("Four", "struct FoldTypeDisplay"),
             ("Vortex", "struct ModeDisplay"),
+            ("VortexV2", "struct VortexV2PanelLabels"),
             ("Brink", "struct WindowRail"),
             ("FourV2", "struct AlgorithmRoutingDisplay"),
             ("FourV2", "struct OperatorFrequencyDisplay"),
@@ -81,6 +82,7 @@ class MetaModuleGraphicsTest(unittest.TestCase):
             ("Four", "struct AlgoDisplay"),
             ("Four", "struct FoldTypeDisplay"),
             ("Vortex", "struct ModeDisplay"),
+            ("VortexV2", "struct VortexV2PanelLabels"),
             ("FourV2", "struct AlgorithmRoutingDisplay"),
             ("FourV2", "struct OperatorFrequencyDisplay"),
         )

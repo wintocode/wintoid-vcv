@@ -1,7 +1,7 @@
 CC := c++
 CFLAGS := -std=c++11 -Wall -Wextra -g -fsanitize=address,undefined -pthread
 
-all: test_four_dsp test_four_engine test_four_v2_model test_four_v2_dsp test_four_v2_engine test_vortex_dsp test_vortex_v2_dsp test_brink_dsp test_polyphony test_ui_geometry test_panel_geometry test_brink_panel test_four_v2_panel test_four_v2_module test_panel_output_style test_polyphony_metadata test_repository_hygiene test_panel_labels test_metamodule_graphics
+all: test_four_dsp test_four_engine test_four_v2_model test_four_v2_dsp test_four_v2_engine test_vortex_dsp test_vortex_v2_dsp test_brink_dsp test_polyphony test_ui_geometry test_panel_geometry test_brink_panel test_four_v2_panel test_four_v2_module test_vortex_v2_panel test_vortex_v2_module test_panel_output_style test_polyphony_metadata test_repository_hygiene test_panel_labels test_metamodule_graphics
 
 test_four_dsp: test_four_dsp.cpp ../src/Four/dsp.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
@@ -45,6 +45,12 @@ test_four_v2_panel:
 test_four_v2_module:
 	python3 test_four_v2_module.py
 
+test_vortex_v2_panel:
+	python3 test_vortex_v2_panel.py
+
+test_vortex_v2_module:
+	python3 test_vortex_v2_module.py
+
 test_panel_output_style:
 	python3 test_panel_output_style.py
 
@@ -60,7 +66,7 @@ test_panel_labels:
 test_metamodule_graphics:
 	python3 test_metamodule_graphics.py
 
-run: test_four_dsp test_four_engine test_four_v2_model test_four_v2_dsp test_four_v2_engine test_vortex_dsp test_vortex_v2_dsp test_brink_dsp test_polyphony test_ui_geometry test_panel_geometry test_brink_panel test_four_v2_panel test_four_v2_module test_panel_output_style test_polyphony_metadata test_repository_hygiene test_panel_labels test_metamodule_graphics
+run: test_four_dsp test_four_engine test_four_v2_model test_four_v2_dsp test_four_v2_engine test_vortex_dsp test_vortex_v2_dsp test_brink_dsp test_polyphony test_ui_geometry test_panel_geometry test_brink_panel test_four_v2_panel test_four_v2_module test_vortex_v2_panel test_vortex_v2_module test_panel_output_style test_polyphony_metadata test_repository_hygiene test_panel_labels test_metamodule_graphics
 	./test_four_dsp
 	./test_four_engine
 	./test_four_v2_model
@@ -75,6 +81,8 @@ run: test_four_dsp test_four_engine test_four_v2_model test_four_v2_dsp test_fou
 	python3 test_brink_panel.py
 	python3 test_four_v2_panel.py
 	python3 test_four_v2_module.py
+	python3 test_vortex_v2_panel.py
+	python3 test_vortex_v2_module.py
 	python3 test_panel_output_style.py
 	python3 test_polyphony_metadata.py
 	python3 test_repository_hygiene.py
@@ -84,4 +92,4 @@ run: test_four_dsp test_four_engine test_four_v2_model test_four_v2_dsp test_fou
 clean:
 	rm -f test_four_dsp test_four_engine test_four_v2_model test_four_v2_dsp test_four_v2_engine test_vortex_dsp test_vortex_v2_dsp test_brink_dsp test_polyphony test_ui_geometry
 
-.PHONY: all run clean test_four_v2_model test_four_v2_dsp test_four_v2_engine test_vortex_v2_dsp test_panel_geometry test_brink_panel test_four_v2_panel test_four_v2_module test_panel_output_style test_polyphony_metadata test_repository_hygiene test_panel_labels test_metamodule_graphics
+.PHONY: all run clean test_four_v2_model test_four_v2_dsp test_four_v2_engine test_vortex_v2_dsp test_panel_geometry test_brink_panel test_four_v2_panel test_four_v2_module test_vortex_v2_panel test_vortex_v2_module test_panel_output_style test_polyphony_metadata test_repository_hygiene test_panel_labels test_metamodule_graphics
