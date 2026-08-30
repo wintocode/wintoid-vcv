@@ -351,7 +351,20 @@ class FourV2PanelTest(unittest.TestCase):
             ("EXT PM", "external_pm_jack"),
             ("MAIN OUT", "main_output"),
         )
-        expected_size = {text: 1.90 for text, _component in label_specs}
+        expected_size = {
+            text: 1.90 if text == "MAIN OUT" else 2.25
+            for text, _component in label_specs
+        }
+        expected_baseline = {
+            "V/OCT": 12.6,
+            "ALGO": 24.1,
+            "TUNE": 12.6,
+            "PM DEPTH": 12.6,
+            "MASTER": 12.6,
+            "PM CV": 12.6,
+            "EXT PM": 23.8,
+            "MAIN OUT": 12.3,
+        }
         for text, component_name in label_specs:
             component_x, component_y = panel.GLOBAL_CONTROLS[component_name]
             matches = [
@@ -373,6 +386,7 @@ class FourV2PanelTest(unittest.TestCase):
             with self.subTest(label=text, component=component_name):
                 self.assertEqual("middle", label.attrib["text-anchor"])
                 self.assertAlmostEqual(expected_size[text], font_size)
+                self.assertAlmostEqual(expected_baseline[text], baseline)
                 self.assertGreaterEqual(
                     component_y - radius - label_bottom,
                     MINIMUM_LABEL_CLEARANCE_MM,
@@ -523,6 +537,18 @@ class FourV2PanelTest(unittest.TestCase):
                 self.assertLess(group_x + group_width,
                                 mode_x - panel.STATE_SWITCH_WIDTH / 2.0)
 
+    def test_enlarged_coarse_labels_keep_visible_group_padding(self):
+        panel = self.require_panel()
+        self.assertAlmostEqual(1.25,
+                               panel.FREQUENCY_CONTROL_GROUP_PADDING_X)
+        minimum_width = 2.0 * (
+            panel.SMALL_KNOB_RADIUS
+            + panel.FREQUENCY_CONTROL_GROUP_PADDING_X
+        )
+        for identifier, (_x, _y, width, _height) in panel.FREQUENCY_CONTROL_GROUP_RECTS:
+            with self.subTest(group=identifier):
+                self.assertGreaterEqual(width, minimum_width)
+
     def test_routing_display_uses_readable_nodes_and_branch_lanes(self):
         panel = self.require_panel()
         root = ET.fromstring(panel.generate_svg())
@@ -638,6 +664,76 @@ class FourV2PanelTest(unittest.TestCase):
                 root = ET.parse(path).getroot()
                 self.assertEqual("10mm", root.attrib.get("width"))
                 self.assertEqual("5mm", root.attrib.get("height"))
+                frame = next(
+                    node for node in root.iter()
+                    if node.tag.endswith("rect")
+                )
+                self.assertEqual(panel.CONTROL_STROKE, frame.attrib["stroke"])
+
+    def test_attenuator_guides_use_the_neutral_control_stroke(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        circles = tuple(
+            node for node in root.iter()
+            if node.tag.endswith("circle")
+        )
+        for name, x, y in panel.COMPONENTS:
+            if not name.endswith("_atten"):
+                continue
+            matches = [
+                circle for circle in circles
+                if abs(float(circle.attrib["cx"]) - x) < 0.01
+                and abs(float(circle.attrib["cy"]) - y) < 0.01
+            ]
+            self.assertEqual(1, len(matches), name)
+            with self.subTest(component=name):
+                self.assertEqual(panel.CONTROL_FILL, matches[0].attrib["fill"])
+                self.assertEqual(panel.CONTROL_STROKE, matches[0].attrib["stroke"])
+
+    def test_mode_and_fold_switches_right_edges_align_with_frequency_displays(self):
+        panel = self.require_panel()
+        components = {
+            name: (x, y)
+            for name, x, y in panel.COMPONENTS
+        }
+        for operator, display in enumerate(panel.FREQUENCY_DISPLAY_RECTS, start=1):
+            display_right = display[0] + display[2]
+            for control in ("freq_mode", "fold_type"):
+                x, _y = components[f"op{operator}_{control}"]
+                with self.subTest(operator=operator, control=control):
+                    self.assertAlmostEqual(
+                        display_right,
+                        x + panel.STATE_SWITCH_WIDTH / 2.0,
+                        delta=0.001,
+                    )
+
+    def test_mode_and_fold_switch_borders_match_frequency_display_stroke(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        for operator in range(1, 5):
+            for control in ("freq_mode", "fold_type"):
+                x, y = next(
+                    (x, y) for name, x, y in panel.COMPONENTS
+                    if name == f"op{operator}_{control}"
+                )
+                matches = [
+                    node for node in root.iter()
+                    if node.tag.endswith("rect")
+                    and abs(float(node.attrib["x"]) -
+                            (x - panel.STATE_SWITCH_WIDTH / 2.0)) < 0.01
+                    and abs(float(node.attrib["y"]) -
+                            (y - panel.STATE_SWITCH_HEIGHT / 2.0)) < 0.01
+                    and abs(float(node.attrib["width"]) -
+                            panel.STATE_SWITCH_WIDTH) < 0.01
+                    and abs(float(node.attrib["height"]) -
+                            panel.STATE_SWITCH_HEIGHT) < 0.01
+                ]
+                self.assertEqual(1, len(matches), f"op{operator}_{control}")
+                with self.subTest(operator=operator, control=control):
+                    self.assertEqual(
+                        panel.CONTROL_STROKE,
+                        matches[0].attrib["stroke"],
+                    )
 
     def test_live_displays_use_generated_display_rectangles(self):
         self.require_panel()
@@ -742,7 +838,7 @@ class FourV2PanelTest(unittest.TestCase):
             with self.subTest(operator=operator, label=label.text,
                               contract="readable size"):
                 self.assertGreaterEqual(font_size, 1.4)
-                expected_size = 1.9 if label.text in {"MODE", "FOLD TYPE"} else 2.0
+                expected_size = 2.25 if label.text in {"MODE", "FOLD TYPE"} else 2.35
                 self.assertAlmostEqual(expected_size, font_size)
             label_top = baseline - font_size
             label_bottom = baseline + font_size * 0.25
@@ -753,6 +849,20 @@ class FourV2PanelTest(unittest.TestCase):
                     above_clearance + 1e-9,
                     MINIMUM_LABEL_CLEARANCE_MM,
                 )
+
+    def test_selective_one_point_typography_leaves_titles_and_readouts_unchanged(self):
+        panel = self.require_panel()
+        self.assertAlmostEqual(2.25, panel.GLOBAL_LABEL_SIZE)
+        self.assertAlmostEqual(2.35, panel.OPERATOR_LABEL_SIZE)
+        self.assertAlmostEqual(2.25, panel.OPERATOR_MODE_LABEL_SIZE)
+        self.assertAlmostEqual(12.6, panel.GLOBAL_LABEL_Y)
+        self.assertAlmostEqual(24.1, panel.ALGORITHM_LABEL_Y)
+        self.assertAlmostEqual(12.3, panel.MAIN_OUTPUT_LABEL_Y)
+        self.assertAlmostEqual(1.9, panel.MAIN_OUTPUT_LABEL_SIZE)
+        self.assertAlmostEqual(6.6, panel.TITLE_FONT_SIZE)
+        self.assertAlmostEqual(5.0, panel.OPERATOR_HEADING_SIZE)
+        self.assertAlmostEqual(3.2, panel.FREQUENCY_DISPLAY_FONT_SIZE)
+        self.assertAlmostEqual(2.1, panel.ROUTING_NODE_LABEL_SIZE)
 
     def test_algorithm_label_clears_both_left_hand_controls(self):
         panel = self.require_panel()
@@ -815,7 +925,7 @@ class FourV2PanelTest(unittest.TestCase):
         root = ET.fromstring(panel.generate_svg())
         labels = {node.text for node in root.iter()
                   if node.tag.endswith("text") and node.text}
-        for expected in ("FourV2", "OP1", "OP2", "OP3", "OP4",
+        for expected in ("Four V2", "OP1", "OP2", "OP3", "OP4",
                          "LEVEL", "WARP", "FOLD", "FEEDBACK",
                          "FOLD TYPE",
                          "PM DEPTH", "MASTER", "PM CV", "EXT PM"):
@@ -839,7 +949,7 @@ class FourV2PanelTest(unittest.TestCase):
             'asset::system("res/fonts/DejaVuSans.ttf")',
             "nvgFontFaceId",
             "nvgText",
-            '"FourV2"',
+            '"Four V2"',
             '"COARSE"',
             '"MODE"',
             '"FOLD TYPE"',
@@ -849,6 +959,7 @@ class FourV2PanelTest(unittest.TestCase):
             '"EXT PM"',
             '"MAIN OUT"',
             "GLOBAL_LABEL_SIZE",
+            "MAIN_OUTPUT_LABEL_SIZE",
         ):
             with self.subTest(contract=contract):
                 self.assertIn(contract, body)
@@ -872,7 +983,7 @@ class FourV2PanelTest(unittest.TestCase):
     def test_title_and_operator_headings_are_bold_in_the_static_panel(self):
         panel = self.require_panel()
         root = ET.fromstring(panel.generate_svg())
-        for text in ("FourV2", "OP1", "OP2", "OP3", "OP4"):
+        for text in ("Four V2", "OP1", "OP2", "OP3", "OP4"):
             label = next(
                 node for node in root.iter()
                 if node.tag.endswith("text") and node.text == text
@@ -883,7 +994,7 @@ class FourV2PanelTest(unittest.TestCase):
         body = _extract_struct_body(self.source, "struct FourV2PanelLabels")
         self.assertIn("bool bold", body)
         self.assertIn("label.bold", body)
-        self.assertIn('"FourV2", true', body)
+        self.assertIn('"Four V2", true', body)
 
     def test_generated_artifacts_match_generators(self):
         panel = self.require_panel()

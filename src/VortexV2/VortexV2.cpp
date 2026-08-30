@@ -128,8 +128,8 @@ struct VortexV2 : Module {
         configOutput(HP24_OUTPUT, "HP 24dB");
         configOutput(BP_OUTPUT, "BP");
         configOutput(BP_PLUS_OUTPUT, "BP+");
-        configOutput(NOTCH_OUTPUT, "Notch");
-        configOutput(NOTCH_PLUS_OUTPUT, "Notch+");
+        configOutput(NOTCH_OUTPUT, "NOTCH");
+        configOutput(NOTCH_PLUS_OUTPUT, "NOTCH+");
         configOutput(AP_OUTPUT, "AP");
         configOutput(AP_PLUS_OUTPUT, "AP+");
 
@@ -304,7 +304,7 @@ struct VortexV2PanelLabels : Widget {
         const int leftBaseline = NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE;
         const Label labels[] = {
             {TITLE_X, TITLE_Y, TITLE_FONT_SIZE, leftBaseline,
-             36, 37, 34, "VortexV2", true},
+             36, 37, 34, "Vortex V2", true},
             {CUTOFF_KNOB_X, CUTOFF_LABEL_Y, CONTROL_LABEL_FONT_SIZE,
              centerBaseline, 36, 37, 34, "CUTOFF", false},
             {RESONANCE_KNOB_X, RESONANCE_LABEL_Y, CONTROL_LABEL_FONT_SIZE,
@@ -320,7 +320,7 @@ struct VortexV2PanelLabels : Widget {
         const char* outputLabels[vortex_v2::OUTPUT_COUNT] = {
             "LP 6dB", "LP 12dB", "LP 24dB",
             "HP 6dB", "HP 12dB", "HP 24dB",
-            "BP", "BP+", "Notch", "Notch+", "AP", "AP+"
+            "BP", "BP+", "NOTCH", "NOTCH+", "AP", "AP+"
         };
         nvgFillColor(args.vg, nvgRGB(36, 37, 34));
         for (int output = 0; output < vortex_v2::OUTPUT_COUNT; ++output) {

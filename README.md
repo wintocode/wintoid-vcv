@@ -13,7 +13,7 @@ VCV Rack plugin — synthesizer, filter, and CV/logic utilities.
 - **Fold** — 3 types per operator (right-click): Symmetric, Asymmetric, Soft clip
 - **Frequency modes** — Ratio (0.25:1 to 31.5:1) or Fixed Hz (1–9999 Hz) per operator, toggled via button
 - **Global controls**: Algorithm selector, cross-modulation depth (XM), fine tune, VCA
-- **External PM input** with attenuverter — for audio-rate phase modulation from other sources
+- **External PM input** with attenuator — for audio-rate phase modulation from other sources
 - **16-channel polyphony** — voice count follows the **V/OCT** input; mono and shorter polyphonic modulation inputs broadcast lane 0
 - **2× internal oversampling** with DC blocking
 
@@ -71,9 +71,9 @@ its controls and signal flow are documented independently.
 - **PM DEPTH** scales the internal operator-to-operator phase modulation after
   each source operator's Output level. Its CV input uses a bipolar attenuverter.
 - **External PM affects every carrier** directly in phase, before waveform
-  generation, Warp, and Fold. It is signed: the external phase contribution is
-  `input volts × attenuverter × 0.1` cycles, so a negative attenuverter inverts
-  the modulation instead of rectifying it. PM DEPTH and External PM are
+  generation, Warp, and Fold. The input is bipolar, and the external phase
+  contribution is `input volts × attenuator × 0.1` cycles; the attenuator scales
+  it without inverting the input polarity. PM DEPTH and External PM are
   independent controls.
 - The **raw carrier sum** is sent through **MASTER**, the only automatic
   post-mix gain control. FourV2 does not divide by carrier count, normalise, or

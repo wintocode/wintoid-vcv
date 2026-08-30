@@ -74,8 +74,8 @@ class VortexV2PanelTest(unittest.TestCase):
         panel = self.require_panel()
         expected = (
             ("cutoff", 13.0, 27.0, 35.5, 20.0),
-            ("resonance", 13.0, 27.0, 35.5, 31.0),
-            ("drive", 13.0, 27.0, 35.5, 42.0),
+            ("resonance", 13.0, 27.0, 35.5, 32.0),
+            ("drive", 13.0, 27.0, 35.5, 44.0),
         )
         actual = tuple(
             (
@@ -97,7 +97,7 @@ class VortexV2PanelTest(unittest.TestCase):
         expected_labels = (
             "LP 6dB", "LP 12dB", "LP 24dB",
             "HP 6dB", "HP 12dB", "HP 24dB",
-            "BP", "BP+", "Notch", "Notch+", "AP", "AP+",
+            "BP", "BP+", "NOTCH", "NOTCH+", "AP", "AP+",
         )
         self.assertEqual(expected_labels, tuple(panel.OUTPUT_LABELS))
         self.assertEqual(
@@ -120,6 +120,27 @@ class VortexV2PanelTest(unittest.TestCase):
         self.assertEqual(
             [(x, y) for y in rows for x in columns],
             positions,
+        )
+
+    def test_control_spacing_expands_into_the_top_of_the_output_section(self):
+        panel = self.require_panel()
+        self.assertEqual((20.0, 32.0, 44.0), panel.CONTROL_ROW_YS)
+        self.assertEqual(
+            (4.0, 11.0, 52.96, 39.5),
+            panel.CONTROL_SECTION,
+        )
+        self.assertEqual(
+            (4.0, 54.0, 52.96, 70.5),
+            panel.OUTPUT_SECTION,
+        )
+        self.assertAlmostEqual(
+            panel.CONTROL_SECTION[1] + panel.CONTROL_SECTION[3] + 3.5,
+            panel.OUTPUT_SECTION[1],
+        )
+        self.assertEqual((67.0, 82.0, 97.0, 112.0), panel.OUTPUT_ROW_YS)
+        self.assertAlmostEqual(
+            panel.OUTPUT_SECTION[1] + panel.OUTPUT_SECTION[3],
+            panel.HEIGHT_MM - 4.0,
         )
 
     def test_all_components_clear_edges_and_each_other(self):
@@ -149,6 +170,27 @@ class VortexV2PanelTest(unittest.TestCase):
             with self.subTest(label=label):
                 self.assertGreaterEqual(
                     panel.LABEL_CLEARANCES[label]["clearance_mm"],
+                    MINIMUM_LABEL_CLEARANCE_MM,
+                )
+
+    def test_selective_one_point_typography_preserves_output_ring_clearance(self):
+        panel = self.require_panel()
+        self.assertAlmostEqual(2.25, panel.CONTROL_LABEL_FONT_SIZE)
+        self.assertAlmostEqual(2.25, panel.AUDIO_IN_LABEL_FONT_SIZE)
+        self.assertAlmostEqual(2.35, panel.OUTPUT_LABEL_FONT_SIZE)
+        self.assertAlmostEqual(5.6, panel.OUTPUT_LABEL_OFFSET)
+        self.assertAlmostEqual(6.6, panel.TITLE_FONT_SIZE)
+
+        output_outer_radius = (
+            panel.OUTPUT_BACKPLATE_RADIUS
+            + panel.OUTPUT_STROKE_WIDTH / 2.0
+        )
+        for label, _x, y in panel.OUTPUT_COMPONENTS:
+            baseline = y - panel.OUTPUT_LABEL_OFFSET
+            label_bottom = baseline + panel.OUTPUT_LABEL_FONT_SIZE * 0.25
+            with self.subTest(label=label):
+                self.assertGreaterEqual(
+                    y - output_outer_radius - label_bottom,
                     MINIMUM_LABEL_CLEARANCE_MM,
                 )
 
@@ -200,12 +242,12 @@ class VortexV2PanelTest(unittest.TestCase):
         panel = self.require_panel()
         svg = panel.generate_svg()
         labels = text_nodes(svg)
-        title = next(node for node in labels if node.text == "VortexV2")
+        title = next(node for node in labels if node.text == "Vortex V2")
         self.assertEqual("700", title.attrib.get("font-weight"))
         label_text = {node.text for node in labels if node.text}
         self.assertNotIn("GLOBAL CONTROLS", label_text)
         self.assertNotIn("FILTER OUTPUTS", label_text)
-        for expected in ("VortexV2", "CUTOFF", "RESO", "DRIVE", "IN",
+        for expected in ("Vortex V2", "CUTOFF", "RESO", "DRIVE", "IN",
                           *panel.OUTPUT_LABELS):
             with self.subTest(label=expected):
                 self.assertIn(expected, label_text)

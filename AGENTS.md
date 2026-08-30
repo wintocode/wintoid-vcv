@@ -1,4 +1,10 @@
-# Wintoid development notes
+# wintoid development notes
+
+## Brand spelling
+
+Always write the project and product name as `wintoid` in lowercase, including
+user-facing text and documentation. Internal identifiers and file names may
+retain their existing casing when required for compatibility.
 
 ## Installing changes into VCV Rack
 

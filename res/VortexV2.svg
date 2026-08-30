@@ -6,48 +6,48 @@
     <g id="oid-glyphs" fill="#ff4d00"><path data-glyph="o" data-glyph-index="82" data-bbox="3.5312,-35.8438,35.6562,0.9062" transform="translate(136 70)" fill="#ff4d00" d="M 19.5938 -30.9688 Q 14.9688 -30.9688 12.2812 -27.3594 Q 9.5938 -23.75 9.5938 -17.4688 Q 9.5938 -11.1875 12.2656 -7.5781 Q 14.9375 -3.9688 19.5938 -3.9688 Q 24.1875 -3.9688 26.875 -7.5938 Q 29.5625 -11.2188 29.5625 -17.4688 Q 29.5625 -23.6875 26.875 -27.3281 Q 24.1875 -30.9688 19.5938 -30.9688 Z M 19.5938 -35.8438 Q 27.0938 -35.8438 31.375 -30.9688 Q 35.6562 -26.0938 35.6562 -17.4688 Q 35.6562 -8.875 31.375 -3.9844 Q 27.0938 0.9062 19.5938 0.9062 Q 12.0625 0.9062 7.7969 -3.9844 Q 3.5312 -8.875 3.5312 -17.4688 Q 3.5312 -26.0938 7.7969 -30.9688 Q 12.0625 -35.8438 19.5938 -35.8438 Z" /><path data-glyph="i" data-glyph-index="76" data-bbox="6.0312,-48.625,11.7812,0" transform="translate(175 70)" fill="#ff4d00" d="M 6.0312 -35 L 11.7812 -35 L 11.7812 0 L 6.0312 0 Z M 6.0312 -48.625 L 11.7812 -48.625 L 11.7812 -41.3438 L 6.0312 -41.3438 Z" /><path data-glyph="d" data-glyph-index="71" data-bbox="3.5312,-48.625,34.8125,0.9062" transform="translate(193 70)" fill="#ff4d00" d="M 29.0625 -29.6875 L 29.0625 -48.625 L 34.8125 -48.625 L 34.8125 0 L 29.0625 0 L 29.0625 -5.25 Q 27.25 -2.125 24.4844 -0.6094 Q 21.7188 0.9062 17.8438 0.9062 Q 11.5 0.9062 7.5156 -4.1562 Q 3.5312 -9.2188 3.5312 -17.4688 Q 3.5312 -25.7188 7.5156 -30.7812 Q 11.5 -35.8438 17.8438 -35.8438 Q 21.7188 -35.8438 24.4844 -34.3281 Q 27.25 -32.8125 29.0625 -29.6875 Z M 9.4688 -17.4688 Q 9.4688 -11.125 12.0781 -7.5156 Q 14.6875 -3.9062 19.25 -3.9062 Q 23.8125 -3.9062 26.4375 -7.5156 Q 29.0625 -11.125 29.0625 -17.4688 Q 29.0625 -23.8125 26.4375 -27.4219 Q 23.8125 -31.0312 19.25 -31.0312 Q 14.6875 -31.0312 12.0781 -27.4219 Q 9.4688 -23.8125 9.4688 -17.4688 Z" /></g>
     <line id="oid-underline" x1="139.5312" y1="74" x2="227.8125" y2="74" stroke="#ff4d00" stroke-width="1.4" stroke-linecap="square" />
   </g>
-  <text x="6" y="7" text-anchor="start" font-family="DejaVu Sans" font-size="6.6" font-weight="700" fill="#242522">VortexV2</text>
-  <rect id="controls-section" x="4" y="11" width="52.96" height="37.5" fill="#e3e0d1" stroke="#556d80" stroke-width="0.35" rx="1.4" />
-  <rect id="outputs-section" x="4" y="52" width="52.96" height="72.5" fill="#e7e3d4" stroke="#556d80" stroke-width="0.35" rx="1.4" />
+  <text x="6" y="7" text-anchor="start" font-family="DejaVu Sans" font-size="6.6" font-weight="700" fill="#242522">Vortex V2</text>
+  <rect id="controls-section" x="4" y="11" width="52.96" height="39.5" fill="#e3e0d1" stroke="#556d80" stroke-width="0.35" rx="1.4" />
+  <rect id="outputs-section" x="4" y="54" width="52.96" height="70.5" fill="#e7e3d4" stroke="#556d80" stroke-width="0.35" rx="1.4" />
   <rect id="cutoff-cv-group" x="21.737" y="15.637" width="18.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
-  <rect id="resonance-cv-group" x="21.737" y="26.637" width="18.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
-  <rect id="drive-cv-group" x="21.737" y="37.637" width="18.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
-  <text x="13" y="14.9" text-anchor="middle" font-family="DejaVu Sans" font-size="1.9" font-weight="400" fill="#242522">CUTOFF</text>
+  <rect id="resonance-cv-group" x="21.737" y="27.637" width="18.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
+  <rect id="drive-cv-group" x="21.737" y="39.637" width="18.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
+  <text x="13" y="14.9" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">CUTOFF</text>
   <circle cx="13" cy="20" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="27" cy="20" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
   <circle cx="35.5" cy="20" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
-  <text x="13" y="25.9" text-anchor="middle" font-family="DejaVu Sans" font-size="1.9" font-weight="400" fill="#242522">RESO</text>
-  <circle cx="13" cy="31" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="27" cy="31" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="35.5" cy="31" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
-  <text x="13" y="36.9" text-anchor="middle" font-family="DejaVu Sans" font-size="1.9" font-weight="400" fill="#242522">DRIVE</text>
-  <circle cx="13" cy="42" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="27" cy="42" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="35.5" cy="42" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
-  <text x="48.96" y="36.9" text-anchor="middle" font-family="DejaVu Sans" font-size="1.9" font-weight="400" fill="#242522">IN</text>
-  <circle cx="48.96" cy="42" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <text x="12" y="59.5" text-anchor="middle" font-family="DejaVu Sans" font-size="2" font-weight="400" fill="#242522">LP 6dB</text>
-  <circle cx="12" cy="65" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="30.48" y="59.5" text-anchor="middle" font-family="DejaVu Sans" font-size="2" font-weight="400" fill="#242522">LP 12dB</text>
-  <circle cx="30.48" cy="65" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="48.96" y="59.5" text-anchor="middle" font-family="DejaVu Sans" font-size="2" font-weight="400" fill="#242522">LP 24dB</text>
-  <circle cx="48.96" cy="65" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="12" y="74.5" text-anchor="middle" font-family="DejaVu Sans" font-size="2" font-weight="400" fill="#242522">HP 6dB</text>
-  <circle cx="12" cy="80" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="30.48" y="74.5" text-anchor="middle" font-family="DejaVu Sans" font-size="2" font-weight="400" fill="#242522">HP 12dB</text>
-  <circle cx="30.48" cy="80" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="48.96" y="74.5" text-anchor="middle" font-family="DejaVu Sans" font-size="2" font-weight="400" fill="#242522">HP 24dB</text>
-  <circle cx="48.96" cy="80" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="12" y="89.5" text-anchor="middle" font-family="DejaVu Sans" font-size="2" font-weight="400" fill="#242522">BP</text>
-  <circle cx="12" cy="95" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="30.48" y="89.5" text-anchor="middle" font-family="DejaVu Sans" font-size="2" font-weight="400" fill="#242522">BP+</text>
-  <circle cx="30.48" cy="95" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="48.96" y="89.5" text-anchor="middle" font-family="DejaVu Sans" font-size="2" font-weight="400" fill="#242522">Notch</text>
-  <circle cx="48.96" cy="95" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="12" y="104.5" text-anchor="middle" font-family="DejaVu Sans" font-size="2" font-weight="400" fill="#242522">Notch+</text>
-  <circle cx="12" cy="110" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="30.48" y="104.5" text-anchor="middle" font-family="DejaVu Sans" font-size="2" font-weight="400" fill="#242522">AP</text>
-  <circle cx="30.48" cy="110" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <text x="48.96" y="104.5" text-anchor="middle" font-family="DejaVu Sans" font-size="2" font-weight="400" fill="#242522">AP+</text>
-  <circle cx="48.96" cy="110" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
+  <text x="13" y="26.9" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">RESO</text>
+  <circle cx="13" cy="32" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="27" cy="32" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="35.5" cy="32" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
+  <text x="13" y="38.9" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">DRIVE</text>
+  <circle cx="13" cy="44" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="27" cy="44" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="35.5" cy="44" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
+  <text x="48.96" y="38.9" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">IN</text>
+  <circle cx="48.96" cy="44" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <text x="12" y="61.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">LP 6dB</text>
+  <circle cx="12" cy="67" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
+  <text x="30.48" y="61.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">LP 12dB</text>
+  <circle cx="30.48" cy="67" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
+  <text x="48.96" y="61.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">LP 24dB</text>
+  <circle cx="48.96" cy="67" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
+  <text x="12" y="76.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">HP 6dB</text>
+  <circle cx="12" cy="82" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
+  <text x="30.48" y="76.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">HP 12dB</text>
+  <circle cx="30.48" cy="82" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
+  <text x="48.96" y="76.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">HP 24dB</text>
+  <circle cx="48.96" cy="82" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
+  <text x="12" y="91.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">BP</text>
+  <circle cx="12" cy="97" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
+  <text x="30.48" y="91.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">BP+</text>
+  <circle cx="30.48" cy="97" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
+  <text x="48.96" y="91.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">NOTCH</text>
+  <circle cx="48.96" cy="97" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
+  <text x="12" y="106.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">NOTCH+</text>
+  <circle cx="12" cy="112" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
+  <text x="30.48" y="106.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">AP</text>
+  <circle cx="30.48" cy="112" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
+  <text x="48.96" y="106.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">AP+</text>
+  <circle cx="48.96" cy="112" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
 </svg>

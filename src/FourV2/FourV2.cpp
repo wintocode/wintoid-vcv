@@ -179,7 +179,7 @@ struct FourV2 : Module {
         configParam(PM_DEPTH_PARAM, 0.f, 1.f, 1.f, "PM Depth", "%", 0.f, 100.f);
         configParam(PM_DEPTH_CV_ATTEN_PARAM, -1.f, 1.f, 0.f, "PM Depth CV Attenuverter", "%", 0.f, 100.f);
         configParam(MASTER_PARAM, 0.f, 1.f, 1.f, "Master", "%", 0.f, 100.f);
-        configParam(EXT_PM_ATTEN_PARAM, -1.f, 1.f, 0.f, "External PM Attenuverter", "%", 0.f, 100.f);
+        configParam(EXT_PM_ATTEN_PARAM, 0.f, 1.f, 0.f, "External PM Attenuator", "%", 0.f, 100.f);
 
         const int coarse_ids[] = {
             OP1_COARSE_PARAM, OP2_COARSE_PARAM,
@@ -398,8 +398,8 @@ struct FourV2 : Module {
             params[PM_DEPTH_PARAM].getValue(), 1.f);
         const float pm_cv_atten = bipolar_param(
             params[PM_DEPTH_CV_ATTEN_PARAM].getValue());
-        const float external_pm_atten = bipolar_param(
-            params[EXT_PM_ATTEN_PARAM].getValue());
+        const float external_pm_atten = unit_param(
+            params[EXT_PM_ATTEN_PARAM].getValue(), 0.f);
 
         for (int op = 0; op < 4; ++op) {
             common.opCoarse[op] = clamp(
@@ -540,7 +540,7 @@ struct FourV2PanelLabels : Widget {
 
         const Label labels[] = {
             {TITLE_X, TITLE_Y, TITLE_FONT_SIZE, leftBaseline,
-             36, 37, 34, "FourV2", true},
+             36, 37, 34, "Four V2", true},
             {ALGORITHM_KNOB_X, ALGORITHM_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
              36, 37, 34, "ALGO", false},
             {TUNE_KNOB_X, GLOBAL_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
@@ -619,7 +619,7 @@ struct FourV2PanelLabels : Widget {
         drawLabel(args, {VOCT_LABEL_X, SHARED_IO_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
                          36, 37, 34, "V/OCT", false});
         drawLabel(args, {MAIN_OUTPUT_LABEL_X, MAIN_OUTPUT_LABEL_Y,
-                         GLOBAL_LABEL_SIZE, centerBaseline,
+                         MAIN_OUTPUT_LABEL_SIZE, centerBaseline,
                          36, 37, 34, "MAIN OUT", false});
 
         Widget::drawLayer(args, layer);

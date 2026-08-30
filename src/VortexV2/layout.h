@@ -20,18 +20,18 @@ constexpr float MINIMUM_LABEL_CLEARANCE_MM = 0.25f;
 constexpr float CONTROL_SECTION_X = 4.0f;
 constexpr float CONTROL_SECTION_Y = 11.0f;
 constexpr float CONTROL_SECTION_WIDTH = 52.96f;
-constexpr float CONTROL_SECTION_HEIGHT = 37.5f;
+constexpr float CONTROL_SECTION_HEIGHT = 39.5f;
 constexpr float OUTPUT_SECTION_X = 4.0f;
-constexpr float OUTPUT_SECTION_Y = 52.0f;
+constexpr float OUTPUT_SECTION_Y = 54.0f;
 constexpr float OUTPUT_SECTION_WIDTH = 52.96f;
-constexpr float OUTPUT_SECTION_HEIGHT = 72.5f;
+constexpr float OUTPUT_SECTION_HEIGHT = 70.5f;
 
 // Horizontal control rows
 constexpr float CONTROL_KNOB_X = 13.0f;
 constexpr float CONTROL_CV_X = 27.0f;
 constexpr float CONTROL_ATTEN_X = 35.5f;
 constexpr float CONTROL_LABEL_OFFSET = 5.1f;
-constexpr float CONTROL_LABEL_FONT_SIZE = 1.9f;
+constexpr float CONTROL_LABEL_FONT_SIZE = 2.25f;
 constexpr float CUTOFF_KNOB_X = 13.0f;
 constexpr float CUTOFF_KNOB_Y = 20.0f;
 constexpr float CUTOFF_CV_X = 27.0f;
@@ -40,31 +40,31 @@ constexpr float CUTOFF_ATTEN_X = 35.5f;
 constexpr float CUTOFF_ATTEN_Y = 20.0f;
 constexpr float CUTOFF_LABEL_Y = 14.9f;
 constexpr float RESONANCE_KNOB_X = 13.0f;
-constexpr float RESONANCE_KNOB_Y = 31.0f;
+constexpr float RESONANCE_KNOB_Y = 32.0f;
 constexpr float RESONANCE_CV_X = 27.0f;
-constexpr float RESONANCE_CV_Y = 31.0f;
+constexpr float RESONANCE_CV_Y = 32.0f;
 constexpr float RESONANCE_ATTEN_X = 35.5f;
-constexpr float RESONANCE_ATTEN_Y = 31.0f;
-constexpr float RESONANCE_LABEL_Y = 25.9f;
+constexpr float RESONANCE_ATTEN_Y = 32.0f;
+constexpr float RESONANCE_LABEL_Y = 26.9f;
 constexpr float DRIVE_KNOB_X = 13.0f;
-constexpr float DRIVE_KNOB_Y = 42.0f;
+constexpr float DRIVE_KNOB_Y = 44.0f;
 constexpr float DRIVE_CV_X = 27.0f;
-constexpr float DRIVE_CV_Y = 42.0f;
+constexpr float DRIVE_CV_Y = 44.0f;
 constexpr float DRIVE_ATTEN_X = 35.5f;
-constexpr float DRIVE_ATTEN_Y = 42.0f;
-constexpr float DRIVE_LABEL_Y = 36.9f;
+constexpr float DRIVE_ATTEN_Y = 44.0f;
+constexpr float DRIVE_LABEL_Y = 38.9f;
 
 // Audio input
 constexpr float AUDIO_IN_X = 48.96f;
-constexpr float AUDIO_IN_Y = 42.0f;
-constexpr float AUDIO_IN_LABEL_Y = 36.9f;
-constexpr float AUDIO_IN_LABEL_FONT_SIZE = 1.9f;
+constexpr float AUDIO_IN_Y = 44.0f;
+constexpr float AUDIO_IN_LABEL_Y = 38.9f;
+constexpr float AUDIO_IN_LABEL_FONT_SIZE = 2.25f;
 
 // Output matrix
 constexpr float OUTPUT_COLUMN_XS[3] = {12.0f, 30.48f, 48.96f};
-constexpr float OUTPUT_ROW_YS[4] = {65.0f, 80.0f, 95.0f, 110.0f};
-constexpr float OUTPUT_LABEL_OFFSET = 5.5f;
-constexpr float OUTPUT_LABEL_FONT_SIZE = 2.0f;
+constexpr float OUTPUT_ROW_YS[4] = {67.0f, 82.0f, 97.0f, 112.0f};
+constexpr float OUTPUT_LABEL_OFFSET = 5.6f;
+constexpr float OUTPUT_LABEL_FONT_SIZE = 2.35f;
 
 // CV/attenuverter pair boxes
 constexpr float PAIR_GROUP_RADIUS = 1.0f;
@@ -74,11 +74,11 @@ constexpr float CUTOFF_CV_GROUP_Y = 15.637f;
 constexpr float CUTOFF_CV_GROUP_WIDTH = 18.853f;
 constexpr float CUTOFF_CV_GROUP_HEIGHT = 9.126f;
 constexpr float RESONANCE_CV_GROUP_X = 21.737f;
-constexpr float RESONANCE_CV_GROUP_Y = 26.637f;
+constexpr float RESONANCE_CV_GROUP_Y = 27.637f;
 constexpr float RESONANCE_CV_GROUP_WIDTH = 18.853f;
 constexpr float RESONANCE_CV_GROUP_HEIGHT = 9.126f;
 constexpr float DRIVE_CV_GROUP_X = 21.737f;
-constexpr float DRIVE_CV_GROUP_Y = 37.637f;
+constexpr float DRIVE_CV_GROUP_Y = 39.637f;
 constexpr float DRIVE_CV_GROUP_WIDTH = 18.853f;
 constexpr float DRIVE_CV_GROUP_HEIGHT = 9.126f;
 

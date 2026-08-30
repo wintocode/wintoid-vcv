@@ -190,9 +190,9 @@ class PanelLabelTest(unittest.TestCase):
 
     def test_vortex_v2_emits_and_consumes_label_geometry_constants(self):
         self.assertEqual(7.0, self.vortex_v2.TITLE_Y)
-        self.assertEqual((20.0, 31.0, 42.0),
+        self.assertEqual((20.0, 32.0, 44.0),
                          self.vortex_v2.CONTROL_ROW_YS)
-        self.assertEqual(5.5, self.vortex_v2.OUTPUT_LABEL_OFFSET)
+        self.assertEqual(5.6, self.vortex_v2.OUTPUT_LABEL_OFFSET)
 
         header = self.vortex_v2.generate_coords_header()
         for contract in (
@@ -203,10 +203,10 @@ class PanelLabelTest(unittest.TestCase):
             "constexpr float CUTOFF_CV_X = 27.0f;",
             "constexpr float CUTOFF_ATTEN_X = 35.5f;",
             "constexpr float CUTOFF_KNOB_Y = 20.0f;",
-            "constexpr float RESONANCE_KNOB_Y = 31.0f;",
-            "constexpr float DRIVE_KNOB_Y = 42.0f;",
+            "constexpr float RESONANCE_KNOB_Y = 32.0f;",
+            "constexpr float DRIVE_KNOB_Y = 44.0f;",
             "constexpr float OUTPUT_COLUMN_XS[3] = {12.0f, 30.48f, 48.96f};",
-            "constexpr float OUTPUT_LABEL_OFFSET = 5.5f;",
+            "constexpr float OUTPUT_LABEL_OFFSET = 5.6f;",
         ):
             with self.subTest(contract=contract):
                 self.assertIn(contract, header)

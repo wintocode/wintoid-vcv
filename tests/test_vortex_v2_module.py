@@ -32,7 +32,7 @@ OUTPUT_IDS = [
 OUTPUT_LABELS = [
     "LP 6dB", "LP 12dB", "LP 24dB",
     "HP 6dB", "HP 12dB", "HP 24dB",
-    "BP", "BP+", "Notch", "Notch+", "AP", "AP+",
+    "BP", "BP+", "NOTCH", "NOTCH+", "AP", "AP+",
 ]
 
 
@@ -184,7 +184,7 @@ class VortexV2ModuleContractTest(unittest.TestCase):
         for marker in (
             "bool bold",
             "label.bold",
-            '"VortexV2", true',
+            '"Vortex V2", true',
             "const float textX = mm2px(label.x);",
             "draw(textX - weightOffset)",
             "draw(textX + weightOffset)",
@@ -206,7 +206,7 @@ class VortexV2ModuleContractTest(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, source)
         for label in (
-            "VortexV2",
+            "Vortex V2",
             "CUTOFF",
             "RESO",
             "DRIVE",

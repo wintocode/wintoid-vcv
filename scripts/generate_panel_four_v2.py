@@ -132,11 +132,12 @@ GLOBAL_CONTROLS = {
     "main_output": (153.0, 17.5),
     "over_light": (153.0, 29.0),
 }
-ALGORITHM_LABEL_Y = 23.7
-GLOBAL_LABEL_Y = 12.4
-GLOBAL_LABEL_SIZE = 1.90
+ALGORITHM_LABEL_Y = 24.1
+GLOBAL_LABEL_Y = 12.6
+GLOBAL_LABEL_SIZE = 2.25
 EXTERNAL_PM_LABEL_Y = 23.8
 MAIN_OUTPUT_LABEL_Y = 12.3
+MAIN_OUTPUT_LABEL_SIZE = 1.90
 
 
 # Four equal operator fields.  Frequency controls occupy two compact rows;
@@ -162,6 +163,18 @@ OPERATOR_CENTRES_X = tuple(
     rect[0] + rect[2] / 2.0 for rect in OPERATOR_SECTION_RECTS
 )
 
+FREQUENCY_DISPLAY_X_OFFSET = 15.0
+FREQUENCY_DISPLAY_TOP = 39.0
+FREQUENCY_DISPLAY_HEIGHT = 5.5
+FREQUENCY_DISPLAY_WIDTH = OPERATOR_SECTION_WIDTH - 19.0
+FREQUENCY_DISPLAY_FONT_SIZE = 3.2
+STATE_SWITCH_RIGHT_EDGE_OFFSET = (
+    FREQUENCY_DISPLAY_X_OFFSET
+    + FREQUENCY_DISPLAY_WIDTH
+    - STATE_SWITCH_WIDTH / 2.0
+    - OPERATOR_SECTION_WIDTH / 2.0
+)
+
 OPERATOR_ROW_YS = {
     "coarse_mode": 52.0,
     "fine_fold_type": 64.5,
@@ -181,13 +194,13 @@ OPERATOR_LABEL_YS = {
 OPERATOR_HEADING_X_OFFSET = 4.0
 OPERATOR_HEADING_Y = 43.2
 OPERATOR_HEADING_SIZE = 5.00
-OPERATOR_LABEL_SIZE = 2.00
-OPERATOR_MODE_LABEL_SIZE = 1.90
+OPERATOR_LABEL_SIZE = 2.35
+OPERATOR_MODE_LABEL_SIZE = 2.25
 OPERATOR_X_OFFSETS = {
     "coarse": -10.5,
-    "freq_mode": 8.75,
+    "freq_mode": STATE_SWITCH_RIGHT_EDGE_OFFSET,
     "fine": -10.5,
-    "fold_type": 8.75,
+    "fold_type": STATE_SWITCH_RIGHT_EDGE_OFFSET,
     "output": -10.5,
     "warp": -10.5,
     "fold": -10.5,
@@ -204,13 +217,9 @@ OPERATOR_PARAMETER_X_OFFSETS = {
     "cv_input": 0.0,
     "cv_atten": 10.5,
 }
-FREQUENCY_DISPLAY_TOP = 39.0
-FREQUENCY_DISPLAY_HEIGHT = 5.5
-FREQUENCY_DISPLAY_WIDTH = OPERATOR_SECTION_WIDTH - 19.0
-FREQUENCY_DISPLAY_FONT_SIZE = 3.2
 FREQUENCY_DISPLAY_RECTS = tuple(
     (
-        rect[0] + 15.0,
+        rect[0] + FREQUENCY_DISPLAY_X_OFFSET,
         FREQUENCY_DISPLAY_TOP,
         FREQUENCY_DISPLAY_WIDTH,
         FREQUENCY_DISPLAY_HEIGHT,
@@ -220,7 +229,7 @@ FREQUENCY_DISPLAY_RECTS = tuple(
 
 # Outline-only enclosures group the left-hand frequency controls.  MODE and
 # FOLD TYPE deliberately remain outside these boxes as the two state selectors.
-FREQUENCY_CONTROL_GROUP_PADDING_X = 1.0
+FREQUENCY_CONTROL_GROUP_PADDING_X = 1.25
 FREQUENCY_CONTROL_GROUP_PADDING_TOP = 1.0
 FREQUENCY_CONTROL_GROUP_PADDING_BOTTOM = 1.0
 FREQUENCY_CONTROL_GROUP_RADIUS = 1.0
@@ -469,7 +478,7 @@ def generate_state_switch_svg(label: str) -> str:
             STATE_SWITCH_WIDTH - inset * 2.0,
             STATE_SWITCH_HEIGHT - inset * 2.0,
             DISPLAY_CHARCOAL,
-            CONTROL_ACCENT,
+            CONTROL_STROKE,
             radius=0.9,
             stroke_width=0.50,
         ),
@@ -557,7 +566,7 @@ def _append_component(lines: list[str], name: str, x: float, y: float) -> None:
                 STATE_SWITCH_WIDTH,
                 STATE_SWITCH_HEIGHT,
                 CONTROL_FILL,
-                CONTROL_ACCENT,
+                CONTROL_STROKE,
                 radius=0.9,
                 stroke_width=0.50,
             )
@@ -565,8 +574,7 @@ def _append_component(lines: list[str], name: str, x: float, y: float) -> None:
     elif kind == "light":
         lines.append(_circle(x, y, LIGHT_RADIUS, "#a93636", LEGEND_CHARCOAL, 0.25))
     else:
-        stroke = CONTROL_ACCENT if "atten" in name else CONTROL_STROKE
-        lines.append(_circle(x, y, SMALL_KNOB_RADIUS, CONTROL_FILL, stroke))
+        lines.append(_circle(x, y, SMALL_KNOB_RADIUS, CONTROL_FILL, CONTROL_STROKE))
 
 
 def _operator_component_coordinates() -> tuple[tuple[str, float, float], ...]:
@@ -812,7 +820,7 @@ def generate_svg() -> str:
         _text(
             TITLE_X,
             TITLE_Y,
-            "FourV2",
+            "Four V2",
             size=TITLE_FONT_SIZE,
             fill=LEGEND_CHARCOAL,
             anchor="start",
@@ -1007,7 +1015,7 @@ def generate_svg() -> str:
             MAIN_OUTPUT_LABEL_X,
             MAIN_OUTPUT_LABEL_Y,
             "MAIN OUT",
-            size=GLOBAL_LABEL_SIZE,
+            size=MAIN_OUTPUT_LABEL_SIZE,
             anchor="middle",
             text_length=9.5,
         )
@@ -1111,10 +1119,12 @@ def generate_coords_header() -> str:
             _header_float("OPERATOR_FEEDBACK_LABEL_Y", OPERATOR_LABEL_YS["feedback"]),
             _header_float("OPERATOR_LABEL_SIZE", OPERATOR_LABEL_SIZE),
             _header_float("OPERATOR_MODE_LABEL_SIZE", OPERATOR_MODE_LABEL_SIZE),
+            _header_float("FREQUENCY_DISPLAY_X_OFFSET", FREQUENCY_DISPLAY_X_OFFSET),
             _header_float("FREQUENCY_DISPLAY_TOP", FREQUENCY_DISPLAY_TOP),
             _header_float("FREQUENCY_DISPLAY_WIDTH", FREQUENCY_DISPLAY_WIDTH),
             _header_float("FREQUENCY_DISPLAY_HEIGHT", FREQUENCY_DISPLAY_HEIGHT),
             _header_float("FREQUENCY_DISPLAY_FONT_SIZE", FREQUENCY_DISPLAY_FONT_SIZE),
+            _header_float("STATE_SWITCH_RIGHT_EDGE_OFFSET", STATE_SWITCH_RIGHT_EDGE_OFFSET),
             _header_float("FREQUENCY_CONTROL_GROUP_RADIUS", FREQUENCY_CONTROL_GROUP_RADIUS),
             _header_float("FREQUENCY_CONTROL_GROUP_STROKE_WIDTH", FREQUENCY_CONTROL_GROUP_STROKE_WIDTH),
             "constexpr float OPERATOR_FREQUENCY_Y = OPERATOR_COARSE_MODE_Y;",
@@ -1221,6 +1231,7 @@ def generate_coords_header() -> str:
             _header_float("MAIN_OUTPUT_LABEL_X", MAIN_OUTPUT_LABEL_X),
             _header_float("SHARED_IO_LABEL_Y", SHARED_IO_LABEL_Y),
             _header_float("MAIN_OUTPUT_LABEL_Y", MAIN_OUTPUT_LABEL_Y),
+            _header_float("MAIN_OUTPUT_LABEL_SIZE", MAIN_OUTPUT_LABEL_SIZE),
             _header_float("RACK_SMALL_KNOB_RADIUS", RACK_SMALL_KNOB_RADIUS, 6),
             _header_float("RACK_PORT_RADIUS", RACK_PORT_RADIUS, 6),
             _header_float("OUTPUT_BACKPLATE_RADIUS", OUTPUT_BACKPLATE_RADIUS, 6),
