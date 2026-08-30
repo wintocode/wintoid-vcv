@@ -524,7 +524,6 @@ struct FourV2PanelLabels : Widget {
         using namespace four_v2_layout;
         const int leftBaseline = NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE;
         const int centerBaseline = NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE;
-        const int rightBaseline = NVG_ALIGN_RIGHT | NVG_ALIGN_BASELINE;
 
         const Label labels[] = {
             {TITLE_X, TITLE_Y, TITLE_FONT_SIZE, leftBaseline,
@@ -553,75 +552,68 @@ struct FourV2PanelLabels : Widget {
             OP1_CENTER_X, OP2_CENTER_X, OP3_CENTER_X, OP4_CENTER_X
         };
         const char* operatorHeadings[] = {"OP1", "OP2", "OP3", "OP4"};
-        const char* firstRow[] = {"COARSE", "MODE", "FINE"};
-        const char* secondRow[] = {"OUTPUT", "WARP"};
-        const char* thirdRow[] = {"FOLD", "TYPE"};
+        const float coarseX[] = {
+            OP1_COARSE_X, OP2_COARSE_X, OP3_COARSE_X, OP4_COARSE_X
+        };
+        const float modeX[] = {
+            OP1_FREQ_MODE_X, OP2_FREQ_MODE_X,
+            OP3_FREQ_MODE_X, OP4_FREQ_MODE_X
+        };
+        const float fineX[] = {
+            OP1_FINE_X, OP2_FINE_X, OP3_FINE_X, OP4_FINE_X
+        };
+        const float foldTypeX[] = {
+            OP1_FOLD_TYPE_X, OP2_FOLD_TYPE_X,
+            OP3_FOLD_TYPE_X, OP4_FOLD_TYPE_X
+        };
+        const float parameterX[4][4] = {
+            {OP1_OUTPUT_X, OP2_OUTPUT_X, OP3_OUTPUT_X, OP4_OUTPUT_X},
+            {OP1_WARP_X, OP2_WARP_X, OP3_WARP_X, OP4_WARP_X},
+            {OP1_FOLD_X, OP2_FOLD_X, OP3_FOLD_X, OP4_FOLD_X},
+            {OP1_FEEDBACK_X, OP2_FEEDBACK_X, OP3_FEEDBACK_X, OP4_FEEDBACK_X}
+        };
+        const float parameterLabelY[] = {
+            OPERATOR_OUTPUT_LABEL_Y, OPERATOR_WARP_LABEL_Y,
+            OPERATOR_FOLD_LABEL_Y, OPERATOR_FEEDBACK_LABEL_Y
+        };
+        const char* parameterLabels[] = {
+            "OUTPUT", "WARP", "FOLD", "FEEDBACK"
+        };
+        const float cvX[] = {
+            OP1_OUTPUT_CV_INPUT_X, OP2_OUTPUT_CV_INPUT_X,
+            OP3_OUTPUT_CV_INPUT_X, OP4_OUTPUT_CV_INPUT_X
+        };
+        const float attenX[] = {
+            OP1_OUTPUT_CV_ATTEN_X, OP2_OUTPUT_CV_ATTEN_X,
+            OP3_OUTPUT_CV_ATTEN_X, OP4_OUTPUT_CV_ATTEN_X
+        };
         for (int op = 0; op < 4; ++op) {
             drawLabel(args, {operatorCenters[op], OPERATOR_HEADING_Y, 2.4f,
                               centerBaseline, 36, 37, 34,
                               operatorHeadings[op]});
-            drawLabel(args, {operatorCenters[op] - 10.5f,
-                              OPERATOR_FREQUENCY_LABEL_Y,
+            drawLabel(args, {coarseX[op], OPERATOR_COARSE_MODE_LABEL_Y,
                               OPERATOR_LABEL_SIZE,
-                              centerBaseline, 36, 37, 34, firstRow[0]});
-            drawLabel(args, {operatorCenters[op],
-                              OPERATOR_FREQUENCY_LABEL_Y,
+                              centerBaseline, 36, 37, 34, "COARSE"});
+            drawLabel(args, {modeX[op], OPERATOR_COARSE_MODE_LABEL_Y,
                               OPERATOR_MODE_LABEL_SIZE,
-                              centerBaseline, 36, 37, 34, firstRow[1]});
-            drawLabel(args, {operatorCenters[op] + 10.5f,
-                              OPERATOR_FREQUENCY_LABEL_Y,
+                              centerBaseline, 36, 37, 34, "MODE"});
+            drawLabel(args, {fineX[op], OPERATOR_FINE_FOLD_TYPE_LABEL_Y,
                               OPERATOR_LABEL_SIZE,
-                              centerBaseline, 36, 37, 34, firstRow[2]});
-            drawLabel(args, {operatorCenters[op] - 9.0f,
-                              OPERATOR_OUTPUT_WARP_LABEL_Y,
+                              centerBaseline, 36, 37, 34, "FINE"});
+            drawLabel(args, {foldTypeX[op], OPERATOR_FINE_FOLD_TYPE_LABEL_Y,
                               OPERATOR_LABEL_SIZE,
-                              centerBaseline, 36, 37, 34, secondRow[0]});
-            drawLabel(args, {operatorCenters[op] + 9.0f,
-                              OPERATOR_OUTPUT_WARP_LABEL_Y,
-                              OPERATOR_LABEL_SIZE,
-                              centerBaseline, 36, 37, 34, secondRow[1]});
-            drawLabel(args, {operatorCenters[op] - 9.0f,
-                              OPERATOR_FOLD_LABEL_Y,
-                              OPERATOR_LABEL_SIZE,
-                              centerBaseline, 36, 37, 34, thirdRow[0]});
-            drawLabel(args, {operatorCenters[op] + 9.0f,
-                              OPERATOR_FOLD_LABEL_Y,
-                              OPERATOR_LABEL_SIZE,
-                              centerBaseline, 36, 37, 34, thirdRow[1]});
-            drawLabel(args, {operatorCenters[op],
-                              OPERATOR_FEEDBACK_LABEL_Y,
-                              OPERATOR_LABEL_SIZE,
-                              centerBaseline, 36, 37, 34, "FEEDBACK"});
-        }
-
-        const char* patchbayRows[] = {"Output", "Warp", "Fold", "Feedback"};
-        const float patchbayY[] = {
-            PATCHBAY_OUTPUT_Y, PATCHBAY_WARP_Y,
-            PATCHBAY_FOLD_Y, PATCHBAY_FEEDBACK_Y
-        };
-        const float patchbayLabelX[] = {
-            OP1_PATCHBAY_LABEL_RIGHT_X, OP2_PATCHBAY_LABEL_RIGHT_X,
-            OP3_PATCHBAY_LABEL_RIGHT_X, OP4_PATCHBAY_LABEL_RIGHT_X
-        };
-        const float patchbayHeadingX[] = {
-            OP1_PATCHBAY_SECTION_X + PATCHBAY_HEADING_OFFSET_X,
-            OP2_PATCHBAY_SECTION_X + PATCHBAY_HEADING_OFFSET_X,
-            OP3_PATCHBAY_SECTION_X + PATCHBAY_HEADING_OFFSET_X,
-            OP4_PATCHBAY_SECTION_X + PATCHBAY_HEADING_OFFSET_X
-        };
-        for (int op = 0; op < 4; ++op) {
-            drawLabel(args, {patchbayHeadingX[op], PATCHBAY_HEADING_Y,
-                              PATCHBAY_HEADING_SIZE, leftBaseline,
-                              85, 109, 128, "CV"});
+                              centerBaseline, 36, 37, 34, "TYPE"});
+            drawLabel(args, {cvX[op], OPERATOR_PARAMETER_HEADER_Y,
+                              OPERATOR_PARAMETER_HEADER_SIZE,
+                              centerBaseline, 36, 37, 34, "CV"});
+            drawLabel(args, {attenX[op], OPERATOR_PARAMETER_HEADER_Y,
+                              OPERATOR_PARAMETER_HEADER_SIZE,
+                              centerBaseline, 36, 37, 34, "ATTEN"});
             for (int row = 0; row < 4; ++row) {
-                const bool output = row == 0;
-                drawLabel(args, {patchbayLabelX[op],
-                                  patchbayY[row] + PATCHBAY_LABEL_Y_OFFSET,
-                                  PATCHBAY_LABEL_SIZE, rightBaseline,
-                                  output ? 183 : 36,
-                                  output ? 105 : 37,
-                                  output ? 60 : 34,
-                                  patchbayRows[row]});
+                drawLabel(args, {parameterX[row][op], parameterLabelY[row],
+                                  OPERATOR_LABEL_SIZE,
+                                  centerBaseline, 36, 37, 34,
+                                  parameterLabels[row]});
             }
         }
 
@@ -961,34 +953,36 @@ struct FourV2Widget : ModuleWidget {
             OP1_FEEDBACK_X, OP2_FEEDBACK_X,
             OP3_FEEDBACK_X, OP4_FEEDBACK_X
         };
-        const float operator_frequency_y = OPERATOR_FREQUENCY_Y;
-        const float operator_output_warp_y = OPERATOR_OUTPUT_WARP_Y;
+        const float operator_coarse_mode_y = OPERATOR_COARSE_MODE_Y;
+        const float operator_fine_fold_type_y = OPERATOR_FINE_FOLD_TYPE_Y;
+        const float operator_output_y = OPERATOR_OUTPUT_Y;
+        const float operator_warp_y = OPERATOR_WARP_Y;
         const float operator_fold_y = OPERATOR_FOLD_Y;
         const float operator_feedback_y = OPERATOR_FEEDBACK_Y;
 
         for (int op = 0; op < 4; ++op) {
             addParam(createParamCentered<RoundSmallBlackKnob>(
-                mm2px(Vec(coarse_x[op], operator_frequency_y)),
+                mm2px(Vec(coarse_x[op], operator_coarse_mode_y)),
                 module, coarse_ids[op]));
             addParam(createParamCentered<FourV2FrequencyModeSwitch>(
-                mm2px(Vec(freq_mode_x[op], operator_frequency_y)),
+                mm2px(Vec(freq_mode_x[op], operator_coarse_mode_y)),
                 module, freq_mode_ids[op]));
             addParam(createParamCentered<Trimpot>(
-                mm2px(Vec(fine_x[op], operator_frequency_y)),
+                mm2px(Vec(fine_x[op], operator_fine_fold_type_y)),
                 module, fine_ids[op]));
+            addParam(createParamCentered<FourV2FoldTypeSwitch>(
+                mm2px(Vec(fold_type_x[op], operator_fine_fold_type_y)),
+                module, fold_type_ids[op]));
 
             addParam(createParamCentered<RoundSmallBlackKnob>(
-                mm2px(Vec(output_x[op], operator_output_warp_y)),
+                mm2px(Vec(output_x[op], operator_output_y)),
                 module, output_ids[op]));
             addParam(createParamCentered<RoundSmallBlackKnob>(
-                mm2px(Vec(warp_x[op], operator_output_warp_y)),
+                mm2px(Vec(warp_x[op], operator_warp_y)),
                 module, warp_ids[op]));
             addParam(createParamCentered<RoundSmallBlackKnob>(
                 mm2px(Vec(fold_x[op], operator_fold_y)),
                 module, fold_ids[op]));
-            addParam(createParamCentered<FourV2FoldTypeSwitch>(
-                mm2px(Vec(fold_type_x[op], operator_fold_y)),
-                module, fold_type_ids[op]));
             addParam(createParamCentered<RoundSmallBlackKnob>(
                 mm2px(Vec(feedback_x[op], operator_feedback_y)),
                 module, feedback_ids[op]));

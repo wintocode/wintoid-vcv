@@ -133,11 +133,10 @@ EXTERNAL_PM_LABEL_Y = 35.1
 MAIN_OUTPUT_LABEL_Y = 24.5
 
 
-# Four equal operator fields.  The inner controls use horizontal sub-columns
-# so the frequency row can contain Coarse, Frequency Mode, and Fine without
-# sacrificing the four shared parameter rows below it.
+# Four equal operator fields.  Frequency controls occupy two compact rows;
+# the four sound controls then share rows with their CV input and attenuverter.
 OPERATOR_SECTION_TOP = 37.5
-OPERATOR_SECTION_HEIGHT = 50.3
+OPERATOR_SECTION_HEIGHT = 87.0
 OPERATOR_SECTION_LEFT = 4.0
 OPERATOR_SECTION_GAP = 1.5
 OPERATOR_SECTION_WIDTH = (
@@ -158,30 +157,41 @@ OPERATOR_CENTRES_X = tuple(
 )
 
 OPERATOR_ROW_YS = {
-    "frequency": 50.0,
-    "output_warp": 60.5,
-    "fold": 71.0,
-    "feedback": 81.5,
+    "coarse_mode": 52.0,
+    "fine_fold_type": 64.5,
+    "output": 78.0,
+    "warp": 91.5,
+    "fold": 105.0,
+    "feedback": 118.5,
 }
 OPERATOR_LABEL_YS = {
-    "frequency": 55.85,
-    "output_warp": 66.35,
-    "fold": 76.85,
-    "feedback": 87.35,
+    "coarse_mode": 57.85,
+    "fine_fold_type": 70.35,
+    "output": 73.0,
+    "warp": 86.5,
+    "fold": 100.0,
+    "feedback": 113.5,
 }
 OPERATOR_HEADING_Y = 40.8
 OPERATOR_LABEL_SIZE = 1.60
 OPERATOR_MODE_LABEL_SIZE = 1.45
 OPERATOR_X_OFFSETS = {
-    "coarse": -10.5,
-    "freq_mode": 0.0,
-    "fine": 10.5,
-    "output": -9.0,
-    "warp": 9.0,
-    "fold": -9.0,
-    "fold_type": 9.0,
-    "feedback": 0.0,
+    "coarse": -8.75,
+    "freq_mode": 8.75,
+    "fine": -8.75,
+    "fold_type": 8.75,
+    "output": -10.5,
+    "warp": -10.5,
+    "fold": -10.5,
+    "feedback": -10.5,
 }
+OPERATOR_PARAMETER_X_OFFSETS = {
+    "knob": -10.5,
+    "cv_input": 0.0,
+    "cv_atten": 10.5,
+}
+OPERATOR_PARAMETER_HEADER_Y = 73.0
+OPERATOR_PARAMETER_HEADER_SIZE = 1.35
 FREQUENCY_DISPLAY_HEIGHT = 4.0
 FREQUENCY_DISPLAY_WIDTH = OPERATOR_SECTION_WIDTH - 8.0
 FREQUENCY_DISPLAY_RECTS = tuple(
@@ -195,58 +205,26 @@ FREQUENCY_DISPLAY_RECTS = tuple(
 )
 
 
-# The patchbay repeats the operator grouping below the knob fields.  The
-# logical column centre remains aligned to the operator above, while the
-# labels occupy the left gutter and the jack/attenuverter pair stays at the
-# same left/right relationship inside each field.
-PATCHBAY_SECTION_TOP = 89.0
-PATCHBAY_SECTION_HEIGHT = 34.5
-PATCHBAY_SECTION = (
-    OPERATOR_SECTION_LEFT,
-    PATCHBAY_SECTION_TOP,
-    WIDTH_MM - 2.0 * OPERATOR_SECTION_LEFT,
-    PATCHBAY_SECTION_HEIGHT,
-)
-PATCHBAY_SECTION_RECTS = tuple(
-    (x, PATCHBAY_SECTION_TOP, width, PATCHBAY_SECTION_HEIGHT)
-    for x, _y, width, _height in OPERATOR_SECTION_RECTS
-)
+# CV controls remain a logical four-row matrix for the generated coordinates,
+# but are now integrated into each operator field rather than framed below it.
 PATCHBAY_COLUMN_XS = OPERATOR_CENTRES_X
 PATCHBAY_ROWS = ("Output", "Warp", "Fold", "Feedback")
-PATCHBAY_ROW_YS = (94.5, 102.7, 110.9, 119.1)
-PATCHBAY_WIDGET_OFFSET = 4.6
-PATCHBAY_HEADING_Y = 90.7
-PATCHBAY_HEADING_OFFSET_X = 2.0
-PATCHBAY_HEADING_SIZE = 1.45
-PATCHBAY_LABEL_Y_OFFSET = 0.8
-PATCHBAY_LABEL_SIZE = 1.8
+PATCHBAY_ROW_YS = tuple(OPERATOR_ROW_YS[row.lower()] for row in PATCHBAY_ROWS)
+PATCHBAY_WIDGET_OFFSET = OPERATOR_PARAMETER_X_OFFSETS["cv_atten"]
+PATCHBAY_SECTION = (
+    OPERATOR_SECTION_LEFT,
+    OPERATOR_SECTION_TOP,
+    WIDTH_MM - 2.0 * OPERATOR_SECTION_LEFT,
+    OPERATOR_SECTION_HEIGHT,
+)
+PATCHBAY_SECTION_TOP = OPERATOR_SECTION_TOP
+PATCHBAY_SECTION_HEIGHT = OPERATOR_SECTION_HEIGHT
+# Kept as an aligned logical alias for callers that used the old generated
+# geometry contract; no separate patchbay rectangles are emitted anymore.
+PATCHBAY_SECTION_RECTS = OPERATOR_SECTION_RECTS
 PATCHBAY_CELLS = {
     row: tuple((x, y) for x in PATCHBAY_COLUMN_XS)
     for row, y in zip(PATCHBAY_ROWS, PATCHBAY_ROW_YS)
-}
-# Keep the row labels in a real left gutter.  The right edge is derived from
-# the first port's Rack envelope, so moving the aligned operator columns or
-# changing the physical port measurement cannot silently reintroduce overlap.
-PATCHBAY_LABEL_RIGHT_OFFSET = (
-    PATCHBAY_COLUMN_XS[0]
-    - PATCHBAY_WIDGET_OFFSET
-    - RACK_PORT_RADIUS
-    # Leave a quantization margin: the generated SVG/header round positions
-    # to three decimals, so the emitted geometry must remain over the public
-    # 0.25 mm minimum rather than merely touching it before formatting.
-    - (MINIMUM_LABEL_CLEARANCE_MM + 0.05)
-    - OPERATOR_SECTION_LEFT
-)
-PATCHBAY_LABEL_RIGHT_XS = tuple(
-    rect[0] + PATCHBAY_LABEL_RIGHT_OFFSET
-    for rect in OPERATOR_SECTION_RECTS
-)
-PATCHBAY_LABEL_RIGHT_X = PATCHBAY_LABEL_RIGHT_XS[0]
-PATCHBAY_LABEL_WIDTHS = {
-    "Output": 6.5,
-    "Warp": 4.8,
-    "Fold": 4.5,
-    "Feedback": 9.25,
 }
 
 
@@ -490,13 +468,13 @@ def _operator_component_coordinates() -> tuple[tuple[str, float, float], ...]:
     for index, centre_x in enumerate(OPERATOR_CENTRES_X, start=1):
         components.extend(
             (
-                (f"op{index}_coarse", centre_x + OPERATOR_X_OFFSETS["coarse"], OPERATOR_ROW_YS["frequency"]),
-                (f"op{index}_freq_mode", centre_x + OPERATOR_X_OFFSETS["freq_mode"], OPERATOR_ROW_YS["frequency"]),
-                (f"op{index}_fine", centre_x + OPERATOR_X_OFFSETS["fine"], OPERATOR_ROW_YS["frequency"]),
-                (f"op{index}_output", centre_x + OPERATOR_X_OFFSETS["output"], OPERATOR_ROW_YS["output_warp"]),
-                (f"op{index}_warp", centre_x + OPERATOR_X_OFFSETS["warp"], OPERATOR_ROW_YS["output_warp"]),
+                (f"op{index}_coarse", centre_x + OPERATOR_X_OFFSETS["coarse"], OPERATOR_ROW_YS["coarse_mode"]),
+                (f"op{index}_freq_mode", centre_x + OPERATOR_X_OFFSETS["freq_mode"], OPERATOR_ROW_YS["coarse_mode"]),
+                (f"op{index}_fine", centre_x + OPERATOR_X_OFFSETS["fine"], OPERATOR_ROW_YS["fine_fold_type"]),
+                (f"op{index}_fold_type", centre_x + OPERATOR_X_OFFSETS["fold_type"], OPERATOR_ROW_YS["fine_fold_type"]),
+                (f"op{index}_output", centre_x + OPERATOR_X_OFFSETS["output"], OPERATOR_ROW_YS["output"]),
+                (f"op{index}_warp", centre_x + OPERATOR_X_OFFSETS["warp"], OPERATOR_ROW_YS["warp"]),
                 (f"op{index}_fold", centre_x + OPERATOR_X_OFFSETS["fold"], OPERATOR_ROW_YS["fold"]),
-                (f"op{index}_fold_type", centre_x + OPERATOR_X_OFFSETS["fold_type"], OPERATOR_ROW_YS["fold"]),
                 (f"op{index}_feedback", centre_x + OPERATOR_X_OFFSETS["feedback"], OPERATOR_ROW_YS["feedback"]),
             )
         )
@@ -512,12 +490,12 @@ def _patchbay_component_coordinates() -> tuple[tuple[str, float, float], ...]:
                 (
                     (
                         f"op{index}_{slug}_cv_input",
-                        centre_x - PATCHBAY_WIDGET_OFFSET,
+                        centre_x + OPERATOR_PARAMETER_X_OFFSETS["cv_input"],
                         y,
                     ),
                     (
                         f"op{index}_{slug}_cv_atten",
-                        centre_x + PATCHBAY_WIDGET_OFFSET,
+                        centre_x + OPERATOR_PARAMETER_X_OFFSETS["cv_atten"],
                         y,
                     ),
                 )
@@ -562,7 +540,6 @@ SECTION_RECTS = {
         f"OP{index}": rectangle
         for index, rectangle in enumerate(OPERATOR_SECTION_RECTS, start=1)
     },
-    "CV_PATCHBAY": PATCHBAY_SECTION,
     "SHARED_IO": SHARED_IO_SECTION,
 }
 
@@ -588,12 +565,10 @@ LABEL_CLEARANCES = {
     **{
         f"op{index}_{label.lower()}": {"clearance_mm": 0.30}
         for index in range(1, 5)
-        for label in ("coarse", "mode", "fine", "output", "warp", "fold", "fold_type", "feedback")
-    },
-    **{
-        f"op{index}_patchbay_{row.lower()}": {"clearance_mm": 0.30}
-        for index in range(1, 5)
-        for row in PATCHBAY_ROWS
+        for label in (
+            "coarse", "mode", "fine", "fold_type", "output",
+            "warp", "fold", "feedback", "cv", "atten",
+        )
     },
     "shared_io": {"clearance_mm": 0.30},
 }
@@ -823,116 +798,67 @@ def generate_svg() -> str:
         lines.append(_text(display_x + 1.5, display_y + 2.7, "FREQ", size=1.45, fill=SECTION_BLUE_GREY, anchor="start"))
         lines.append(
             _text(
-                centre_x - 10.5,
-                OPERATOR_LABEL_YS["frequency"],
+                centre_x + OPERATOR_X_OFFSETS["coarse"],
+                OPERATOR_LABEL_YS["coarse_mode"],
                 "COARSE",
                 size=OPERATOR_LABEL_SIZE,
             )
         )
         lines.append(
             _text(
-                centre_x,
-                OPERATOR_LABEL_YS["frequency"],
+                centre_x + OPERATOR_X_OFFSETS["freq_mode"],
+                OPERATOR_LABEL_YS["coarse_mode"],
                 "MODE",
                 size=OPERATOR_MODE_LABEL_SIZE,
             )
         )
         lines.append(
             _text(
-                centre_x + 10.5,
-                OPERATOR_LABEL_YS["frequency"],
+                centre_x + OPERATOR_X_OFFSETS["fine"],
+                OPERATOR_LABEL_YS["fine_fold_type"],
                 "FINE",
                 size=OPERATOR_LABEL_SIZE,
             )
         )
         lines.append(
             _text(
-                centre_x - 9.0,
-                OPERATOR_LABEL_YS["output_warp"],
-                "OUTPUT",
-                size=OPERATOR_LABEL_SIZE,
-            )
-        )
-        lines.append(
-            _text(
-                centre_x + 9.0,
-                OPERATOR_LABEL_YS["output_warp"],
-                "WARP",
-                size=OPERATOR_LABEL_SIZE,
-            )
-        )
-        lines.append(
-            _text(
-                centre_x - 9.0,
-                OPERATOR_LABEL_YS["fold"],
-                "FOLD",
-                size=OPERATOR_LABEL_SIZE,
-            )
-        )
-        lines.append(
-            _text(
-                centre_x + 9.0,
-                OPERATOR_LABEL_YS["fold"],
+                centre_x + OPERATOR_X_OFFSETS["fold_type"],
+                OPERATOR_LABEL_YS["fine_fold_type"],
                 "TYPE",
                 size=OPERATOR_LABEL_SIZE,
             )
         )
-        lines.append(
-            _text(
-                centre_x,
-                OPERATOR_LABEL_YS["feedback"],
-                "FEEDBACK",
-                size=OPERATOR_LABEL_SIZE,
-            )
-        )
-
-    # Four operator-specific CV bays.  The left gutter is reserved for the
-    # row names; the existing aligned jack/attenuverter pairs remain on the
-    # right so the bay reads as a small, repeated operator instrument.
-    for index, (x, y, width, height) in enumerate(
-        PATCHBAY_SECTION_RECTS, start=1
-    ):
-        lines.append(
-            _rect(
-                x,
-                y,
-                width,
-                height,
-                SECTION_FILL if index % 2 == 0 else SECTION_FILL_ALT,
-                SECTION_BLUE_GREY,
-                identifier=f"cv-patchbay-section-{index}",
-                radius=1.2,
-                stroke_width=0.30,
-            )
-        )
-        lines.append(
-            _text(
-                x + PATCHBAY_HEADING_OFFSET_X,
-                PATCHBAY_HEADING_Y,
-                "CV",
-                size=PATCHBAY_HEADING_SIZE,
-                anchor="start",
-                weight="600",
-                fill=SECTION_BLUE_GREY,
-            )
-        )
-        label_right = PATCHBAY_LABEL_RIGHT_XS[index - 1]
-        for row, row_y in zip(PATCHBAY_ROWS, PATCHBAY_ROW_YS):
+        for parameter in ("output", "warp", "fold", "feedback"):
             lines.append(
                 _text(
-                    label_right,
-                    row_y + PATCHBAY_LABEL_Y_OFFSET,
-                    row,
-                    size=PATCHBAY_LABEL_SIZE,
-                    anchor="end",
-                    weight="600",
-                    fill=FUNCTION_ORANGE if row == "Output" else LEGEND_CHARCOAL,
-                    text_length=PATCHBAY_LABEL_WIDTHS[row],
+                    centre_x + OPERATOR_X_OFFSETS[parameter],
+                    OPERATOR_LABEL_YS[parameter],
+                    parameter.upper(),
+                    size=OPERATOR_LABEL_SIZE,
                 )
             )
+        lines.append(
+            _text(
+                centre_x + OPERATOR_PARAMETER_X_OFFSETS["cv_input"],
+                OPERATOR_PARAMETER_HEADER_Y,
+                "CV",
+                size=OPERATOR_PARAMETER_HEADER_SIZE,
+            )
+        )
+        lines.append(
+            _text(
+                centre_x + OPERATOR_PARAMETER_X_OFFSETS["cv_atten"],
+                OPERATOR_PARAMETER_HEADER_Y,
+                "ATTEN",
+                size=OPERATOR_PARAMETER_HEADER_SIZE,
+            )
+        )
+
+    # Operator-specific CV controls share the sound-control rows above.  The
+    # component guides are emitted below with the rest of the Rack geometry.
 
     # Shared I/O labels use the open spaces around the controls in the global
-    # band rather than spending another row beneath the operator patchbays.
+    # band rather than spending another row beneath the operator fields.
     lines.append(
         _text(
             VOCT_LABEL_X,
@@ -1040,18 +966,28 @@ def generate_coords_header() -> str:
             _header_float("OPERATOR_SECTION_WIDTH", OPERATOR_SECTION_WIDTH),
             _header_float("OPERATOR_SECTION_GAP", OPERATOR_SECTION_GAP),
             _header_float("OPERATOR_HEADING_Y", OPERATOR_HEADING_Y),
-            _header_float("OPERATOR_FREQUENCY_Y", OPERATOR_ROW_YS["frequency"]),
-            _header_float("OPERATOR_OUTPUT_WARP_Y", OPERATOR_ROW_YS["output_warp"]),
+            _header_float("OPERATOR_COARSE_MODE_Y", OPERATOR_ROW_YS["coarse_mode"]),
+            _header_float("OPERATOR_FINE_FOLD_TYPE_Y", OPERATOR_ROW_YS["fine_fold_type"]),
+            _header_float("OPERATOR_OUTPUT_Y", OPERATOR_ROW_YS["output"]),
+            _header_float("OPERATOR_WARP_Y", OPERATOR_ROW_YS["warp"]),
             _header_float("OPERATOR_FOLD_Y", OPERATOR_ROW_YS["fold"]),
             _header_float("OPERATOR_FEEDBACK_Y", OPERATOR_ROW_YS["feedback"]),
-            _header_float("OPERATOR_FREQUENCY_LABEL_Y", OPERATOR_LABEL_YS["frequency"]),
-            _header_float("OPERATOR_OUTPUT_WARP_LABEL_Y", OPERATOR_LABEL_YS["output_warp"]),
+            _header_float("OPERATOR_COARSE_MODE_LABEL_Y", OPERATOR_LABEL_YS["coarse_mode"]),
+            _header_float("OPERATOR_FINE_FOLD_TYPE_LABEL_Y", OPERATOR_LABEL_YS["fine_fold_type"]),
+            _header_float("OPERATOR_OUTPUT_LABEL_Y", OPERATOR_LABEL_YS["output"]),
+            _header_float("OPERATOR_WARP_LABEL_Y", OPERATOR_LABEL_YS["warp"]),
             _header_float("OPERATOR_FOLD_LABEL_Y", OPERATOR_LABEL_YS["fold"]),
             _header_float("OPERATOR_FEEDBACK_LABEL_Y", OPERATOR_LABEL_YS["feedback"]),
             _header_float("OPERATOR_LABEL_SIZE", OPERATOR_LABEL_SIZE),
             _header_float("OPERATOR_MODE_LABEL_SIZE", OPERATOR_MODE_LABEL_SIZE),
+            _header_float("OPERATOR_PARAMETER_HEADER_Y", OPERATOR_PARAMETER_HEADER_Y),
+            _header_float("OPERATOR_PARAMETER_HEADER_SIZE", OPERATOR_PARAMETER_HEADER_SIZE),
             _header_float("FREQUENCY_DISPLAY_WIDTH", FREQUENCY_DISPLAY_WIDTH),
             _header_float("FREQUENCY_DISPLAY_HEIGHT", FREQUENCY_DISPLAY_HEIGHT),
+            "constexpr float OPERATOR_FREQUENCY_Y = OPERATOR_COARSE_MODE_Y;",
+            "constexpr float OPERATOR_OUTPUT_WARP_Y = OPERATOR_OUTPUT_Y;",
+            "constexpr float OPERATOR_FREQUENCY_LABEL_Y = OPERATOR_COARSE_MODE_LABEL_Y;",
+            "constexpr float OPERATOR_OUTPUT_WARP_LABEL_Y = OPERATOR_OUTPUT_LABEL_Y;",
         )
     )
     for index, (section, centre_x, display) in enumerate(
@@ -1075,14 +1011,12 @@ def generate_coords_header() -> str:
             )
         )
         for control, offset in OPERATOR_X_OFFSETS.items():
-            if control == "coarse" or control == "freq_mode" or control == "fine":
-                y = OPERATOR_ROW_YS["frequency"]
-            elif control in ("output", "warp"):
-                y = OPERATOR_ROW_YS["output_warp"]
-            elif control in ("fold", "fold_type"):
-                y = OPERATOR_ROW_YS["fold"]
+            if control in ("coarse", "freq_mode"):
+                y = OPERATOR_ROW_YS["coarse_mode"]
+            elif control in ("fine", "fold_type"):
+                y = OPERATOR_ROW_YS["fine_fold_type"]
             else:
-                y = OPERATOR_ROW_YS["feedback"]
+                y = OPERATOR_ROW_YS[control]
             control_name = control.upper()
             lines.append(_header_float(f"OP{index}_{control_name}_X", centre_x + offset))
             lines.append(_header_float(f"OP{index}_{control_name}_Y", y))
@@ -1110,26 +1044,15 @@ def generate_coords_header() -> str:
             _header_float("PATCHBAY_SECTION_TOP", PATCHBAY_SECTION_TOP),
             _header_float("PATCHBAY_SECTION_HEIGHT", PATCHBAY_SECTION_HEIGHT),
             _header_float("PATCHBAY_WIDGET_OFFSET", PATCHBAY_WIDGET_OFFSET),
-            _header_float("PATCHBAY_LABEL_RIGHT_OFFSET", PATCHBAY_LABEL_RIGHT_OFFSET),
-            _header_float("PATCHBAY_HEADING_Y", PATCHBAY_HEADING_Y),
-            _header_float("PATCHBAY_HEADING_OFFSET_X", PATCHBAY_HEADING_OFFSET_X),
-            _header_float("PATCHBAY_HEADING_SIZE", PATCHBAY_HEADING_SIZE),
-            _header_float("PATCHBAY_LABEL_Y_OFFSET", PATCHBAY_LABEL_Y_OFFSET),
-            _header_float("PATCHBAY_LABEL_SIZE", PATCHBAY_LABEL_SIZE),
         )
     )
-    for index, (section, x, label_right) in enumerate(
-        zip(PATCHBAY_SECTION_RECTS, PATCHBAY_COLUMN_XS, PATCHBAY_LABEL_RIGHT_XS),
-        start=1,
-    ):
-        section_x, section_y, section_width, section_height = section
+    for index, x in enumerate(PATCHBAY_COLUMN_XS, start=1):
         lines.extend(
             (
-                _header_float(f"OP{index}_PATCHBAY_SECTION_X", section_x),
-                _header_float(f"OP{index}_PATCHBAY_SECTION_Y", section_y),
-                _header_float(f"OP{index}_PATCHBAY_SECTION_WIDTH", section_width),
-                _header_float(f"OP{index}_PATCHBAY_SECTION_HEIGHT", section_height),
-                _header_float(f"OP{index}_PATCHBAY_LABEL_RIGHT_X", label_right),
+                _header_float(f"OP{index}_PATCHBAY_SECTION_X", OPERATOR_SECTION_RECTS[index - 1][0]),
+                _header_float(f"OP{index}_PATCHBAY_SECTION_Y", OPERATOR_SECTION_TOP),
+                _header_float(f"OP{index}_PATCHBAY_SECTION_WIDTH", OPERATOR_SECTION_RECTS[index - 1][2]),
+                _header_float(f"OP{index}_PATCHBAY_SECTION_HEIGHT", OPERATOR_SECTION_HEIGHT),
             )
         )
         lines.append(_header_float(f"PATCHBAY_COLUMN_{index}_X", x))
@@ -1140,9 +1063,9 @@ def generate_coords_header() -> str:
         for index, centre_x in enumerate(PATCHBAY_COLUMN_XS, start=1):
             lines.extend(
                 (
-                    _header_float(f"OP{index}_{slug}_CV_INPUT_X", centre_x - PATCHBAY_WIDGET_OFFSET),
+                    _header_float(f"OP{index}_{slug}_CV_INPUT_X", centre_x + OPERATOR_PARAMETER_X_OFFSETS["cv_input"]),
                     _header_float(f"OP{index}_{slug}_CV_INPUT_Y", y),
-                    _header_float(f"OP{index}_{slug}_CV_ATTEN_X", centre_x + PATCHBAY_WIDGET_OFFSET),
+                    _header_float(f"OP{index}_{slug}_CV_ATTEN_X", centre_x + OPERATOR_PARAMETER_X_OFFSETS["cv_atten"]),
                     _header_float(f"OP{index}_{slug}_CV_ATTEN_Y", y),
                 )
             )
@@ -1164,7 +1087,6 @@ def generate_coords_header() -> str:
             _header_float("OUTPUT_STROKE_WIDTH", OUTPUT_STROKE_WIDTH),
             _header_float("GLOBAL_LABEL_OFFSET", 5.0),
             _header_float("OPERATOR_LABEL_OFFSET", 5.5),
-            _header_float("PATCHBAY_LABEL_OFFSET", 5.0),
         )
     )
     lines.extend(("", "} // namespace four_v2_layout", ""))

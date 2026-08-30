@@ -162,33 +162,6 @@ def _path_x_bounds(path_data):
     return min(xs), max(xs)
 
 
-def _text_envelope(node):
-    """Return a conservative SVG text envelope from rendered attributes."""
-    if node.attrib.get("lengthAdjust") != "spacingAndGlyphs":
-        raise AssertionError("patchbay labels must expose a rendered text envelope")
-    if "textLength" not in node.attrib:
-        raise AssertionError("patchbay labels must expose textLength")
-    x = float(node.attrib["x"])
-    width = float(node.attrib["textLength"])
-    if width <= 0.0:
-        raise AssertionError("patchbay labels must have positive textLength")
-    baseline = float(node.attrib["y"])
-    font_size = float(node.attrib["font-size"])
-    anchor = node.attrib.get("text-anchor", "start")
-    if anchor == "start":
-        left, right = x, x + width
-    elif anchor == "end":
-        left, right = x - width, x
-    elif anchor == "middle":
-        left, right = x - width / 2.0, x + width / 2.0
-    else:
-        raise AssertionError(f"unsupported text anchor: {anchor}")
-    # The top bound uses the full em; the bottom bound includes a conservative
-    # quarter-em descender allowance without falsely reaching the lower shared
-    # I/O port row.
-    return left, baseline - font_size, right, baseline + font_size * 0.25
-
-
 def _extract_struct_body(source, marker):
     start = source.index(marker)
     brace = source.index("{", start)
@@ -201,13 +174,6 @@ def _extract_struct_body(source, marker):
             if depth == 0:
                 return source[brace + 1:index]
     raise AssertionError(f"unterminated struct: {marker}")
-
-
-def _rectangle_circle_clearance(rectangle, cx, cy, radius):
-    left, top, right, bottom = rectangle
-    dx = max(left - cx, 0.0, cx - right)
-    dy = max(top - cy, 0.0, cy - bottom)
-    return math.hypot(dx, dy) - radius
 
 
 def load_generator(path, name):
@@ -247,16 +213,9 @@ class FourV2PanelTest(unittest.TestCase):
         self.assertEqual("#155f91", panel.LOGO_BLUE)
         self.assertEqual("#ed5b22", panel.LOGO_ORANGE)
 
-    def test_four_operator_sections_and_patchbay_are_framed(self):
+    def test_four_operator_sections_are_framed(self):
         panel = self.require_panel()
         self.assertEqual(4, len(panel.OPERATOR_SECTION_RECTS))
-        patchbay_sections = getattr(panel, "PATCHBAY_SECTION_RECTS", ())
-        self.assertEqual(4, len(patchbay_sections))
-        for operator, patchbay in zip(
-            panel.OPERATOR_SECTION_RECTS, patchbay_sections
-        ):
-            self.assertAlmostEqual(operator[0], patchbay[0])
-            self.assertAlmostEqual(operator[2], patchbay[2])
         self.assertEqual(4, len(panel.PATCHBAY_COLUMN_XS))
         self.assertEqual(
             ("Output", "Warp", "Fold", "Feedback"),
@@ -358,6 +317,57 @@ class FourV2PanelTest(unittest.TestCase):
             self.assertLessEqual(x + width, panel.WIDTH_MM)
             self.assertLessEqual(y + height, panel.HEIGHT_MM)
 
+    def test_operator_parameter_controls_share_rows_with_their_cv_controls(self):
+        panel = self.require_panel()
+        components = {
+            name: (x, y)
+            for name, x, y in panel.COMPONENTS
+        }
+        for operator in range(1, 5):
+            coarse = components[f"op{operator}_coarse"]
+            mode = components[f"op{operator}_freq_mode"]
+            fine = components[f"op{operator}_fine"]
+            fold_type = components[f"op{operator}_fold_type"]
+            with self.subTest(operator=operator, row="coarse-mode"):
+                self.assertAlmostEqual(coarse[1], mode[1])
+                self.assertLess(coarse[0], mode[0])
+            with self.subTest(operator=operator, row="fine-type"):
+                self.assertAlmostEqual(fine[1], fold_type[1])
+                self.assertLess(fine[0], fold_type[0])
+                self.assertGreater(fine[1], coarse[1])
+
+            parameter_y = []
+            for parameter in ("output", "warp", "fold", "feedback"):
+                knob = components[f"op{operator}_{parameter}"]
+                cv_input = components[f"op{operator}_{parameter}_cv_input"]
+                atten = components[f"op{operator}_{parameter}_cv_atten"]
+                parameter_y.append(knob[1])
+                with self.subTest(operator=operator, parameter=parameter):
+                    self.assertAlmostEqual(knob[1], cv_input[1])
+                    self.assertAlmostEqual(knob[1], atten[1])
+                    self.assertLess(knob[0], cv_input[0])
+                    self.assertLess(cv_input[0], atten[0])
+            self.assertEqual(sorted(parameter_y), parameter_y)
+            self.assertGreater(parameter_y[0], fine[1])
+
+    def test_operator_sections_absorb_the_cv_bays(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        rect_ids = {
+            node.attrib.get("id") for node in root.iter()
+            if node.tag.endswith("rect")
+        }
+        self.assertEqual(
+            [],
+            sorted(identifier for identifier in rect_ids
+                   if identifier and identifier.startswith("cv-patchbay-section-")),
+        )
+        self.assertEqual(4, len(panel.OPERATOR_SECTION_RECTS))
+        for left, top, width, height in panel.OPERATOR_SECTION_RECTS:
+            self.assertAlmostEqual(top, panel.OPERATOR_SECTION_TOP)
+            self.assertGreater(height, 80.0)
+            self.assertLessEqual(top + height, panel.HEIGHT_MM)
+
     def test_state_switch_assets_are_generated_for_every_static_choice(self):
         panel = self.require_panel()
         expected = (
@@ -397,7 +407,7 @@ class FourV2PanelTest(unittest.TestCase):
             with self.subTest(contract=contract):
                 self.assertIn(contract, self.source)
 
-    def test_patchbay_rows_and_columns_align_to_operator_centres(self):
+    def test_integrated_cv_rows_and_columns_align_to_operator_centres(self):
         panel = self.require_panel()
         self.assertEqual(tuple(panel.OPERATOR_CENTRES_X),
                          tuple(panel.PATCHBAY_COLUMN_XS))
@@ -407,19 +417,19 @@ class FourV2PanelTest(unittest.TestCase):
                                panel.PATCHBAY_COLUMN_XS):
                 self.assertAlmostEqual(x, cell[0])
 
-    def test_patchbay_has_no_horizontal_guide_lines_through_socket_rows(self):
+    def test_integrated_cv_rows_have_no_horizontal_guide_lines(self):
         panel = self.require_panel()
         root = ET.fromstring(panel.generate_svg())
-        patchbay_rows = {round(y, 3) for y in panel.PATCHBAY_ROW_YS}
+        parameter_rows = {round(y, 3) for y in panel.PATCHBAY_ROW_YS}
         guide_lines = [
             node for node in root.iter()
             if node.tag.endswith("line")
-            and round(float(node.attrib["y1"]), 3) in patchbay_rows
-            and round(float(node.attrib["y2"]), 3) in patchbay_rows
+            and round(float(node.attrib["y1"]), 3) in parameter_rows
+            and round(float(node.attrib["y2"]), 3) in parameter_rows
         ]
         self.assertEqual([], guide_lines)
 
-    def test_patchbay_row_labels_clear_every_real_rack_widget_envelope(self):
+    def test_integrated_cv_headers_align_with_every_cv_control_pair(self):
         panel = self.require_panel()
         root = ET.fromstring(PANEL_SVG.read_text(encoding="utf-8"))
         header = _emitted_header_floats(
@@ -427,9 +437,12 @@ class FourV2PanelTest(unittest.TestCase):
         )
         labels = [
             node for node in root.iter()
-            if node.tag.endswith("text") and node.text in panel.PATCHBAY_ROWS
+            if node.tag.endswith("text")
+            and node.text in {"CV", "ATTEN"}
+            and abs(float(node.attrib["y"]) -
+                    panel.OPERATOR_PARAMETER_HEADER_Y) < 0.01
         ]
-        self.assertEqual(16, len(labels))
+        self.assertEqual(8, len(labels))
 
         circles = [
             node for node in root.iter()
@@ -437,14 +450,25 @@ class FourV2PanelTest(unittest.TestCase):
             and "cx" in node.attrib
             and "cy" in node.attrib
         ]
-        components = []
-        for row in panel.PATCHBAY_ROWS:
-            slug = row.upper()
-            for index in range(1, 5):
-                for role, radius_name in (
-                    ("CV_INPUT", "RACK_PORT_RADIUS"),
-                    ("CV_ATTEN", "RACK_SMALL_KNOB_RADIUS"),
-                ):
+        for index in range(1, 5):
+            input_prefix = f"OP{index}_OUTPUT_CV_INPUT"
+            atten_prefix = f"OP{index}_OUTPUT_CV_ATTEN"
+            input_x = header[f"{input_prefix}_X"]
+            atten_x = header[f"{atten_prefix}_X"]
+            for role, x in (("CV", input_x), ("ATTEN", atten_x)):
+                matches = [
+                    label for label in labels
+                    if label.text == role
+                    and abs(float(label.attrib["x"]) - x) < 0.01
+                ]
+                self.assertEqual(1, len(matches))
+                self.assertAlmostEqual(
+                    header["OPERATOR_PARAMETER_HEADER_Y"],
+                    float(matches[0].attrib["y"]),
+                )
+            for row in panel.PATCHBAY_ROWS:
+                slug = row.upper()
+                for role in ("CV_INPUT", "CV_ATTEN"):
                     prefix = f"OP{index}_{slug}_{role}"
                     x = header[f"{prefix}_X"]
                     y = header[f"{prefix}_Y"]
@@ -458,38 +482,9 @@ class FourV2PanelTest(unittest.TestCase):
                         len(matches),
                         f"missing emitted SVG component for {prefix}",
                     )
-                    components.append(
-                        (prefix, x, y, header[radius_name])
+                    self.assertAlmostEqual(
+                        header[f"OP{index}_{slug}_CV_INPUT_Y"], y
                     )
-
-        patchbay_sections = getattr(panel, "PATCHBAY_SECTION_RECTS", ())
-        self.assertEqual(4, len(patchbay_sections))
-        for index, section in enumerate(patchbay_sections, start=1):
-            left, _top, width, _height = section
-            section_labels = [
-                node for node in labels
-                if abs(float(node.attrib["x"]) - panel.OPERATOR_CENTRES_X[index - 1])
-                > 0.01
-                and left <= float(node.attrib["x"]) <= left + width
-            ]
-            self.assertEqual(4, len(section_labels))
-            for label in section_labels:
-                rectangle = _text_envelope(label)
-                with self.subTest(operator=index, label=label.text,
-                                  boundary="operator patchbay"):
-                    self.assertGreaterEqual(rectangle[0], left)
-                    self.assertLessEqual(rectangle[2], left + width)
-                for name, x, y, radius in components:
-                    if not (left <= x <= left + width):
-                        continue
-                    clearance = _rectangle_circle_clearance(
-                        rectangle, x, y, radius
-                    )
-                    with self.subTest(operator=index, label=label.text,
-                                      component=name):
-                        self.assertGreaterEqual(
-                            clearance + 1e-9, MINIMUM_LABEL_CLEARANCE_MM
-                        )
 
     def test_operator_labels_clear_their_real_control_envelopes(self):
         panel = self.require_panel()
@@ -569,7 +564,7 @@ class FourV2PanelTest(unittest.TestCase):
                     MINIMUM_LABEL_CLEARANCE_MM,
                 )
 
-    def test_patchbay_is_grouped_by_operator_in_the_svg(self):
+    def test_operator_sections_are_single_integrated_fields_in_the_svg(self):
         panel = self.require_panel()
         root = ET.fromstring(panel.generate_svg())
         identifiers = {
@@ -577,12 +572,14 @@ class FourV2PanelTest(unittest.TestCase):
             if node.tag.endswith("rect")
         }
         self.assertTrue({
-            "cv-patchbay-section-1",
-            "cv-patchbay-section-2",
-            "cv-patchbay-section-3",
-            "cv-patchbay-section-4",
+            "operator-section-1",
+            "operator-section-2",
+            "operator-section-3",
+            "operator-section-4",
         }.issubset(identifiers))
-        self.assertNotIn("cv-patchbay-section", identifiers)
+        self.assertEqual([], [identifier for identifier in identifiers
+                              if identifier and
+                              identifier.startswith("cv-patchbay-section")])
 
     def test_main_output_uses_established_inverted_backplate(self):
         panel = self.require_panel()
@@ -607,8 +604,8 @@ class FourV2PanelTest(unittest.TestCase):
         labels = {node.text for node in root.iter()
                   if node.tag.endswith("text") and node.text}
         for expected in ("FourV2", "OP1", "OP2", "OP3", "OP4",
-                         "Output", "Warp", "Fold",
-                         "Feedback", "PM DEPTH", "MASTER", "OVER"):
+                         "OUTPUT", "WARP", "FOLD", "FEEDBACK", "CV",
+                         "ATTEN", "PM DEPTH", "MASTER", "OVER"):
             with self.subTest(label=expected):
                 self.assertIn(expected, labels)
         for removed in ("ROUTING", "ALGORITHM", "CV PATCHBAY"):

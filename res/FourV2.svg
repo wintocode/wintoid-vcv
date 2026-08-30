@@ -31,78 +31,62 @@
   <text x="131" y="12.8" text-anchor="middle" font-family="DejaVu Sans" font-size="1.55" font-weight="400" fill="#242522">ATTEN</text>
   <text x="106.5" y="35.1" text-anchor="middle" font-family="DejaVu Sans" font-size="1.65" font-weight="400" fill="#242522">EXT PM</text>
   <text x="118.5" y="35.1" text-anchor="middle" font-family="DejaVu Sans" font-size="1.55" font-weight="400" fill="#242522">ATTEN</text>
-  <rect id="operator-section-1" x="4" y="37.5" width="37.515" height="50.3" fill="#e7e3d4" stroke="#556d80" stroke-width="0.3" rx="1.2" />
+  <rect id="operator-section-1" x="4" y="37.5" width="37.515" height="87" fill="#e7e3d4" stroke="#556d80" stroke-width="0.3" rx="1.2" />
   <text x="22.758" y="40.8" text-anchor="middle" font-family="DejaVu Sans" font-size="2.4" font-weight="600" fill="#242522" letter-spacing="0.25">OP1</text>
   <rect id="op1-frequency-display" x="8" y="41.5" width="29.515" height="4" fill="#242522" stroke="#556d80" stroke-width="0.25" rx="0.6" />
   <text x="9.5" y="44.2" text-anchor="start" font-family="DejaVu Sans" font-size="1.45" font-weight="400" fill="#556d80">FREQ</text>
-  <text x="12.258" y="55.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">COARSE</text>
-  <text x="22.758" y="55.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.45" font-weight="400" fill="#242522">MODE</text>
-  <text x="33.258" y="55.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FINE</text>
-  <text x="13.758" y="66.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">OUTPUT</text>
-  <text x="31.758" y="66.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">WARP</text>
-  <text x="13.758" y="76.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FOLD</text>
-  <text x="31.758" y="76.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">TYPE</text>
-  <text x="22.758" y="87.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FEEDBACK</text>
-  <rect id="operator-section-2" x="43.015" y="37.5" width="37.515" height="50.3" fill="#e3e0d1" stroke="#556d80" stroke-width="0.3" rx="1.2" />
+  <text x="14.008" y="57.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">COARSE</text>
+  <text x="31.508" y="57.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.45" font-weight="400" fill="#242522">MODE</text>
+  <text x="14.008" y="70.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FINE</text>
+  <text x="31.508" y="70.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">TYPE</text>
+  <text x="12.258" y="73" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">OUTPUT</text>
+  <text x="12.258" y="86.5" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">WARP</text>
+  <text x="12.258" y="100" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FOLD</text>
+  <text x="12.258" y="113.5" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FEEDBACK</text>
+  <text x="22.758" y="73" text-anchor="middle" font-family="DejaVu Sans" font-size="1.35" font-weight="400" fill="#242522">CV</text>
+  <text x="33.258" y="73" text-anchor="middle" font-family="DejaVu Sans" font-size="1.35" font-weight="400" fill="#242522">ATTEN</text>
+  <rect id="operator-section-2" x="43.015" y="37.5" width="37.515" height="87" fill="#e3e0d1" stroke="#556d80" stroke-width="0.3" rx="1.2" />
   <text x="61.773" y="40.8" text-anchor="middle" font-family="DejaVu Sans" font-size="2.4" font-weight="600" fill="#242522" letter-spacing="0.25">OP2</text>
   <rect id="op2-frequency-display" x="47.015" y="41.5" width="29.515" height="4" fill="#242522" stroke="#556d80" stroke-width="0.25" rx="0.6" />
   <text x="48.515" y="44.2" text-anchor="start" font-family="DejaVu Sans" font-size="1.45" font-weight="400" fill="#556d80">FREQ</text>
-  <text x="51.273" y="55.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">COARSE</text>
-  <text x="61.773" y="55.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.45" font-weight="400" fill="#242522">MODE</text>
-  <text x="72.273" y="55.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FINE</text>
-  <text x="52.773" y="66.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">OUTPUT</text>
-  <text x="70.773" y="66.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">WARP</text>
-  <text x="52.773" y="76.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FOLD</text>
-  <text x="70.773" y="76.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">TYPE</text>
-  <text x="61.773" y="87.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FEEDBACK</text>
-  <rect id="operator-section-3" x="82.03" y="37.5" width="37.515" height="50.3" fill="#e7e3d4" stroke="#556d80" stroke-width="0.3" rx="1.2" />
+  <text x="53.023" y="57.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">COARSE</text>
+  <text x="70.523" y="57.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.45" font-weight="400" fill="#242522">MODE</text>
+  <text x="53.023" y="70.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FINE</text>
+  <text x="70.523" y="70.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">TYPE</text>
+  <text x="51.273" y="73" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">OUTPUT</text>
+  <text x="51.273" y="86.5" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">WARP</text>
+  <text x="51.273" y="100" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FOLD</text>
+  <text x="51.273" y="113.5" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FEEDBACK</text>
+  <text x="61.773" y="73" text-anchor="middle" font-family="DejaVu Sans" font-size="1.35" font-weight="400" fill="#242522">CV</text>
+  <text x="72.273" y="73" text-anchor="middle" font-family="DejaVu Sans" font-size="1.35" font-weight="400" fill="#242522">ATTEN</text>
+  <rect id="operator-section-3" x="82.03" y="37.5" width="37.515" height="87" fill="#e7e3d4" stroke="#556d80" stroke-width="0.3" rx="1.2" />
   <text x="100.787" y="40.8" text-anchor="middle" font-family="DejaVu Sans" font-size="2.4" font-weight="600" fill="#242522" letter-spacing="0.25">OP3</text>
   <rect id="op3-frequency-display" x="86.03" y="41.5" width="29.515" height="4" fill="#242522" stroke="#556d80" stroke-width="0.25" rx="0.6" />
   <text x="87.53" y="44.2" text-anchor="start" font-family="DejaVu Sans" font-size="1.45" font-weight="400" fill="#556d80">FREQ</text>
-  <text x="90.287" y="55.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">COARSE</text>
-  <text x="100.787" y="55.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.45" font-weight="400" fill="#242522">MODE</text>
-  <text x="111.287" y="55.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FINE</text>
-  <text x="91.787" y="66.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">OUTPUT</text>
-  <text x="109.787" y="66.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">WARP</text>
-  <text x="91.787" y="76.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FOLD</text>
-  <text x="109.787" y="76.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">TYPE</text>
-  <text x="100.787" y="87.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FEEDBACK</text>
-  <rect id="operator-section-4" x="121.045" y="37.5" width="37.515" height="50.3" fill="#e3e0d1" stroke="#556d80" stroke-width="0.3" rx="1.2" />
+  <text x="92.037" y="57.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">COARSE</text>
+  <text x="109.537" y="57.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.45" font-weight="400" fill="#242522">MODE</text>
+  <text x="92.037" y="70.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FINE</text>
+  <text x="109.537" y="70.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">TYPE</text>
+  <text x="90.287" y="73" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">OUTPUT</text>
+  <text x="90.287" y="86.5" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">WARP</text>
+  <text x="90.287" y="100" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FOLD</text>
+  <text x="90.287" y="113.5" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FEEDBACK</text>
+  <text x="100.787" y="73" text-anchor="middle" font-family="DejaVu Sans" font-size="1.35" font-weight="400" fill="#242522">CV</text>
+  <text x="111.287" y="73" text-anchor="middle" font-family="DejaVu Sans" font-size="1.35" font-weight="400" fill="#242522">ATTEN</text>
+  <rect id="operator-section-4" x="121.045" y="37.5" width="37.515" height="87" fill="#e3e0d1" stroke="#556d80" stroke-width="0.3" rx="1.2" />
   <text x="139.803" y="40.8" text-anchor="middle" font-family="DejaVu Sans" font-size="2.4" font-weight="600" fill="#242522" letter-spacing="0.25">OP4</text>
   <rect id="op4-frequency-display" x="125.045" y="41.5" width="29.515" height="4" fill="#242522" stroke="#556d80" stroke-width="0.25" rx="0.6" />
   <text x="126.545" y="44.2" text-anchor="start" font-family="DejaVu Sans" font-size="1.45" font-weight="400" fill="#556d80">FREQ</text>
-  <text x="129.303" y="55.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">COARSE</text>
-  <text x="139.803" y="55.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.45" font-weight="400" fill="#242522">MODE</text>
-  <text x="150.303" y="55.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FINE</text>
-  <text x="130.803" y="66.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">OUTPUT</text>
-  <text x="148.803" y="66.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">WARP</text>
-  <text x="130.803" y="76.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FOLD</text>
-  <text x="148.803" y="76.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">TYPE</text>
-  <text x="139.803" y="87.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FEEDBACK</text>
-  <rect id="cv-patchbay-section-1" x="4" y="89" width="37.515" height="34.5" fill="#e7e3d4" stroke="#556d80" stroke-width="0.3" rx="1.2" />
-  <text x="6" y="90.7" text-anchor="start" font-family="DejaVu Sans" font-size="1.45" font-weight="600" fill="#556d80">CV</text>
-  <text x="13.844" y="95.3" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#b7693c" textLength="6.5" lengthAdjust="spacingAndGlyphs">Output</text>
-  <text x="13.844" y="103.5" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#242522" textLength="4.8" lengthAdjust="spacingAndGlyphs">Warp</text>
-  <text x="13.844" y="111.7" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#242522" textLength="4.5" lengthAdjust="spacingAndGlyphs">Fold</text>
-  <text x="13.844" y="119.9" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#242522" textLength="9.25" lengthAdjust="spacingAndGlyphs">Feedback</text>
-  <rect id="cv-patchbay-section-2" x="43.015" y="89" width="37.515" height="34.5" fill="#e3e0d1" stroke="#556d80" stroke-width="0.3" rx="1.2" />
-  <text x="45.015" y="90.7" text-anchor="start" font-family="DejaVu Sans" font-size="1.45" font-weight="600" fill="#556d80">CV</text>
-  <text x="52.859" y="95.3" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#b7693c" textLength="6.5" lengthAdjust="spacingAndGlyphs">Output</text>
-  <text x="52.859" y="103.5" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#242522" textLength="4.8" lengthAdjust="spacingAndGlyphs">Warp</text>
-  <text x="52.859" y="111.7" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#242522" textLength="4.5" lengthAdjust="spacingAndGlyphs">Fold</text>
-  <text x="52.859" y="119.9" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#242522" textLength="9.25" lengthAdjust="spacingAndGlyphs">Feedback</text>
-  <rect id="cv-patchbay-section-3" x="82.03" y="89" width="37.515" height="34.5" fill="#e7e3d4" stroke="#556d80" stroke-width="0.3" rx="1.2" />
-  <text x="84.03" y="90.7" text-anchor="start" font-family="DejaVu Sans" font-size="1.45" font-weight="600" fill="#556d80">CV</text>
-  <text x="91.874" y="95.3" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#b7693c" textLength="6.5" lengthAdjust="spacingAndGlyphs">Output</text>
-  <text x="91.874" y="103.5" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#242522" textLength="4.8" lengthAdjust="spacingAndGlyphs">Warp</text>
-  <text x="91.874" y="111.7" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#242522" textLength="4.5" lengthAdjust="spacingAndGlyphs">Fold</text>
-  <text x="91.874" y="119.9" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#242522" textLength="9.25" lengthAdjust="spacingAndGlyphs">Feedback</text>
-  <rect id="cv-patchbay-section-4" x="121.045" y="89" width="37.515" height="34.5" fill="#e3e0d1" stroke="#556d80" stroke-width="0.3" rx="1.2" />
-  <text x="123.045" y="90.7" text-anchor="start" font-family="DejaVu Sans" font-size="1.45" font-weight="600" fill="#556d80">CV</text>
-  <text x="130.889" y="95.3" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#b7693c" textLength="6.5" lengthAdjust="spacingAndGlyphs">Output</text>
-  <text x="130.889" y="103.5" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#242522" textLength="4.8" lengthAdjust="spacingAndGlyphs">Warp</text>
-  <text x="130.889" y="111.7" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#242522" textLength="4.5" lengthAdjust="spacingAndGlyphs">Fold</text>
-  <text x="130.889" y="119.9" text-anchor="end" font-family="DejaVu Sans" font-size="1.8" font-weight="600" fill="#242522" textLength="9.25" lengthAdjust="spacingAndGlyphs">Feedback</text>
+  <text x="131.053" y="57.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">COARSE</text>
+  <text x="148.553" y="57.85" text-anchor="middle" font-family="DejaVu Sans" font-size="1.45" font-weight="400" fill="#242522">MODE</text>
+  <text x="131.053" y="70.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FINE</text>
+  <text x="148.553" y="70.35" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">TYPE</text>
+  <text x="129.303" y="73" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">OUTPUT</text>
+  <text x="129.303" y="86.5" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">WARP</text>
+  <text x="129.303" y="100" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FOLD</text>
+  <text x="129.303" y="113.5" text-anchor="middle" font-family="DejaVu Sans" font-size="1.6" font-weight="400" fill="#242522">FEEDBACK</text>
+  <text x="139.803" y="73" text-anchor="middle" font-family="DejaVu Sans" font-size="1.35" font-weight="400" fill="#242522">CV</text>
+  <text x="150.303" y="73" text-anchor="middle" font-family="DejaVu Sans" font-size="1.35" font-weight="400" fill="#242522">ATTEN</text>
   <text x="13" y="14.5" text-anchor="start" font-family="DejaVu Sans" font-size="1.55" font-weight="400" fill="#242522" textLength="4.5" lengthAdjust="spacingAndGlyphs">V/OCT</text>
   <text x="153" y="24.5" text-anchor="middle" font-family="DejaVu Sans" font-size="1.55" font-weight="400" fill="#242522" textLength="9.5" lengthAdjust="spacingAndGlyphs">MAIN OUT</text>
   <text x="145" y="35.1" text-anchor="middle" font-family="DejaVu Sans" font-size="1.55" font-weight="400" fill="#b7693c">OVER</text>
@@ -117,68 +101,68 @@
   <circle cx="8.5" cy="14.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="153" cy="17.5" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
   <circle cx="145" cy="29" r="1.2" fill="#a93636" stroke="#242522" stroke-width="0.25" />
-  <circle cx="12.258" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="17.758" y="47.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
-  <circle cx="33.258" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="13.758" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="31.758" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="13.758" cy="71" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="26.758" y="68.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
-  <circle cx="22.758" cy="81.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="51.273" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="56.773" y="47.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
-  <circle cx="72.273" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="52.773" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="70.773" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="52.773" cy="71" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="65.773" y="68.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
-  <circle cx="61.773" cy="81.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="90.287" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="95.787" y="47.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
-  <circle cx="111.287" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="91.787" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="109.787" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="91.787" cy="71" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="104.787" y="68.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
-  <circle cx="100.787" cy="81.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="129.303" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="134.803" y="47.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
-  <circle cx="150.303" cy="50" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="130.803" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="148.803" cy="60.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="130.803" cy="71" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <rect x="143.803" y="68.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
-  <circle cx="139.803" cy="81.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="18.157" cy="94.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="27.358" cy="94.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="57.172" cy="94.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="66.373" cy="94.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="96.188" cy="94.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="105.387" cy="94.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="135.203" cy="94.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="144.403" cy="94.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="18.157" cy="102.7" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="27.358" cy="102.7" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="57.172" cy="102.7" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="66.373" cy="102.7" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="96.188" cy="102.7" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="105.387" cy="102.7" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="135.203" cy="102.7" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="144.403" cy="102.7" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="18.157" cy="110.9" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="27.358" cy="110.9" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="57.172" cy="110.9" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="66.373" cy="110.9" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="96.188" cy="110.9" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="105.387" cy="110.9" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="135.203" cy="110.9" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="144.403" cy="110.9" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="18.157" cy="119.1" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="27.358" cy="119.1" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="57.172" cy="119.1" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="66.373" cy="119.1" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="96.188" cy="119.1" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="105.387" cy="119.1" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
-  <circle cx="135.203" cy="119.1" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="144.403" cy="119.1" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="14.008" cy="52" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <rect x="26.508" y="49.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
+  <circle cx="14.008" cy="64.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <rect x="26.508" y="62" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
+  <circle cx="12.258" cy="78" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="12.258" cy="91.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="12.258" cy="105" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="12.258" cy="118.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="53.023" cy="52" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <rect x="65.523" y="49.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
+  <circle cx="53.023" cy="64.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <rect x="65.523" y="62" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
+  <circle cx="51.273" cy="78" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="51.273" cy="91.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="51.273" cy="105" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="51.273" cy="118.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="92.037" cy="52" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <rect x="104.537" y="49.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
+  <circle cx="92.037" cy="64.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <rect x="104.537" y="62" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
+  <circle cx="90.287" cy="78" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="90.287" cy="91.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="90.287" cy="105" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="90.287" cy="118.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="131.053" cy="52" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <rect x="143.553" y="49.5" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
+  <circle cx="131.053" cy="64.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <rect x="143.553" y="62" width="10" height="5" fill="#242522" stroke="#b7693c" stroke-width="0.5" rx="0.9" />
+  <circle cx="129.303" cy="78" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="129.303" cy="91.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="129.303" cy="105" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="129.303" cy="118.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="22.758" cy="78" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="33.258" cy="78" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="61.773" cy="78" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="72.273" cy="78" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="100.787" cy="78" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="111.287" cy="78" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="139.803" cy="78" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="150.303" cy="78" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="22.758" cy="91.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="33.258" cy="91.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="61.773" cy="91.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="72.273" cy="91.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="100.787" cy="91.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="111.287" cy="91.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="139.803" cy="91.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="150.303" cy="91.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="22.758" cy="105" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="33.258" cy="105" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="61.773" cy="105" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="72.273" cy="105" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="100.787" cy="105" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="111.287" cy="105" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="139.803" cy="105" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="150.303" cy="105" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="22.758" cy="118.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="33.258" cy="118.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="61.773" cy="118.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="72.273" cy="118.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="100.787" cy="118.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="111.287" cy="118.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
+  <circle cx="139.803" cy="118.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="150.303" cy="118.5" r="3.84" fill="#242522" stroke="#b7693c" stroke-width="0.3" />
 </svg>

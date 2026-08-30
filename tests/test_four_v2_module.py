@@ -351,7 +351,7 @@ class FourV2ModuleContractTest(unittest.TestCase):
             "Ratio mode",
             "Fixed mode",
             "Output, Warp, Fold, and Feedback",
-            "CV PATCHBAY",
+            "same four-row control block",
             "PM DEPTH",
             "External PM affects every carrier",
             "signed",

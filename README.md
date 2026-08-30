@@ -52,7 +52,7 @@ its controls and signal flow are documented independently.
 - Each operator has a read-only frequency display showing its selected ratio or
   fixed frequency; the routing display is also informational.
 
-#### Output, Warp, Fold, and Feedback CV patchbay
+#### Output, Warp, Fold, and Feedback CV controls
 
 - **OUTPUT** controls every destination of its operator. For a carrier it sets
   audible mix level; for a modulator it sets modulation depth; an operator with
@@ -61,9 +61,9 @@ its controls and signal flow are documented independently.
 - **WARP** continuously morphs Sine → Triangle → Saw → Pulse. **FOLD** adds
   wavefolding, with Symmetric, Asymmetric, and Soft Clip types. **FEEDBACK**
   adds self-phase modulation for that operator.
-- The **CV PATCHBAY** is a separate four-row matrix: Output, Warp, Fold, and
-  Feedback. Every operator/row cell has a CV input and bipolar attenuverter;
-  the effective control is the knob plus scaled CV, clamped to its documented
+- Each operator keeps the Output, Warp, Fold, and Feedback knob beside its CV
+  input and bipolar attenuverter in the same four-row control block. The
+  effective control is the knob plus scaled CV, clamped to its documented
   range.
 
 #### PM, output level, and polyphony
@@ -86,7 +86,7 @@ its controls and signal flow are documented independently.
 - **16-channel polyphony** — voice count follows the **V/OCT** input, with one
   lane when it is unpatched and up to 16 lanes when it is polyphonic. Mono and
   shorter polyphonic CV inputs broadcast lane 0 to the additional lanes; this
-  applies to PM Depth, External PM, and every CV PATCHBAY row.
+  applies to PM Depth, External PM, and every operator CV row.
 
 #### Patch compatibility
 
