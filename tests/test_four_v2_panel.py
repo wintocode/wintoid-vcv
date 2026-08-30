@@ -29,18 +29,6 @@ MINIMUM_LABEL_CLEARANCE_MM = 0.25
 
 _FLOAT_TOKEN = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
 _PATH_TOKEN_RE = re.compile(rf"[A-Za-z]|{_FLOAT_TOKEN}")
-_HEADER_FLOAT_RE = re.compile(
-    rf"constexpr float (?P<name>[A-Z0-9_]+) = (?P<value>{_FLOAT_TOKEN})f;"
-)
-
-
-def _emitted_header_floats(source):
-    return {
-        match.group("name"): float(match.group("value"))
-        for match in _HEADER_FLOAT_RE.finditer(source)
-    }
-
-
 def _quadratic_x_values(start, control, end):
     values = [start, end]
     denominator = start - 2.0 * control + end
@@ -337,7 +325,7 @@ class FourV2PanelTest(unittest.TestCase):
                 self.assertEqual("start", heading.attrib["text-anchor"])
                 self.assertAlmostEqual(section[0] + 4.0, heading_x)
             with self.subTest(operator=index, typography="heading"):
-                self.assertGreaterEqual(float(heading.attrib["font-size"]), 3.4)
+                self.assertAlmostEqual(5.0, float(heading.attrib["font-size"]))
             with self.subTest(operator=index, layout="same-line"):
                 self.assertGreater(display_x, heading_x)
                 self.assertLessEqual(display_y, heading_y)
@@ -360,12 +348,10 @@ class FourV2PanelTest(unittest.TestCase):
             ("PM DEPTH", "pm_depth_knob"),
             ("MASTER", "master_knob"),
             ("PM CV", "pm_depth_cv_jack"),
-            ("ATTEN", "pm_depth_cv_atten"),
             ("EXT PM", "external_pm_jack"),
-            ("ATTEN", "external_pm_atten"),
             ("MAIN OUT", "main_output"),
-            ("OVER", "over_light"),
         )
+        expected_size = {text: 1.90 for text, _component in label_specs}
         for text, component_name in label_specs:
             component_x, component_y = panel.GLOBAL_CONTROLS[component_name]
             matches = [
@@ -386,6 +372,7 @@ class FourV2PanelTest(unittest.TestCase):
             radius = panel.COMPONENT_RADII[component_name]
             with self.subTest(label=text, component=component_name):
                 self.assertEqual("middle", label.attrib["text-anchor"])
+                self.assertAlmostEqual(expected_size[text], font_size)
                 self.assertGreaterEqual(
                     component_y - radius - label_bottom,
                     MINIMUM_LABEL_CLEARANCE_MM,
@@ -394,6 +381,137 @@ class FourV2PanelTest(unittest.TestCase):
                     baseline - font_size,
                     panel.SHARED_IO_SECTION[1],
                 )
+
+    def test_global_controls_match_the_revised_control_order(self):
+        panel = self.require_panel()
+        self.assertEqual(
+            (94.5, 17.5), panel.GLOBAL_CONTROLS["pm_depth_knob"]
+        )
+        self.assertEqual(
+            (106.5, 17.5), panel.GLOBAL_CONTROLS["pm_depth_cv_jack"]
+        )
+        self.assertEqual(
+            (118.5, 17.5), panel.GLOBAL_CONTROLS["pm_depth_cv_atten"]
+        )
+        self.assertEqual(
+            (106.5, 29.0), panel.GLOBAL_CONTROLS["external_pm_jack"]
+        )
+        self.assertEqual(
+            (118.5, 29.0), panel.GLOBAL_CONTROLS["external_pm_atten"]
+        )
+        master_x, master_y = panel.GLOBAL_CONTROLS["master_knob"]
+        output_x, output_y = panel.GLOBAL_CONTROLS["main_output"]
+        over_x, over_y = panel.GLOBAL_CONTROLS["over_light"]
+        self.assertEqual((141.0, 17.5), (master_x, master_y))
+        pm_depth_x, pm_depth_y = panel.GLOBAL_CONTROLS["pm_depth_knob"]
+        pm_cv_x, pm_cv_y = panel.GLOBAL_CONTROLS["pm_depth_cv_jack"]
+        self.assertLess(pm_depth_x, pm_cv_x)
+        self.assertAlmostEqual(pm_depth_y, pm_cv_y)
+        self.assertLess(master_x, output_x)
+        self.assertAlmostEqual(master_y, output_y)
+        self.assertAlmostEqual(over_x, output_x)
+        self.assertGreater(over_y, output_y)
+
+    def test_socket_attenuator_pairs_have_small_rounded_group_boxes(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        expected_pairs = {
+            "pm-depth-cv-group": ("pm_depth_cv_jack", "pm_depth_cv_atten"),
+            "external-pm-group": ("external_pm_jack", "external_pm_atten"),
+        }
+        for operator in range(1, 5):
+            for parameter in ("output", "warp", "fold", "feedback"):
+                expected_pairs[f"op{operator}-{parameter}-cv-group"] = (
+                    f"op{operator}_{parameter}_cv_input",
+                    f"op{operator}_{parameter}_cv_atten",
+                )
+
+        group_boxes = {
+            node.attrib.get("id"): node
+            for node in root.iter()
+            if node.tag.endswith("rect")
+            and node.attrib.get("id") in expected_pairs
+        }
+        self.assertEqual(set(expected_pairs), set(group_boxes))
+        components = {
+            name: (x, y)
+            for name, x, y in panel.COMPONENTS
+        }
+        for identifier, (socket_name, atten_name) in expected_pairs.items():
+            group = group_boxes[identifier]
+            group_x = float(group.attrib["x"])
+            group_y = float(group.attrib["y"])
+            group_width = float(group.attrib["width"])
+            group_height = float(group.attrib["height"])
+            socket_x, socket_y = components[socket_name]
+            atten_x, atten_y = components[atten_name]
+            socket_radius = panel.COMPONENT_RADII[socket_name]
+            atten_radius = panel.COMPONENT_RADII[atten_name]
+            with self.subTest(group=identifier, style="outline"):
+                self.assertEqual("none", group.attrib["fill"])
+                self.assertEqual(panel.SECTION_BLUE_GREY,
+                                 group.attrib["stroke"])
+                self.assertGreater(float(group.attrib["rx"]), 0.0)
+            with self.subTest(group=identifier, enclosure="horizontal"):
+                self.assertLessEqual(group_x, socket_x - socket_radius)
+                self.assertGreaterEqual(
+                    group_x + group_width,
+                    atten_x + atten_radius,
+                )
+            with self.subTest(group=identifier, enclosure="vertical"):
+                self.assertAlmostEqual(socket_y, atten_y)
+                self.assertLessEqual(group_y, socket_y - socket_radius)
+                self.assertGreaterEqual(
+                    group_y + group_height,
+                    socket_y + socket_radius,
+                )
+            with self.subTest(group=identifier, size="small"):
+                expected_width = (
+                    22.353 if identifier in {
+                        "pm-depth-cv-group", "external-pm-group"
+                    } else 20.853
+                )
+                self.assertAlmostEqual(expected_width, group_width, delta=0.001)
+                self.assertAlmostEqual(9.126, group_height, delta=0.001)
+
+    def test_routing_display_uses_readable_nodes_and_branch_lanes(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        routing_art = next(
+            node for node in root.iter()
+            if node.attrib.get("id") == "routing-display-art"
+        )
+        circles = [
+            node for node in routing_art if node.tag.endswith("circle")
+        ]
+        labels = [
+            node for node in routing_art if node.tag.endswith("text")
+        ]
+        strokes = [
+            node for node in routing_art
+            if node.tag.endswith(("path", "line"))
+        ]
+        self.assertEqual(4, len(circles))
+        self.assertEqual(4, len(labels))
+        self.assertTrue(strokes)
+        self.assertTrue(all(float(node.attrib["r"]) == 1.5
+                            for node in circles))
+        self.assertTrue(all(float(node.attrib["font-size"]) == 2.1
+                            for node in labels))
+        self.assertTrue(all(float(node.attrib["stroke-width"]) == 0.5
+                            for node in strokes))
+        self.assertAlmostEqual(1.5, panel.ROUTING_NODE_RADIUS)
+        self.assertAlmostEqual(0.5, panel.ROUTING_EDGE_STROKE_WIDTH)
+        self.assertAlmostEqual(0.4, panel.ROUTING_NODE_STROKE_WIDTH)
+        self.assertAlmostEqual(2.1, panel.ROUTING_NODE_LABEL_SIZE)
+        self.assertAlmostEqual(0.7, panel.ROUTING_BRANCH_OFFSET)
+        routing_body = _extract_struct_body(
+            self.source, "struct AlgorithmRoutingDisplay"
+        )
+        for contract in ("sourceOffset", "destinationOffset",
+                         "ROUTING_BRANCH_OFFSET"):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, routing_body)
 
     def test_operator_parameter_controls_share_rows_with_their_cv_controls(self):
         panel = self.require_panel()
@@ -425,6 +543,10 @@ class FourV2PanelTest(unittest.TestCase):
                     self.assertAlmostEqual(knob[1], atten[1])
                     self.assertLess(knob[0], cv_input[0])
                     self.assertLess(cv_input[0], atten[0])
+            with self.subTest(operator=operator, alignment="left-column"):
+                output_x = components[f"op{operator}_output"][0]
+                self.assertAlmostEqual(coarse[0], output_x)
+                self.assertAlmostEqual(fine[0], output_x)
             self.assertEqual(sorted(parameter_y), parameter_y)
             self.assertGreater(parameter_y[0], fine[1])
 
@@ -485,6 +607,11 @@ class FourV2PanelTest(unittest.TestCase):
             with self.subTest(contract=contract):
                 self.assertIn(contract, self.source)
 
+    def test_frequency_readout_matches_switch_label_scale(self):
+        panel = self.require_panel()
+        self.assertAlmostEqual(3.2, panel.FREQUENCY_DISPLAY_FONT_SIZE)
+        self.assertIn("FREQUENCY_DISPLAY_FONT_SIZE", self.source)
+
     def test_integrated_cv_rows_and_columns_align_to_operator_centres(self):
         panel = self.require_panel()
         self.assertEqual(tuple(panel.OPERATOR_CENTRES_X),
@@ -507,62 +634,17 @@ class FourV2PanelTest(unittest.TestCase):
         ]
         self.assertEqual([], guide_lines)
 
-    def test_integrated_cv_headers_align_with_every_cv_control_pair(self):
+    def test_operator_cv_and_atten_columns_have_no_headings(self):
         panel = self.require_panel()
         root = ET.fromstring(PANEL_SVG.read_text(encoding="utf-8"))
-        header = _emitted_header_floats(
-            LAYOUT_HEADER.read_text(encoding="utf-8")
-        )
         labels = [
             node for node in root.iter()
             if node.tag.endswith("text")
             and node.text in {"CV", "ATTEN"}
             and abs(float(node.attrib["y"]) -
-                    panel.OPERATOR_PARAMETER_HEADER_Y) < 0.01
+                    panel.OPERATOR_LABEL_YS["output"]) < 0.01
         ]
-        self.assertEqual(8, len(labels))
-
-        circles = [
-            node for node in root.iter()
-            if node.tag.endswith("circle")
-            and "cx" in node.attrib
-            and "cy" in node.attrib
-        ]
-        for index in range(1, 5):
-            input_prefix = f"OP{index}_OUTPUT_CV_INPUT"
-            atten_prefix = f"OP{index}_OUTPUT_CV_ATTEN"
-            input_x = header[f"{input_prefix}_X"]
-            atten_x = header[f"{atten_prefix}_X"]
-            for role, x in (("CV", input_x), ("ATTEN", atten_x)):
-                matches = [
-                    label for label in labels
-                    if label.text == role
-                    and abs(float(label.attrib["x"]) - x) < 0.01
-                ]
-                self.assertEqual(1, len(matches))
-                self.assertAlmostEqual(
-                    header["OPERATOR_PARAMETER_HEADER_Y"],
-                    float(matches[0].attrib["y"]),
-                )
-            for row in panel.PATCHBAY_ROWS:
-                slug = row.upper()
-                for role in ("CV_INPUT", "CV_ATTEN"):
-                    prefix = f"OP{index}_{slug}_{role}"
-                    x = header[f"{prefix}_X"]
-                    y = header[f"{prefix}_Y"]
-                    matches = [
-                        circle for circle in circles
-                        if float(circle.attrib["cx"]) == x
-                        and float(circle.attrib["cy"]) == y
-                    ]
-                    self.assertEqual(
-                        1,
-                        len(matches),
-                        f"missing emitted SVG component for {prefix}",
-                    )
-                    self.assertAlmostEqual(
-                        header[f"OP{index}_{slug}_CV_INPUT_Y"], y
-                    )
+        self.assertEqual([], labels)
 
     def test_operator_labels_clear_their_real_control_envelopes(self):
         panel = self.require_panel()
@@ -570,7 +652,7 @@ class FourV2PanelTest(unittest.TestCase):
         labels = [
             node for node in root.iter()
             if node.tag.endswith("text") and node.text in {
-                "COARSE", "MODE", "FINE", "OUTPUT", "WARP", "FOLD", "TYPE",
+                "COARSE", "MODE", "FINE", "LEVEL", "WARP", "FOLD", "TYPE",
                 "FEEDBACK",
             }
         ]
@@ -583,7 +665,7 @@ class FourV2PanelTest(unittest.TestCase):
             "COARSE": "coarse",
             "MODE": "freq_mode",
             "FINE": "fine",
-            "OUTPUT": "output",
+            "LEVEL": "output",
             "WARP": "warp",
             "FOLD": "fold",
             "TYPE": "fold_type",
@@ -610,6 +692,8 @@ class FourV2PanelTest(unittest.TestCase):
             with self.subTest(operator=operator, label=label.text,
                               contract="readable size"):
                 self.assertGreaterEqual(font_size, 1.4)
+                expected_size = 1.9 if label.text in {"MODE", "TYPE"} else 2.0
+                self.assertAlmostEqual(expected_size, font_size)
             label_top = baseline - font_size
             label_bottom = baseline + font_size * 0.25
             above_clearance = component_y - radius - label_bottom
@@ -682,11 +766,12 @@ class FourV2PanelTest(unittest.TestCase):
         labels = {node.text for node in root.iter()
                   if node.tag.endswith("text") and node.text}
         for expected in ("FourV2", "OP1", "OP2", "OP3", "OP4",
-                         "OUTPUT", "WARP", "FOLD", "FEEDBACK", "CV",
-                         "ATTEN", "PM DEPTH", "MASTER", "OVER"):
+                         "LEVEL", "WARP", "FOLD", "FEEDBACK",
+                         "PM DEPTH", "MASTER", "PM CV", "EXT PM"):
             with self.subTest(label=expected):
                 self.assertIn(expected, labels)
-        for removed in ("ROUTING", "ALGORITHM", "CV PATCHBAY"):
+        for removed in ("ROUTING", "ALGORITHM", "CV PATCHBAY",
+                        "OUTPUT", "ATTEN", "OVER"):
             with self.subTest(removed_label=removed):
                 self.assertNotIn(removed, labels)
 
@@ -706,15 +791,28 @@ class FourV2PanelTest(unittest.TestCase):
             '"FourV2"',
             '"COARSE"',
             '"MODE"',
-            '"CV"',
             '"FEEDBACK"',
+            '"LEVEL"',
+            '"PM CV"',
+            '"EXT PM"',
             '"MAIN OUT"',
+            "GLOBAL_LABEL_SIZE",
         ):
             with self.subTest(contract=contract):
                 self.assertIn(contract, body)
-        for removed in ('"ROUTING"', '"ALGORITHM"', '"CV PATCHBAY"'):
+        for removed in ('"ROUTING"', '"ALGORITHM"', '"CV PATCHBAY"',
+                        '"ATTEN"', '"OVER"'):
             with self.subTest(removed_label=removed):
                 self.assertNotIn(removed, body)
+        self.assertNotIn("OVER_LABEL_Y", body)
+        self.assertNotIn(
+            "const float cvX[]",
+            body,
+        )
+        self.assertNotIn(
+            "const float attenX[]",
+            body,
+        )
         self.assertRegex(source, r"addChild\(\s*labels\s*\)")
 
     def test_generated_artifacts_match_generators(self):

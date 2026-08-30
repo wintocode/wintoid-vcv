@@ -528,22 +528,18 @@ struct FourV2PanelLabels : Widget {
         const Label labels[] = {
             {TITLE_X, TITLE_Y, TITLE_FONT_SIZE, leftBaseline,
              36, 37, 34, "FourV2"},
-            {ALGORITHM_KNOB_X, ALGORITHM_LABEL_Y, 1.55f, centerBaseline,
+            {ALGORITHM_KNOB_X, ALGORITHM_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
              36, 37, 34, "ALGO"},
-            {TUNE_KNOB_X, GLOBAL_LABEL_Y, 1.55f, centerBaseline,
+            {TUNE_KNOB_X, GLOBAL_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
              36, 37, 34, "TUNE"},
-            {PM_DEPTH_KNOB_X, GLOBAL_LABEL_Y, 1.55f, centerBaseline,
+            {PM_DEPTH_KNOB_X, GLOBAL_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
              36, 37, 34, "PM DEPTH"},
-            {MASTER_KNOB_X, GLOBAL_LABEL_Y, 1.55f, centerBaseline,
+            {MASTER_KNOB_X, GLOBAL_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
              36, 37, 34, "MASTER"},
-            {PM_DEPTH_CV_JACK_X, GLOBAL_LABEL_Y, 1.55f, centerBaseline,
+            {PM_DEPTH_CV_JACK_X, GLOBAL_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
              36, 37, 34, "PM CV"},
-            {PM_DEPTH_CV_ATTEN_X, GLOBAL_LABEL_Y, 1.55f, centerBaseline,
-             36, 37, 34, "ATTEN"},
-            {EXTERNAL_PM_JACK_X, EXTERNAL_PM_LABEL_Y, 1.65f, centerBaseline,
+            {EXTERNAL_PM_JACK_X, EXTERNAL_PM_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
              36, 37, 34, "EXT PM"},
-            {EXTERNAL_PM_ATTEN_X, EXTERNAL_PM_LABEL_Y, 1.55f, centerBaseline,
-             36, 37, 34, "ATTEN"},
         };
         for (const Label& label : labels)
             drawLabel(args, label);
@@ -580,15 +576,7 @@ struct FourV2PanelLabels : Widget {
             OPERATOR_FOLD_LABEL_Y, OPERATOR_FEEDBACK_LABEL_Y
         };
         const char* parameterLabels[] = {
-            "OUTPUT", "WARP", "FOLD", "FEEDBACK"
-        };
-        const float cvX[] = {
-            OP1_OUTPUT_CV_INPUT_X, OP2_OUTPUT_CV_INPUT_X,
-            OP3_OUTPUT_CV_INPUT_X, OP4_OUTPUT_CV_INPUT_X
-        };
-        const float attenX[] = {
-            OP1_OUTPUT_CV_ATTEN_X, OP2_OUTPUT_CV_ATTEN_X,
-            OP3_OUTPUT_CV_ATTEN_X, OP4_OUTPUT_CV_ATTEN_X
+            "LEVEL", "WARP", "FOLD", "FEEDBACK"
         };
         for (int op = 0; op < 4; ++op) {
             drawLabel(args, {operatorHeadingX[op], OPERATOR_HEADING_Y,
@@ -605,14 +593,8 @@ struct FourV2PanelLabels : Widget {
                               OPERATOR_LABEL_SIZE,
                               centerBaseline, 36, 37, 34, "FINE"});
             drawLabel(args, {foldTypeX[op], OPERATOR_FINE_FOLD_TYPE_LABEL_Y,
-                              OPERATOR_LABEL_SIZE,
+                              OPERATOR_MODE_LABEL_SIZE,
                               centerBaseline, 36, 37, 34, "TYPE"});
-            drawLabel(args, {cvX[op], OPERATOR_PARAMETER_HEADER_Y,
-                              OPERATOR_PARAMETER_HEADER_SIZE,
-                              centerBaseline, 36, 37, 34, "CV"});
-            drawLabel(args, {attenX[op], OPERATOR_PARAMETER_HEADER_Y,
-                              OPERATOR_PARAMETER_HEADER_SIZE,
-                              centerBaseline, 36, 37, 34, "ATTEN"});
             for (int row = 0; row < 4; ++row) {
                 drawLabel(args, {parameterX[row][op], parameterLabelY[row],
                                   OPERATOR_LABEL_SIZE,
@@ -621,13 +603,11 @@ struct FourV2PanelLabels : Widget {
             }
         }
 
-        drawLabel(args, {VOCT_LABEL_X, SHARED_IO_LABEL_Y, 1.55f, centerBaseline,
+        drawLabel(args, {VOCT_LABEL_X, SHARED_IO_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
                          36, 37, 34, "V/OCT"});
         drawLabel(args, {MAIN_OUTPUT_LABEL_X, MAIN_OUTPUT_LABEL_Y,
-                         1.55f, centerBaseline,
+                         GLOBAL_LABEL_SIZE, centerBaseline,
                          36, 37, 34, "MAIN OUT"});
-        drawLabel(args, {OVER_LIGHT_X, OVER_LABEL_Y, 1.55f, centerBaseline,
-                         183, 105, 60, "OVER"});
 
         Widget::drawLayer(args, layer);
     }
@@ -647,6 +627,7 @@ struct AlgorithmRoutingDisplay : Widget {
         if (layer != 1)
             return;
 
+        using namespace four_v2_layout;
         const float strokeWidth = mm2px(0.35f);
         const float inset = wintoid::ui::stroke_inset(strokeWidth);
         nvgBeginPath(args.vg);
@@ -661,9 +642,10 @@ struct AlgorithmRoutingDisplay : Widget {
         nvgStrokeWidth(args.vg, strokeWidth);
         nvgStroke(args.vg);
 
-        const float edgeStroke = mm2px(0.45f);
-        const float nodeStroke = mm2px(0.35f);
-        const float nodeRadius = mm2px(1.35f);
+        const float edgeStroke = mm2px(ROUTING_EDGE_STROKE_WIDTH);
+        const float nodeStroke = mm2px(ROUTING_NODE_STROKE_WIDTH);
+        const float nodeRadius = mm2px(ROUTING_NODE_RADIUS);
+        const float branchOffset = mm2px(ROUTING_BRANCH_OFFSET);
         const float nodeInset = nodeRadius + nodeStroke * 0.5f;
         const float left = inset + mm2px(2.4f) + nodeInset;
         const float right = box.size.x - inset - mm2px(2.4f) - nodeInset;
@@ -703,22 +685,49 @@ struct AlgorithmRoutingDisplay : Widget {
                 const float controlX = mm2px(2.4f);
                 const float controlY = nodeY
                     - mm2px(2.2f + 1.3f * static_cast<float>(span));
+                int outgoingCount = 0;
+                int outgoingIndex = 0;
+                int incomingCount = 0;
+                int incomingIndex = 0;
+                for (int candidate = 0;
+                     candidate < four_v2::OPERATOR_COUNT; ++candidate) {
+                    if (candidate != source
+                        && algorithm.mod[source][candidate]) {
+                        if (candidate < destination)
+                            ++outgoingIndex;
+                        ++outgoingCount;
+                    }
+                    if (candidate != destination
+                        && algorithm.mod[candidate][destination]) {
+                        if (candidate < source)
+                            ++incomingIndex;
+                        ++incomingCount;
+                    }
+                }
+                const float sourceOffset = branchOffset * (
+                    static_cast<float>(outgoingIndex)
+                    - (static_cast<float>(outgoingCount) - 1.f) * 0.5f);
+                const float destinationOffset = branchOffset * (
+                    static_cast<float>(incomingIndex)
+                    - (static_cast<float>(incomingCount) - 1.f) * 0.5f);
+                const float startY = nodeY + sourceOffset;
+                const float endY = nodeY + destinationOffset;
 
                 nvgBeginPath(args.vg);
-                nvgMoveTo(args.vg, startX, nodeY);
+                nvgMoveTo(args.vg, startX, startY);
                 nvgBezierTo(
                     args.vg,
                     startX + direction * controlX, controlY,
                     endX - direction * controlX, controlY,
-                    endX, nodeY);
+                    endX, endY);
                 nvgStroke(args.vg);
 
                 const float arrowBaseX = endX - direction * arrowLength;
                 nvgBeginPath(args.vg);
-                nvgMoveTo(args.vg, endX, nodeY);
-                nvgLineTo(args.vg, arrowBaseX, nodeY - arrowWidth);
-                nvgMoveTo(args.vg, endX, nodeY);
-                nvgLineTo(args.vg, arrowBaseX, nodeY + arrowWidth);
+                nvgMoveTo(args.vg, endX, endY);
+                nvgLineTo(args.vg, arrowBaseX, endY - arrowWidth);
+                nvgMoveTo(args.vg, endX, endY);
+                nvgLineTo(args.vg, arrowBaseX, endY + arrowWidth);
                 nvgStroke(args.vg);
             }
         }
@@ -754,7 +763,7 @@ struct AlgorithmRoutingDisplay : Widget {
             asset::system("res/fonts/DejaVuSans.ttf"));
         if (font) {
             nvgFontFaceId(args.vg, font->handle);
-            nvgFontSize(args.vg, mm2px(1.8f));
+            nvgFontSize(args.vg, mm2px(ROUTING_NODE_LABEL_SIZE));
             nvgFillColor(args.vg, nvgRGB(236, 232, 217));
             nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
             for (int op = 0; op < four_v2::OPERATOR_COUNT; ++op) {

@@ -111,26 +111,32 @@ LOGO_SCALE = 0.06
 
 
 # Global routing/control band.
-ROUTING_SECTION = (4.0, 10.5, WIDTH_MM - 8.0, 25.5)
+ROUTING_SECTION = (4.0, 10.3, WIDTH_MM - 8.0, 25.7)
 ROUTING_DISPLAY = (17.5, 13.0, 48.0, 21.0)
 ROUTING_DISPLAY_INSET = 1.3
+ROUTING_EDGE_STROKE_WIDTH = 0.50
+ROUTING_NODE_RADIUS = 1.50
+ROUTING_NODE_STROKE_WIDTH = 0.40
+ROUTING_NODE_LABEL_SIZE = 2.10
+ROUTING_BRANCH_OFFSET = 0.70
 GLOBAL_CONTROLS = {
     "algorithm_knob": (8.5, 29.0),
     "tune_knob": (70.5, 17.5),
-    "pm_depth_knob": (82.5, 17.5),
-    "master_knob": (94.5, 17.5),
-    "pm_depth_cv_jack": (119.0, 17.5),
-    "pm_depth_cv_atten": (131.0, 17.5),
+    "pm_depth_knob": (94.5, 17.5),
+    "master_knob": (141.0, 17.5),
+    "pm_depth_cv_jack": (106.5, 17.5),
+    "pm_depth_cv_atten": (118.5, 17.5),
     "external_pm_jack": (106.5, 29.0),
     "external_pm_atten": (118.5, 29.0),
     "voct_jack": (8.5, 17.5),
     "main_output": (153.0, 17.5),
-    "over_light": (145.0, 29.0),
+    "over_light": (153.0, 29.0),
 }
-ALGORITHM_LABEL_Y = 23.5
-GLOBAL_LABEL_Y = 12.3
+ALGORITHM_LABEL_Y = 23.7
+GLOBAL_LABEL_Y = 12.4
+GLOBAL_LABEL_SIZE = 1.90
 EXTERNAL_PM_LABEL_Y = 23.8
-MAIN_OUTPUT_LABEL_Y = GLOBAL_LABEL_Y
+MAIN_OUTPUT_LABEL_Y = 12.3
 
 
 # Four equal operator fields.  Frequency controls occupy two compact rows;
@@ -165,39 +171,43 @@ OPERATOR_ROW_YS = {
     "feedback": 118.5,
 }
 OPERATOR_LABEL_YS = {
-    "coarse_mode": 47.2,
-    "fine_fold_type": 59.7,
-    "output": 73.0,
-    "warp": 86.5,
-    "fold": 100.0,
-    "feedback": 113.5,
+    "coarse_mode": 47.0,
+    "fine_fold_type": 59.5,
+    "output": 72.8,
+    "warp": 86.3,
+    "fold": 99.8,
+    "feedback": 113.3,
 }
 OPERATOR_HEADING_X_OFFSET = 4.0
 OPERATOR_HEADING_Y = 43.2
-OPERATOR_HEADING_SIZE = 3.5
-OPERATOR_LABEL_SIZE = 1.60
-OPERATOR_MODE_LABEL_SIZE = 1.45
+OPERATOR_HEADING_SIZE = 5.00
+OPERATOR_LABEL_SIZE = 2.00
+OPERATOR_MODE_LABEL_SIZE = 1.90
 OPERATOR_X_OFFSETS = {
-    "coarse": -8.75,
+    "coarse": -10.5,
     "freq_mode": 8.75,
-    "fine": -8.75,
+    "fine": -10.5,
     "fold_type": 8.75,
     "output": -10.5,
     "warp": -10.5,
     "fold": -10.5,
     "feedback": -10.5,
 }
+OPERATOR_PARAMETER_LABELS = {
+    "output": "LEVEL",
+    "warp": "WARP",
+    "fold": "FOLD",
+    "feedback": "FEEDBACK",
+}
 OPERATOR_PARAMETER_X_OFFSETS = {
     "knob": -10.5,
     "cv_input": 0.0,
     "cv_atten": 10.5,
 }
-OPERATOR_PARAMETER_HEADER_Y = 73.0
-OPERATOR_PARAMETER_HEADER_SIZE = 1.35
 FREQUENCY_DISPLAY_TOP = 39.0
 FREQUENCY_DISPLAY_HEIGHT = 5.5
 FREQUENCY_DISPLAY_WIDTH = OPERATOR_SECTION_WIDTH - 19.0
-FREQUENCY_DISPLAY_FONT_SIZE = 2.4
+FREQUENCY_DISPLAY_FONT_SIZE = 3.2
 FREQUENCY_DISPLAY_RECTS = tuple(
     (
         rect[0] + 15.0,
@@ -232,13 +242,65 @@ PATCHBAY_CELLS = {
 }
 
 
+# Small outline-only enclosures make each socket/attenuator pair read as one
+# control without changing the established control positions.
+PAIR_GROUP_PADDING_X = 1.25
+PAIR_GROUP_PADDING_TOP = 0.35
+PAIR_GROUP_PADDING_BOTTOM = 0.75
+PAIR_GROUP_RADIUS = 1.0
+PAIR_GROUP_STROKE_WIDTH = 0.25
+PAIR_GROUP_FILL = "none"
+PAIR_GROUP_STROKE = SECTION_BLUE_GREY
+
+
+def _pair_group_rect(input_x: float, atten_x: float, y: float) -> tuple[float, ...]:
+    left = input_x - PORT_RADIUS - PAIR_GROUP_PADDING_X
+    right = atten_x + SMALL_KNOB_RADIUS + PAIR_GROUP_PADDING_X
+    top = y - PORT_RADIUS - PAIR_GROUP_PADDING_TOP
+    bottom = y + PORT_RADIUS + PAIR_GROUP_PADDING_BOTTOM
+    return left, top, right - left, bottom - top
+
+
+GLOBAL_PAIR_GROUP_RECTS = (
+    (
+        "pm-depth-cv-group",
+        _pair_group_rect(
+            GLOBAL_CONTROLS["pm_depth_cv_jack"][0],
+            GLOBAL_CONTROLS["pm_depth_cv_atten"][0],
+            GLOBAL_CONTROLS["pm_depth_cv_jack"][1],
+        ),
+    ),
+    (
+        "external-pm-group",
+        _pair_group_rect(
+            GLOBAL_CONTROLS["external_pm_jack"][0],
+            GLOBAL_CONTROLS["external_pm_atten"][0],
+            GLOBAL_CONTROLS["external_pm_jack"][1],
+        ),
+    ),
+)
+OPERATOR_PAIR_GROUP_RECTS = tuple(
+    (
+        f"op{index}-{parameter}-cv-group",
+        _pair_group_rect(
+            centre_x + OPERATOR_PARAMETER_X_OFFSETS["cv_input"],
+            centre_x + OPERATOR_PARAMETER_X_OFFSETS["cv_atten"],
+            OPERATOR_ROW_YS[parameter],
+        ),
+    )
+    for index, centre_x in enumerate(OPERATOR_CENTRES_X, start=1)
+    for parameter in ("output", "warp", "fold", "feedback")
+)
+PAIR_GROUP_RECTS = GLOBAL_PAIR_GROUP_RECTS + OPERATOR_PAIR_GROUP_RECTS
+PAIR_GROUP_RECT_BY_ID = dict(PAIR_GROUP_RECTS)
+
+
 # Shared I/O is integrated into the global band so the operator CV bays can
 # remain complete, repeated fields down to their bottom borders.
 SHARED_IO_SECTION = ROUTING_SECTION
 VOCT_LABEL_X = GLOBAL_CONTROLS["voct_jack"][0]
 MAIN_OUTPUT_LABEL_X = GLOBAL_CONTROLS["main_output"][0]
 SHARED_IO_LABEL_Y = GLOBAL_LABEL_Y
-OVER_LABEL_Y = 26.5
 SHARED_IO = {
     "voct_jack": GLOBAL_CONTROLS["voct_jack"],
     "main_output": GLOBAL_CONTROLS["main_output"],
@@ -561,7 +623,6 @@ LABEL_CLEARANCES = {
     "pm_depth_cv": {"clearance_mm": 0.35},
     "external_pm": {"clearance_mm": 0.35},
     "main_output": {"clearance_mm": 0.35},
-    "over": {"clearance_mm": 0.35},
     **{
         f"op{index}_heading": {"clearance_mm": 0.35}
         for index in range(1, 5)
@@ -671,19 +732,27 @@ def _append_routing_artwork(lines: list[str]) -> None:
                 f"{_fmt(destination - 7.0)} {_fmt(node_y + 4.0)}, "
                 f"{_fmt(destination - 2.0)} {_fmt(node_y)}",
                 ROUTING_MODULATION,
-                0.45,
+                ROUTING_EDGE_STROKE_WIDTH,
             )
         )
     rail_y = inner_y + inner_height * 0.76
-    lines.append(_line(node_xs[0], rail_y, node_xs[-1], rail_y, ROUTING_CARRIER, 0.45))
+    lines.append(
+        _line(
+            node_xs[0], rail_y, node_xs[-1], rail_y,
+            ROUTING_CARRIER, ROUTING_EDGE_STROKE_WIDTH,
+        )
+    )
     for index, node_x in enumerate(node_xs, start=1):
         lines.append(
-            f'    <circle cx="{_fmt(node_x)}" cy="{_fmt(node_y)}" r="1.65" '
-            f'fill="{DISPLAY_CHARCOAL}" stroke="{PANEL_IVORY}" stroke-width="0.35" />'
+            f'    <circle cx="{_fmt(node_x)}" cy="{_fmt(node_y)}" '
+            f'r="{_fmt(ROUTING_NODE_RADIUS)}" fill="{DISPLAY_CHARCOAL}" '
+            f'stroke="{PANEL_IVORY}" '
+            f'stroke-width="{_fmt(ROUTING_NODE_STROKE_WIDTH)}" />'
         )
         lines.append(
             f'    <text x="{_fmt(node_x)}" y="{_fmt(node_y + 0.8)}" '
-            'text-anchor="middle" font-family="DejaVu Sans" font-size="1.8" '
+            f'text-anchor="middle" font-family="DejaVu Sans" '
+            f'font-size="{_fmt(ROUTING_NODE_LABEL_SIZE)}" '
             f'fill="{PANEL_IVORY}">{index}</text>'
         )
     lines.append("  </g>")
@@ -727,33 +796,38 @@ def generate_svg() -> str:
             GLOBAL_CONTROLS["algorithm_knob"][0],
             ALGORITHM_LABEL_Y,
             "ALGO",
-            size=1.55,
+            size=GLOBAL_LABEL_SIZE,
             weight="600",
         )
     )
     _append_routing_artwork(lines)
+    for identifier, (x, y, width, height) in GLOBAL_PAIR_GROUP_RECTS:
+        lines.append(
+            _rect(
+                x,
+                y,
+                width,
+                height,
+                PAIR_GROUP_FILL,
+                PAIR_GROUP_STROKE,
+                identifier=identifier,
+                radius=PAIR_GROUP_RADIUS,
+                stroke_width=PAIR_GROUP_STROKE_WIDTH,
+            )
+        )
     for value, x in (
         ("TUNE", GLOBAL_CONTROLS["tune_knob"][0]),
         ("PM DEPTH", GLOBAL_CONTROLS["pm_depth_knob"][0]),
         ("MASTER", GLOBAL_CONTROLS["master_knob"][0]),
         ("PM CV", GLOBAL_CONTROLS["pm_depth_cv_jack"][0]),
-        ("ATTEN", GLOBAL_CONTROLS["pm_depth_cv_atten"][0]),
     ):
-        lines.append(_text(x, GLOBAL_LABEL_Y, value, size=1.55))
+        lines.append(_text(x, GLOBAL_LABEL_Y, value, size=GLOBAL_LABEL_SIZE))
     lines.append(
         _text(
             GLOBAL_CONTROLS["external_pm_jack"][0],
             EXTERNAL_PM_LABEL_Y,
             "EXT PM",
-            size=1.65,
-        )
-    )
-    lines.append(
-        _text(
-            GLOBAL_CONTROLS["external_pm_atten"][0],
-            EXTERNAL_PM_LABEL_Y,
-            "ATTEN",
-            size=1.55,
+            size=GLOBAL_LABEL_SIZE,
         )
     )
 
@@ -797,6 +871,23 @@ def generate_svg() -> str:
                 stroke_width=0.25,
             )
         )
+        for parameter in ("output", "warp", "fold", "feedback"):
+            group_x, group_y, group_width, group_height = PAIR_GROUP_RECT_BY_ID[
+                f"op{index}-{parameter}-cv-group"
+            ]
+            lines.append(
+                _rect(
+                    group_x,
+                    group_y,
+                    group_width,
+                    group_height,
+                    PAIR_GROUP_FILL,
+                    PAIR_GROUP_STROKE,
+                    identifier=f"op{index}-{parameter}-cv-group",
+                    radius=PAIR_GROUP_RADIUS,
+                    stroke_width=PAIR_GROUP_STROKE_WIDTH,
+                )
+            )
         # The display text itself is supplied by the host widget at run time.
         lines.append(
             _text(
@@ -827,7 +918,7 @@ def generate_svg() -> str:
                 centre_x + OPERATOR_X_OFFSETS["fold_type"],
                 OPERATOR_LABEL_YS["fine_fold_type"],
                 "TYPE",
-                size=OPERATOR_LABEL_SIZE,
+                size=OPERATOR_MODE_LABEL_SIZE,
             )
         )
         for parameter in ("output", "warp", "fold", "feedback"):
@@ -835,27 +926,10 @@ def generate_svg() -> str:
                 _text(
                     centre_x + OPERATOR_X_OFFSETS[parameter],
                     OPERATOR_LABEL_YS[parameter],
-                    parameter.upper(),
+                    OPERATOR_PARAMETER_LABELS[parameter],
                     size=OPERATOR_LABEL_SIZE,
                 )
             )
-        lines.append(
-            _text(
-                centre_x + OPERATOR_PARAMETER_X_OFFSETS["cv_input"],
-                OPERATOR_PARAMETER_HEADER_Y,
-                "CV",
-                size=OPERATOR_PARAMETER_HEADER_SIZE,
-            )
-        )
-        lines.append(
-            _text(
-                centre_x + OPERATOR_PARAMETER_X_OFFSETS["cv_atten"],
-                OPERATOR_PARAMETER_HEADER_Y,
-                "ATTEN",
-                size=OPERATOR_PARAMETER_HEADER_SIZE,
-            )
-        )
-
     # Operator-specific CV controls share the sound-control rows above.  The
     # component guides are emitted below with the rest of the Rack geometry.
 
@@ -866,7 +940,7 @@ def generate_svg() -> str:
             VOCT_LABEL_X,
             SHARED_IO_LABEL_Y,
             "V/OCT",
-            size=1.55,
+            size=GLOBAL_LABEL_SIZE,
             anchor="middle",
             text_length=4.5,
         )
@@ -876,21 +950,11 @@ def generate_svg() -> str:
             MAIN_OUTPUT_LABEL_X,
             MAIN_OUTPUT_LABEL_Y,
             "MAIN OUT",
-            size=1.55,
+            size=GLOBAL_LABEL_SIZE,
             anchor="middle",
             text_length=9.5,
         )
     )
-    lines.append(
-        _text(
-            GLOBAL_CONTROLS["over_light"][0],
-            OVER_LABEL_Y,
-            "OVER",
-            size=1.55,
-            fill=FUNCTION_ORANGE,
-        )
-    )
-
     # Rack widget guide circles/rectangles are direct children so existing
     # output-style tests can locate the main output by its coordinate.
     for name, x, y in COMPONENTS:
@@ -929,6 +993,7 @@ def generate_coords_header() -> str:
         _header_float("MINIMUM_LABEL_CLEARANCE_MM", MINIMUM_LABEL_CLEARANCE_MM),
         _header_float("ALGORITHM_LABEL_Y", ALGORITHM_LABEL_Y),
         _header_float("GLOBAL_LABEL_Y", GLOBAL_LABEL_Y),
+        _header_float("GLOBAL_LABEL_SIZE", GLOBAL_LABEL_SIZE),
         _header_float("EXTERNAL_PM_LABEL_Y", EXTERNAL_PM_LABEL_Y),
         "",
         "// Global routing display rectangle",
@@ -940,6 +1005,11 @@ def generate_coords_header() -> str:
             _header_float("ROUTING_DISPLAY_Y", routing_y),
             _header_float("ROUTING_DISPLAY_WIDTH", routing_width),
             _header_float("ROUTING_DISPLAY_HEIGHT", routing_height),
+            _header_float("ROUTING_EDGE_STROKE_WIDTH", ROUTING_EDGE_STROKE_WIDTH),
+            _header_float("ROUTING_NODE_RADIUS", ROUTING_NODE_RADIUS),
+            _header_float("ROUTING_NODE_STROKE_WIDTH", ROUTING_NODE_STROKE_WIDTH),
+            _header_float("ROUTING_NODE_LABEL_SIZE", ROUTING_NODE_LABEL_SIZE),
+            _header_float("ROUTING_BRANCH_OFFSET", ROUTING_BRANCH_OFFSET),
         )
     )
     lines.extend(("", "// Global controls"))
@@ -984,8 +1054,6 @@ def generate_coords_header() -> str:
             _header_float("OPERATOR_FEEDBACK_LABEL_Y", OPERATOR_LABEL_YS["feedback"]),
             _header_float("OPERATOR_LABEL_SIZE", OPERATOR_LABEL_SIZE),
             _header_float("OPERATOR_MODE_LABEL_SIZE", OPERATOR_MODE_LABEL_SIZE),
-            _header_float("OPERATOR_PARAMETER_HEADER_Y", OPERATOR_PARAMETER_HEADER_Y),
-            _header_float("OPERATOR_PARAMETER_HEADER_SIZE", OPERATOR_PARAMETER_HEADER_SIZE),
             _header_float("FREQUENCY_DISPLAY_TOP", FREQUENCY_DISPLAY_TOP),
             _header_float("FREQUENCY_DISPLAY_WIDTH", FREQUENCY_DISPLAY_WIDTH),
             _header_float("FREQUENCY_DISPLAY_HEIGHT", FREQUENCY_DISPLAY_HEIGHT),
@@ -1086,7 +1154,6 @@ def generate_coords_header() -> str:
             _header_float("MAIN_OUTPUT_LABEL_X", MAIN_OUTPUT_LABEL_X),
             _header_float("SHARED_IO_LABEL_Y", SHARED_IO_LABEL_Y),
             _header_float("MAIN_OUTPUT_LABEL_Y", MAIN_OUTPUT_LABEL_Y),
-            _header_float("OVER_LABEL_Y", OVER_LABEL_Y),
             _header_float("RACK_SMALL_KNOB_RADIUS", RACK_SMALL_KNOB_RADIUS, 6),
             _header_float("RACK_PORT_RADIUS", RACK_PORT_RADIUS, 6),
             _header_float("OUTPUT_BACKPLATE_RADIUS", OUTPUT_BACKPLATE_RADIUS, 6),
