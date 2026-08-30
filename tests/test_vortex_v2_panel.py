@@ -15,8 +15,7 @@ OUTPUT_STROKE = "#dfe7f3"
 MINIMUM_LABEL_CLEARANCE_MM = 0.25
 
 
-def load_generator(name):
-    path = ROOT / "scripts" / f"generate_panel_{name}.py"
+def load_generator(path, name):
     if not path.exists():
         return None
     spec = importlib.util.spec_from_file_location(f"panel_{name}", path)
@@ -42,7 +41,7 @@ def circle_at(circles, coordinate):
 class VortexV2PanelTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.panel = load_generator("vortex_v2")
+        cls.panel = load_generator(SCRIPT, "vortex_v2")
 
     def require_panel(self):
         self.assertIsNotNone(
@@ -60,11 +59,15 @@ class VortexV2PanelTest(unittest.TestCase):
 
     def test_outputs_are_the_twelve_modes_in_row_major_order(self):
         panel = self.require_panel()
+        expected_labels = (
+            "LP 6dB", "LP 12dB", "LP 24dB",
+            "HP 6dB", "HP 12dB", "HP 24dB",
+            "BP", "BP+", "Notch", "Notch+", "AP", "AP+",
+        )
+        self.assertEqual(expected_labels, tuple(panel.OUTPUT_LABELS))
         self.assertEqual(
-            ("LP 6dB", "LP 12dB", "LP 24dB",
-             "HP 6dB", "HP 12dB", "HP 24dB",
-             "BP", "BP+", "Notch", "Notch+", "AP", "AP+"),
-            tuple(panel.OUTPUT_LABELS),
+            expected_labels,
+            tuple(name for name, _x, _y in panel.OUTPUT_COMPONENTS),
         )
         self.assertEqual(12, len(panel.OUTPUT_COMPONENTS))
 
@@ -72,8 +75,16 @@ class VortexV2PanelTest(unittest.TestCase):
         panel = self.require_panel()
         positions = [(round(x, 3), round(y, 3))
                      for _, x, y in panel.OUTPUT_COMPONENTS]
-        self.assertEqual(3, len({x for x, _ in positions}))
-        self.assertEqual(4, len({y for _, y in positions}))
+        self.assertEqual(12, len(positions))
+        self.assertEqual(12, len(set(positions)))
+        columns = sorted({x for x, _ in positions})
+        rows = sorted({y for _, y in positions})
+        self.assertEqual(3, len(columns))
+        self.assertEqual(4, len(rows))
+        self.assertEqual(
+            [(x, y) for y in rows for x in columns],
+            positions,
+        )
 
     def test_all_components_clear_edges_and_each_other(self):
         panel = self.require_panel()
@@ -116,6 +127,12 @@ class VortexV2PanelTest(unittest.TestCase):
 
     def test_generated_artifacts_match_checked_in_files(self):
         panel = self.require_panel()
+        self.assertTrue(PANEL_SVG.exists(),
+                        "Task 3 panel SVG is missing: res/VortexV2.svg")
+        self.assertTrue(
+            LAYOUT_HEADER.exists(),
+            "Task 3 layout header is missing: src/VortexV2/layout.h",
+        )
         self.assertEqual(panel.generate_svg(),
                          PANEL_SVG.read_text(encoding="utf-8"))
         self.assertEqual(panel.generate_coords_header(),
