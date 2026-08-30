@@ -7,5 +7,6 @@ void init(Plugin* p) {
     p->addModel(modelFour);
     p->addModel(modelFourV2);
     p->addModel(modelVortex);
+    p->addModel(modelVortexV2);
     p->addModel(modelBrink);
 }

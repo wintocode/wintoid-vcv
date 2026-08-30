@@ -104,6 +104,15 @@ Four; FourV2 is an independent model and does not replace or reinterpret them.
 - **Mode selector** — click display to cycle, right-click for menu
 - **Filter DSP** by Yuriy Ivantsov ([ivantsov-filters](https://github.com/yIvantsov/ivantsov-filters)) — state-space design with Sigma frequency warping
 
+### VortexV2
+Independent twelve-output multi-mode filter (6HP)
+
+- **Controls**: Cutoff (20 Hz – 20 kHz), Resonance, Drive — each with CV input and attenuverter
+- **Outputs**: LP 6/12/24dB, HP 6/12/24dB, BP, BP+, Notch, Notch+, AP, AP+ — in that order
+- **Simultaneous outputs** — all twelve outputs can be used at the same time
+- **Disconnected outputs** — reset and skip their individual filter branch
+- **16-channel polyphony** — voice count follows **AUDIO IN**; mono and shorter polyphonic CV inputs broadcast lane 0
+
 ### Brink
 Dual voltage-window processor (12HP)
 

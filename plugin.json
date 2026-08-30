@@ -47,6 +47,13 @@
       ]
     },
     {
+      "slug": "VortexV2",
+      "name": "VortexV2",
+      "description": "16-channel polyphonic 12-output multi-mode filter with drive and CV control",
+      "manualUrl": "https://github.com/wintocode/wintoid-vcv#vortexv2",
+      "tags": ["Filter", "Effect", "Polyphonic"]
+    },
+    {
       "slug": "Brink",
       "name": "Brink",
       "description": "Polyphonic dual-window utility with bipolar position, directional boundary events, and shared logic",
