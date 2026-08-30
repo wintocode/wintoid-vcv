@@ -14,14 +14,14 @@ constexpr float LOGO_X = 79f;
 constexpr float LOGO_Y = 8f;
 constexpr float LOGO_FONT_SIZE = 3f;
 
-constexpr float GLOBAL_CONTROLS_SECTION_X = 4f;
+constexpr float GLOBAL_CONTROLS_SECTION_X = 4.175f;
 constexpr float GLOBAL_CONTROLS_SECTION_Y = 13f;
-constexpr float GLOBAL_CONTROLS_SECTION_WIDTH = 93.6f;
+constexpr float GLOBAL_CONTROLS_SECTION_WIDTH = 93.25f;
 constexpr float GLOBAL_CONTROLS_SECTION_HEIGHT = 34f;
 
-constexpr float OUTPUTS_SECTION_X = 4f;
+constexpr float OUTPUTS_SECTION_X = 4.175f;
 constexpr float OUTPUTS_SECTION_Y = 53f;
-constexpr float OUTPUTS_SECTION_WIDTH = 93.6f;
+constexpr float OUTPUTS_SECTION_WIDTH = 93.25f;
 constexpr float OUTPUTS_SECTION_HEIGHT = 68f;
 
 constexpr float CUTOFF_KNOB_X = 17f;
