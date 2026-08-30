@@ -290,17 +290,15 @@ class FourV2PanelTest(unittest.TestCase):
         self.assertLessEqual(x + width, panel.WIDTH_MM)
         self.assertLessEqual(y + height, panel.HEIGHT_MM)
 
-    def test_algorithm_knob_is_left_of_and_aligned_with_routing_display(self):
+    def test_algorithm_knob_is_left_of_and_inside_routing_display(self):
         panel = self.require_panel()
         display_x, display_y, _display_width, display_height = \
             panel.DISPLAY_RECTS["ROUTING"]
         algorithm_x, algorithm_y = panel.GLOBAL_CONTROLS["algorithm_knob"]
         algorithm_radius = panel.COMPONENT_RADII["algorithm_knob"]
         self.assertLess(algorithm_x + algorithm_radius, display_x)
-        self.assertAlmostEqual(
-            display_y + display_height / 2.0,
-            algorithm_y,
-        )
+        self.assertGreaterEqual(algorithm_y, display_y)
+        self.assertLessEqual(algorithm_y, display_y + display_height)
 
     def test_frequency_displays_have_equal_dimensions_and_fit(self):
         panel = self.require_panel()
@@ -316,6 +314,86 @@ class FourV2PanelTest(unittest.TestCase):
             self.assertGreaterEqual(y, 0.0)
             self.assertLessEqual(x + width, panel.WIDTH_MM)
             self.assertLessEqual(y + height, panel.HEIGHT_MM)
+
+    def test_operator_headers_are_large_left_aligned_and_share_one_line(self):
+        panel = self.require_panel()
+        root = ET.fromstring(PANEL_SVG.read_text(encoding="utf-8"))
+        for index, section in enumerate(panel.OPERATOR_SECTION_RECTS, start=1):
+            heading = next(
+                node for node in root.iter()
+                if node.tag.endswith("text") and node.text == f"OP{index}"
+            )
+            display = next(
+                node for node in root.iter()
+                if node.tag.endswith("rect")
+                and node.attrib.get("id") == f"op{index}-frequency-display"
+            )
+            heading_x = float(heading.attrib["x"])
+            heading_y = float(heading.attrib["y"])
+            display_x = float(display.attrib["x"])
+            display_y = float(display.attrib["y"])
+            display_height = float(display.attrib["height"])
+            with self.subTest(operator=index, alignment="left"):
+                self.assertEqual("start", heading.attrib["text-anchor"])
+                self.assertAlmostEqual(section[0] + 4.0, heading_x)
+            with self.subTest(operator=index, typography="heading"):
+                self.assertGreaterEqual(float(heading.attrib["font-size"]), 3.4)
+            with self.subTest(operator=index, layout="same-line"):
+                self.assertGreater(display_x, heading_x)
+                self.assertLessEqual(display_y, heading_y)
+                self.assertGreaterEqual(display_y + display_height, heading_y)
+                self.assertGreaterEqual(display_height, 5.5)
+
+        labels = {
+            node.text for node in root.iter()
+            if node.tag.endswith("text") and node.text
+        }
+        self.assertNotIn("FREQ", labels)
+
+    def test_global_labels_are_above_their_controls(self):
+        panel = self.require_panel()
+        root = ET.fromstring(PANEL_SVG.read_text(encoding="utf-8"))
+        label_specs = (
+            ("V/OCT", "voct_jack"),
+            ("ALGO", "algorithm_knob"),
+            ("TUNE", "tune_knob"),
+            ("PM DEPTH", "pm_depth_knob"),
+            ("MASTER", "master_knob"),
+            ("PM CV", "pm_depth_cv_jack"),
+            ("ATTEN", "pm_depth_cv_atten"),
+            ("EXT PM", "external_pm_jack"),
+            ("ATTEN", "external_pm_atten"),
+            ("MAIN OUT", "main_output"),
+            ("OVER", "over_light"),
+        )
+        for text, component_name in label_specs:
+            component_x, component_y = panel.GLOBAL_CONTROLS[component_name]
+            matches = [
+                node for node in root.iter()
+                if node.tag.endswith("text")
+                and node.text == text
+                and abs(float(node.attrib["x"]) - component_x) < 0.01
+            ]
+            with self.subTest(label=text, component=component_name,
+                              contract="single matching label"):
+                self.assertEqual(1, len(matches))
+            if len(matches) != 1:
+                continue
+            label = matches[0]
+            baseline = float(label.attrib["y"])
+            font_size = float(label.attrib["font-size"])
+            label_bottom = baseline + font_size * 0.25
+            radius = panel.COMPONENT_RADII[component_name]
+            with self.subTest(label=text, component=component_name):
+                self.assertEqual("middle", label.attrib["text-anchor"])
+                self.assertGreaterEqual(
+                    component_y - radius - label_bottom,
+                    MINIMUM_LABEL_CLEARANCE_MM,
+                )
+                self.assertGreaterEqual(
+                    baseline - font_size,
+                    panel.SHARED_IO_SECTION[1],
+                )
 
     def test_operator_parameter_controls_share_rows_with_their_cv_controls(self):
         panel = self.require_panel()
@@ -538,7 +616,7 @@ class FourV2PanelTest(unittest.TestCase):
             below_clearance = label_top - (component_y + radius)
             with self.subTest(operator=operator, label=label.text):
                 self.assertGreaterEqual(
-                    max(above_clearance, below_clearance) + 1e-9,
+                    above_clearance + 1e-9,
                     MINIMUM_LABEL_CLEARANCE_MM,
                 )
 

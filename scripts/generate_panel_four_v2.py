@@ -115,7 +115,7 @@ ROUTING_SECTION = (4.0, 10.5, WIDTH_MM - 8.0, 25.5)
 ROUTING_DISPLAY = (17.5, 13.0, 48.0, 21.0)
 ROUTING_DISPLAY_INSET = 1.3
 GLOBAL_CONTROLS = {
-    "algorithm_knob": (8.5, 23.5),
+    "algorithm_knob": (8.5, 29.0),
     "tune_knob": (70.5, 17.5),
     "pm_depth_knob": (82.5, 17.5),
     "master_knob": (94.5, 17.5),
@@ -123,14 +123,14 @@ GLOBAL_CONTROLS = {
     "pm_depth_cv_atten": (131.0, 17.5),
     "external_pm_jack": (106.5, 29.0),
     "external_pm_atten": (118.5, 29.0),
-    "voct_jack": (8.5, 14.5),
+    "voct_jack": (8.5, 17.5),
     "main_output": (153.0, 17.5),
     "over_light": (145.0, 29.0),
 }
-ALGORITHM_LABEL_Y = 29.2
-GLOBAL_LABEL_Y = 12.8
-EXTERNAL_PM_LABEL_Y = 35.1
-MAIN_OUTPUT_LABEL_Y = 24.5
+ALGORITHM_LABEL_Y = 23.5
+GLOBAL_LABEL_Y = 12.3
+EXTERNAL_PM_LABEL_Y = 23.8
+MAIN_OUTPUT_LABEL_Y = GLOBAL_LABEL_Y
 
 
 # Four equal operator fields.  Frequency controls occupy two compact rows;
@@ -165,14 +165,16 @@ OPERATOR_ROW_YS = {
     "feedback": 118.5,
 }
 OPERATOR_LABEL_YS = {
-    "coarse_mode": 57.85,
-    "fine_fold_type": 70.35,
+    "coarse_mode": 47.2,
+    "fine_fold_type": 59.7,
     "output": 73.0,
     "warp": 86.5,
     "fold": 100.0,
     "feedback": 113.5,
 }
-OPERATOR_HEADING_Y = 40.8
+OPERATOR_HEADING_X_OFFSET = 4.0
+OPERATOR_HEADING_Y = 43.2
+OPERATOR_HEADING_SIZE = 3.5
 OPERATOR_LABEL_SIZE = 1.60
 OPERATOR_MODE_LABEL_SIZE = 1.45
 OPERATOR_X_OFFSETS = {
@@ -192,12 +194,14 @@ OPERATOR_PARAMETER_X_OFFSETS = {
 }
 OPERATOR_PARAMETER_HEADER_Y = 73.0
 OPERATOR_PARAMETER_HEADER_SIZE = 1.35
-FREQUENCY_DISPLAY_HEIGHT = 4.0
-FREQUENCY_DISPLAY_WIDTH = OPERATOR_SECTION_WIDTH - 8.0
+FREQUENCY_DISPLAY_TOP = 39.0
+FREQUENCY_DISPLAY_HEIGHT = 5.5
+FREQUENCY_DISPLAY_WIDTH = OPERATOR_SECTION_WIDTH - 19.0
+FREQUENCY_DISPLAY_FONT_SIZE = 2.4
 FREQUENCY_DISPLAY_RECTS = tuple(
     (
-        rect[0] + 4.0,
-        41.5,
+        rect[0] + 15.0,
+        FREQUENCY_DISPLAY_TOP,
         FREQUENCY_DISPLAY_WIDTH,
         FREQUENCY_DISPLAY_HEIGHT,
     )
@@ -231,10 +235,10 @@ PATCHBAY_CELLS = {
 # Shared I/O is integrated into the global band so the operator CV bays can
 # remain complete, repeated fields down to their bottom borders.
 SHARED_IO_SECTION = ROUTING_SECTION
-VOCT_LABEL_X = 13.0
+VOCT_LABEL_X = GLOBAL_CONTROLS["voct_jack"][0]
 MAIN_OUTPUT_LABEL_X = GLOBAL_CONTROLS["main_output"][0]
-SHARED_IO_LABEL_Y = 14.5
-OVER_LABEL_Y = 35.1
+SHARED_IO_LABEL_Y = GLOBAL_LABEL_Y
+OVER_LABEL_Y = 26.5
 SHARED_IO = {
     "voct_jack": GLOBAL_CONTROLS["voct_jack"],
     "main_output": GLOBAL_CONTROLS["main_output"],
@@ -771,12 +775,12 @@ def generate_svg() -> str:
         centre_x = OPERATOR_CENTRES_X[index - 1]
         lines.append(
             _text(
-                centre_x,
+                x + OPERATOR_HEADING_X_OFFSET,
                 OPERATOR_HEADING_Y,
                 f"OP{index}",
-                size=2.4,
+                size=OPERATOR_HEADING_SIZE,
+                anchor="start",
                 weight="600",
-                letter_spacing=0.25,
             )
         )
         display_x, display_y, display_width, display_height = FREQUENCY_DISPLAY_RECTS[index - 1]
@@ -793,9 +797,7 @@ def generate_svg() -> str:
                 stroke_width=0.25,
             )
         )
-        # These small legends are static; the display text itself is supplied
-        # by the host widget at run time.
-        lines.append(_text(display_x + 1.5, display_y + 2.7, "FREQ", size=1.45, fill=SECTION_BLUE_GREY, anchor="start"))
+        # The display text itself is supplied by the host widget at run time.
         lines.append(
             _text(
                 centre_x + OPERATOR_X_OFFSETS["coarse"],
@@ -865,7 +867,7 @@ def generate_svg() -> str:
             SHARED_IO_LABEL_Y,
             "V/OCT",
             size=1.55,
-            anchor="start",
+            anchor="middle",
             text_length=4.5,
         )
     )
@@ -965,7 +967,9 @@ def generate_coords_header() -> str:
             _header_float("OPERATOR_SECTION_HEIGHT", OPERATOR_SECTION_HEIGHT),
             _header_float("OPERATOR_SECTION_WIDTH", OPERATOR_SECTION_WIDTH),
             _header_float("OPERATOR_SECTION_GAP", OPERATOR_SECTION_GAP),
+            _header_float("OPERATOR_HEADING_X_OFFSET", OPERATOR_HEADING_X_OFFSET),
             _header_float("OPERATOR_HEADING_Y", OPERATOR_HEADING_Y),
+            _header_float("OPERATOR_HEADING_SIZE", OPERATOR_HEADING_SIZE),
             _header_float("OPERATOR_COARSE_MODE_Y", OPERATOR_ROW_YS["coarse_mode"]),
             _header_float("OPERATOR_FINE_FOLD_TYPE_Y", OPERATOR_ROW_YS["fine_fold_type"]),
             _header_float("OPERATOR_OUTPUT_Y", OPERATOR_ROW_YS["output"]),
@@ -982,8 +986,10 @@ def generate_coords_header() -> str:
             _header_float("OPERATOR_MODE_LABEL_SIZE", OPERATOR_MODE_LABEL_SIZE),
             _header_float("OPERATOR_PARAMETER_HEADER_Y", OPERATOR_PARAMETER_HEADER_Y),
             _header_float("OPERATOR_PARAMETER_HEADER_SIZE", OPERATOR_PARAMETER_HEADER_SIZE),
+            _header_float("FREQUENCY_DISPLAY_TOP", FREQUENCY_DISPLAY_TOP),
             _header_float("FREQUENCY_DISPLAY_WIDTH", FREQUENCY_DISPLAY_WIDTH),
             _header_float("FREQUENCY_DISPLAY_HEIGHT", FREQUENCY_DISPLAY_HEIGHT),
+            _header_float("FREQUENCY_DISPLAY_FONT_SIZE", FREQUENCY_DISPLAY_FONT_SIZE),
             "constexpr float OPERATOR_FREQUENCY_Y = OPERATOR_COARSE_MODE_Y;",
             "constexpr float OPERATOR_OUTPUT_WARP_Y = OPERATOR_OUTPUT_Y;",
             "constexpr float OPERATOR_FREQUENCY_LABEL_Y = OPERATOR_COARSE_MODE_LABEL_Y;",

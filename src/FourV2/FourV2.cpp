@@ -548,8 +548,11 @@ struct FourV2PanelLabels : Widget {
         for (const Label& label : labels)
             drawLabel(args, label);
 
-        const float operatorCenters[] = {
-            OP1_CENTER_X, OP2_CENTER_X, OP3_CENTER_X, OP4_CENTER_X
+        const float operatorHeadingX[] = {
+            OP1_SECTION_X + OPERATOR_HEADING_X_OFFSET,
+            OP2_SECTION_X + OPERATOR_HEADING_X_OFFSET,
+            OP3_SECTION_X + OPERATOR_HEADING_X_OFFSET,
+            OP4_SECTION_X + OPERATOR_HEADING_X_OFFSET
         };
         const char* operatorHeadings[] = {"OP1", "OP2", "OP3", "OP4"};
         const float coarseX[] = {
@@ -588,8 +591,9 @@ struct FourV2PanelLabels : Widget {
             OP3_OUTPUT_CV_ATTEN_X, OP4_OUTPUT_CV_ATTEN_X
         };
         for (int op = 0; op < 4; ++op) {
-            drawLabel(args, {operatorCenters[op], OPERATOR_HEADING_Y, 2.4f,
-                              centerBaseline, 36, 37, 34,
+            drawLabel(args, {operatorHeadingX[op], OPERATOR_HEADING_Y,
+                              OPERATOR_HEADING_SIZE, leftBaseline,
+                              36, 37, 34,
                               operatorHeadings[op]});
             drawLabel(args, {coarseX[op], OPERATOR_COARSE_MODE_LABEL_Y,
                               OPERATOR_LABEL_SIZE,
@@ -617,7 +621,7 @@ struct FourV2PanelLabels : Widget {
             }
         }
 
-        drawLabel(args, {VOCT_LABEL_X, SHARED_IO_LABEL_Y, 1.55f, leftBaseline,
+        drawLabel(args, {VOCT_LABEL_X, SHARED_IO_LABEL_Y, 1.55f, centerBaseline,
                          36, 37, 34, "V/OCT"});
         drawLabel(args, {MAIN_OUTPUT_LABEL_X, MAIN_OUTPUT_LABEL_Y,
                          1.55f, centerBaseline,
@@ -812,12 +816,8 @@ struct OperatorFrequencyDisplay : Widget {
             asset::system("res/fonts/DejaVuSans.ttf"));
         if (font) {
             nvgFontFaceId(args.vg, font->handle);
-            nvgFontSize(args.vg, mm2px(1.45f));
-            nvgFillColor(args.vg, nvgRGB(85, 109, 128));
-            nvgTextAlign(args.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
-            nvgText(args.vg, mm2px(1.5f), mm2px(2.7f), "FREQ", nullptr);
-
-            nvgFontSize(args.vg, mm2px(1.8f));
+            nvgFontSize(args.vg, mm2px(
+                four_v2_layout::FREQUENCY_DISPLAY_FONT_SIZE));
             nvgFillColor(args.vg, nvgRGB(236, 232, 217));
             nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
             nvgText(args.vg, box.size.x * 0.5f, box.size.y * 0.5f,
