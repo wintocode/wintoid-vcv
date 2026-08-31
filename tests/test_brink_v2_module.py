@@ -71,7 +71,7 @@ def struct_body(source, declaration):
 def configuration_calls(source, class_name):
     body = constructor_body(source, class_name)
     calls = re.findall(
-        r"\b(configParam|configInput|configOutput)\s*(?:<[^>]+>)?\s*"
+        r"\b(configParam|configInput|configOutput|configLight)\s*(?:<[^>]+>)?\s*"
         r"\((.*?);",
         body,
         re.DOTALL,
@@ -110,6 +110,7 @@ class BrinkV2ModuleContractTest(unittest.TestCase):
         self.assertIn('createModel<BrinkV2, BrinkV2Widget>("BrinkV2")', source)
         for marker in (
             '#include "../Brink/dsp.h"',
+            '#include "../ui_geometry.h"',
             "brink::process_window",
             "brink::process_logic",
             '#include "layout.h"',
@@ -117,6 +118,154 @@ class BrinkV2ModuleContractTest(unittest.TestCase):
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, source)
+
+    def test_processing_uses_only_the_shared_brink_namespace(self):
+        source = self.require_source()
+        self.assertNotRegex(source, r"\bnamespace\s+brink\b")
+        for function in (
+            "effective_channels",
+            "logic_channels",
+            "broadcast_lane",
+            "process_window",
+            "process_logic",
+        ):
+            with self.subTest(function=function):
+                self.assertGreater(source.count(f"brink::{function}("), 0)
+                self.assertEqual(
+                    source.count(f"{function}("),
+                    source.count(f"brink::{function}("),
+                    f"{function} must only be called through the shared brink namespace",
+                )
+
+    def test_process_contract_preserves_v1_normalisation_polyphony_and_state(self):
+        source = self.require_source()
+        module_body = struct_body(source, "struct BrinkV2 : Module")
+        process_body = struct_body(module_body, "void process(const ProcessArgs& args) override")
+
+        for normalisation in (
+            "inputs[B_SIGNAL_INPUT].isConnected()",
+            "? inputs[B_SIGNAL_INPUT] : inputs[A_SIGNAL_INPUT]",
+            "inputs[B_CENTER_CV_INPUT].isConnected()",
+            "? inputs[B_CENTER_CV_INPUT] : inputs[A_CENTER_CV_INPUT]",
+            "inputs[B_WIDTH_CV_INPUT].isConnected()",
+            "? inputs[B_WIDTH_CV_INPUT] : inputs[A_WIDTH_CV_INPUT]",
+        ):
+            with self.subTest(normalisation=normalisation):
+                self.assertIn(normalisation, process_body)
+
+        for contract in (
+            "displayRateLimiter.should_publish()",
+            "args.sampleRate != previousSampleRate",
+            "clearRuntimeState()",
+            "prepareWindowLanes(channel, signalChannels[channel])",
+            "prepareLogicLanes(logicChannels)",
+            "brink::effective_channels(signalInput.getChannels())",
+            "brink::process_window(",
+            "brink::process_logic(",
+            "out.inside ? 10.f : 0.f",
+            "out.inside ? 0.f : 10.f",
+            "setVoltage(out.position, lane)",
+            "active ? 10.f : 0.f",
+            "values[output] ? 10.f : 0.f",
+            "lane == 0 && publishDisplay",
+            "displayFrames[channel].store(out.frame)",
+            "setSmoothBrightness(",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, process_body)
+
+        first_channel_count = process_body.index(".setChannels(signalChannels[channel])")
+        first_channel_write = process_body.index(".setVoltage(")
+        self.assertLess(first_channel_count, first_channel_write)
+        logic_count = process_body.index(".setChannels(logicChannels)")
+        logic_write = process_body.index(".setVoltage(values[output]")
+        self.assertLess(logic_count, logic_write)
+
+    def test_runtime_reset_contract_preserves_silent_lane_activation(self):
+        source = self.require_source()
+        module_body = struct_body(source, "struct BrinkV2 : Module")
+        for contract in (
+            "brink::reset(windowStates[channel][lane])",
+            "insideStates[channel][lane] = false",
+            "brink::reset(logicStates[lane])",
+            "previousSignalChannels[channel] = 0",
+            "previousLogicChannels = 0",
+            "previousSampleRate = 0.f",
+            "displayRateLimiter.reset(0.f)",
+            "resetWindowLane(windowStates[channel][lane], insideStates[channel][lane])",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, module_body)
+
+    def test_window_rail_is_read_only_layer_one_and_clip_safe(self):
+        source = self.require_source()
+        rail_body = struct_body(source, "struct BrinkV2WindowRail : Widget")
+        for contract in (
+            "brink_v2_layout::RAIL_WIDTH",
+            "brink_v2_layout::POSITION_RAIL_HEIGHT",
+            "void drawLayer(const DrawArgs& args, int layer) override",
+            "layer != 1",
+            "displayFrames[channel].load()",
+            "brink::normalize_display_voltage",
+            "wintoid::ui::stroke_inset",
+            "wintoid::ui::inset_extent",
+            "wintoid::ui::clamp_stroke_center",
+            "brink_v2_layout::CHANNEL_A_ACCENT_R",
+            "brink_v2_layout::CHANNEL_B_ACCENT_R",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, rail_body)
+        self.assertGreaterEqual(rail_body.count("clamp_stroke_center"), 4)
+        for forbidden in ("onButton(", "onDrag(", "appendContextMenu("):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, rail_body)
+
+    def test_label_overlay_is_static_generated_and_metamodule_safe(self):
+        source = self.require_source()
+        labels_body = struct_body(source, "struct BrinkV2PanelLabels : Widget")
+        for contract in (
+            "void drawLayer(const DrawArgs& args, int layer) override",
+            "layer != 1",
+            'asset::system("res/fonts/DejaVuSans.ttf")',
+            "if (!font)",
+            "brink_v2_layout::PANEL_WIDTH",
+            "brink_v2_layout::PANEL_HEIGHT",
+            "brink_v2_layout::TITLE_X",
+            "brink_v2_layout::TITLE_Y",
+            "brink_v2_layout::TITLE_FONT_SIZE",
+            "brink_v2_layout::KNOB_LABEL_OFFSET",
+            "brink_v2_layout::PORT_LABEL_OFFSET",
+            "brink_v2_layout::EVENT_LABEL_OFFSET",
+            '"Brink V2"',
+            '"CHANNEL A"',
+            '"CHANNEL B"',
+            '"CENTER"',
+            '"WIDTH"',
+            '"SIGNAL"',
+            '"POSITION"',
+            '"CTR CV"',
+            '"WID CV"',
+            '"INSIDE"',
+            '"OUTSIDE"',
+            '"AND"',
+            '"OR"',
+            '"XOR"',
+            '"TOGGLE"',
+            "drawDirectionArrow",
+            "normalisationPoints",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, labels_body)
+        self.assertNotIn('"wint"', source)
+        self.assertNotIn('"oid"', source)
+        for forbidden in (
+            "onButton(",
+            "onDrag(",
+            "appendContextMenu(",
+            ".setValue(",
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, source)
 
     def test_enum_declarations_match_brink_v1_in_order(self):
         source = self.require_source()
@@ -176,6 +325,25 @@ class BrinkV2ModuleContractTest(unittest.TestCase):
             for identifier in expected_ids:
                 with self.subTest(port_id=identifier):
                     self.assertRegex(widget_body, rf"\b{re.escape(identifier)}\b")
+
+        coordinate_names = (
+            "A_CENTER_KNOB", "A_WIDTH_KNOB", "A_SIGNAL", "A_POSITION",
+            "A_CENTER_CV", "A_CENTER_ATTEN", "A_WIDTH_CV", "A_WIDTH_ATTEN",
+            "A_INSIDE", "A_OUTSIDE", "A_LOW_UP", "A_HIGH_UP",
+            "A_LOW_DOWN", "A_HIGH_DOWN", "A_POSITION_RAIL",
+            "B_CENTER_KNOB", "B_WIDTH_KNOB", "B_SIGNAL", "B_POSITION",
+            "B_CENTER_CV", "B_CENTER_ATTEN", "B_WIDTH_CV", "B_WIDTH_ATTEN",
+            "B_INSIDE", "B_OUTSIDE", "B_LOW_UP", "B_HIGH_UP",
+            "B_LOW_DOWN", "B_HIGH_DOWN", "B_POSITION_RAIL",
+            "AND_OUTPUT", "OR_OUTPUT", "XOR_OUTPUT", "STATE_OUTPUT",
+        )
+        for coordinate in coordinate_names:
+            with self.subTest(coordinate=coordinate):
+                self.assertIn(f"brink_v2_layout::{coordinate}_X", source)
+                self.assertIn(f"brink_v2_layout::{coordinate}_Y", source)
+
+        self.assertIn("new BrinkV2PanelLabels()", widget_body)
+        self.assertIn("new BrinkV2WindowRail()", widget_body)
 
         root = self.require_panel_root()
         title_nodes = [
