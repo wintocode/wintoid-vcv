@@ -40,9 +40,7 @@ static four_v2::RoutingLayout layout_for(int algorithm)
         four_v2_layout::ROUTING_DISPLAY_HEIGHT,
         four_v2_layout::ROUTING_NODE_RADIUS,
         four_v2_layout::ROUTING_NODE_HORIZONTAL_MARGIN,
-        four_v2_layout::ROUTING_NODE_VERTICAL_MARGIN,
-        four_v2_layout::ROUTING_PORT_GAP,
-        four_v2_layout::ROUTING_ROUTE_GAP);
+        four_v2_layout::ROUTING_NODE_VERTICAL_MARGIN);
 }
 
 static const four_v2::RoutingPath* find_path(
@@ -134,42 +132,35 @@ TEST(branching_algorithms_keep_the_main_chain_on_top)
 
     const four_v2::RoutingLayout algo3 = layout_for(2);
     ASSERT(algo3.nodes[3].row == 0);
-    ASSERT(algo3.nodes[2].row == 0);
+    ASSERT(algo3.nodes[1].row == 0);
     ASSERT(algo3.nodes[0].row == 0);
-    ASSERT(algo3.nodes[1].row == 1);
-
-    const four_v2::RoutingLayout algo4 = layout_for(3);
-    ASSERT(algo4.nodes[3].row == 0);
-    ASSERT(algo4.nodes[1].row == 0);
-    ASSERT(algo4.nodes[0].row == 0);
-    ASSERT(algo4.nodes[2].row == 1);
+    ASSERT(algo3.nodes[2].row == 1);
 }
 
 TEST(branch_nodes_are_aligned_with_their_destination_stage)
 {
     const four_v2::RoutingLayout algo3 = layout_for(2);
-    ASSERT_NEAR(algo3.nodes[1].x, algo3.nodes[2].x, 1e-6f);
-    ASSERT(algo3.nodes[1].row > algo3.nodes[2].row);
-
-    const four_v2::RoutingLayout algo4 = layout_for(3);
-    ASSERT_NEAR(algo4.nodes[2].x, algo4.nodes[1].x, 1e-6f);
-    ASSERT(algo4.nodes[2].row > algo4.nodes[1].row);
+    ASSERT_NEAR(algo3.nodes[2].x, algo3.nodes[1].x, 1e-6f);
+    ASSERT(algo3.nodes[2].row > algo3.nodes[1].row);
 }
 
-TEST(modulation_paths_do_not_hit_nodes_or_share_ambiguous_runs)
+TEST(exception_paths_do_not_hit_nodes_or_share_ambiguous_runs)
 {
-    for (int algorithm = 0;
-         algorithm < four_v2::ALGORITHM_COUNT; ++algorithm) {
-        const four_v2::RoutingLayout layout = layout_for(algorithm);
+    const int algorithms[] = {2, 8};
+    for (int index = 0;
+         index < static_cast<int>(sizeof(algorithms) / sizeof(algorithms[0]));
+         ++index) {
+        const four_v2::RoutingLayout layout = layout_for(algorithms[index]);
         for (int firstIndex = 0;
-             firstIndex < layout.pathCount; ++firstIndex) {
-            const four_v2::RoutingPath& first = layout.paths[firstIndex];
+             firstIndex < layout.displayPathCount; ++firstIndex) {
+            const four_v2::RoutingPath& first = layout.displayPaths[firstIndex];
             if (first.carrier)
                 continue;
             ASSERT(!passes_through_unrelated_node(layout, first));
             for (int secondIndex = firstIndex + 1;
-                 secondIndex < layout.pathCount; ++secondIndex) {
-                const four_v2::RoutingPath& second = layout.paths[secondIndex];
+                 secondIndex < layout.displayPathCount; ++secondIndex) {
+                const four_v2::RoutingPath& second =
+                    layout.displayPaths[secondIndex];
                 if (second.carrier)
                     continue;
                 ASSERT(!has_horizontal_overlap(first, second));
@@ -178,29 +169,87 @@ TEST(modulation_paths_do_not_hit_nodes_or_share_ambiguous_runs)
     }
 }
 
-TEST(algorithm_10_routes_crossing_edges_through_distinct_channels)
+TEST(non_exception_algorithms_keep_centered_ports_and_direct_lanes)
 {
-    const four_v2::RoutingLayout layout = layout_for(9);
-    const four_v2::RoutingPath* upperToLower = find_path(layout, 2, 0);
-    const four_v2::RoutingPath* lowerToUpper = find_path(layout, 3, 1);
-    ASSERT(upperToLower != nullptr);
-    ASSERT(lowerToUpper != nullptr);
-    ASSERT(upperToLower->pointCount == 5);
-    ASSERT(upperToLower->points[1].y < upperToLower->points[0].y);
-    ASSERT(upperToLower->points[2].x > upperToLower->points[1].x);
-    ASSERT(lowerToUpper->pointCount == 4);
-    ASSERT(!has_horizontal_overlap(*upperToLower, *lowerToUpper));
+    const int algorithms[] = {0, 1, 3, 4, 5, 6, 7, 9};
+    for (int index = 0;
+         index < static_cast<int>(sizeof(algorithms) / sizeof(algorithms[0]));
+         ++index) {
+        const four_v2::RoutingLayout layout = layout_for(algorithms[index]);
+        for (int pathIndex = 0;
+             pathIndex < layout.pathCount; ++pathIndex) {
+            const four_v2::RoutingPath& path = layout.paths[pathIndex];
+            if (path.carrier)
+                continue;
+            ASSERT_NEAR(path.points[0].y,
+                        layout.nodes[path.source].y, 1e-6f);
+            if (path.pointCount == 4) {
+                const float midpoint = path.points[0].x
+                    + (path.points[path.pointCount - 1].x
+                       - path.points[0].x) * 0.5f;
+                ASSERT_NEAR(path.points[1].x, midpoint, 1e-6f);
+            }
+            ASSERT_NEAR(path.points[path.pointCount - 1].y,
+                        layout.nodes[path.destination].y, 1e-6f);
+        }
+    }
+}
+
+TEST(algorithm_9_display_is_one_merge_then_one_split)
+{
+    const four_v2::RoutingLayout layout = layout_for(8);
+    ASSERT(layout.displayPathCount == 7);
+    int mergeInputs = 0;
+    int splitOutputs = 0;
+    int mergeToSplit = 0;
+    int arrowCount = 0;
+    four_v2::RoutingPoint mergePoint = {};
+    four_v2::RoutingPoint splitPoint = {};
+    for (int pathIndex = 0;
+         pathIndex < layout.displayPathCount; ++pathIndex) {
+        const four_v2::RoutingPath& path = layout.displayPaths[pathIndex];
+        if (path.arrow)
+            ++arrowCount;
+        if ((path.source == 2 || path.source == 3)
+            && path.destination == four_v2::ROUTING_MERGE) {
+            ++mergeInputs;
+            ASSERT(!path.arrow);
+            mergePoint = path.points[path.pointCount - 1];
+        } else if (path.source == four_v2::ROUTING_SPLIT
+                   && (path.destination == 0 || path.destination == 1)) {
+            ++splitOutputs;
+            ASSERT(path.arrow);
+            if (splitOutputs > 1) {
+                ASSERT_NEAR(path.points[0].x, splitPoint.x, 1e-6f);
+                ASSERT_NEAR(path.points[0].y, splitPoint.y, 1e-6f);
+            }
+            splitPoint = path.points[0];
+        } else if (path.source == four_v2::ROUTING_MERGE
+                   && path.destination == four_v2::ROUTING_SPLIT) {
+            ++mergeToSplit;
+            ASSERT(!path.arrow);
+            ASSERT(path.pointCount == 2);
+        }
+    }
+    ASSERT(mergeInputs == 2);
+    ASSERT(splitOutputs == 2);
+    ASSERT(mergeToSplit == 1);
+    ASSERT(arrowCount == 4);
+    ASSERT_NEAR(mergePoint.x, layout.displayPaths[2].points[0].x, 1e-6f);
+    ASSERT_NEAR(mergePoint.y, layout.displayPaths[2].points[0].y, 1e-6f);
+    ASSERT_NEAR(splitPoint.x, layout.displayPaths[2].points[1].x, 1e-6f);
+    ASSERT_NEAR(splitPoint.y, layout.displayPaths[2].points[1].y, 1e-6f);
 }
 
 TEST(parallel_carrier_chains_get_separate_slices)
 {
-    const four_v2::RoutingLayout algo5 = layout_for(4);
+    const four_v2::RoutingLayout algo5 = layout_for(3);
     ASSERT(algo5.nodes[1].row == 0);
     ASSERT(algo5.nodes[0].row == 0);
     ASSERT(algo5.nodes[3].row == 1);
     ASSERT(algo5.nodes[2].row == 1);
 
-    const four_v2::RoutingLayout algo6 = layout_for(5);
+    const four_v2::RoutingLayout algo6 = layout_for(4);
     ASSERT(algo6.nodes[3].row == 0);
     ASSERT(algo6.nodes[2].row == 0);
     ASSERT(algo6.nodes[1].row == 1);
@@ -210,7 +259,7 @@ TEST(parallel_carrier_chains_get_separate_slices)
 
 TEST(independent_carriers_fill_four_slices)
 {
-    const four_v2::RoutingLayout layout = layout_for(7);
+    const four_v2::RoutingLayout layout = layout_for(6);
     ASSERT(layout.rowCount == 4);
     ASSERT(layout.nodes[3].row == 0);
     ASSERT(layout.nodes[2].row == 1);
@@ -290,8 +339,9 @@ int main()
     run_serial_algorithm_uses_one_left_to_right_slice();
     run_branching_algorithms_keep_the_main_chain_on_top();
     run_branch_nodes_are_aligned_with_their_destination_stage();
-    run_modulation_paths_do_not_hit_nodes_or_share_ambiguous_runs();
-    run_algorithm_10_routes_crossing_edges_through_distinct_channels();
+    run_exception_paths_do_not_hit_nodes_or_share_ambiguous_runs();
+    run_non_exception_algorithms_keep_centered_ports_and_direct_lanes();
+    run_algorithm_9_display_is_one_merge_then_one_split();
     run_parallel_carrier_chains_get_separate_slices();
     run_independent_carriers_fill_four_slices();
     run_all_paths_stay_inside_the_display_and_flow_forward();

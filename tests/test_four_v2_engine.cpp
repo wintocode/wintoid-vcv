@@ -82,7 +82,7 @@ TEST(external_pm_is_added_only_to_carriers)
 
 TEST(all_carriers_receive_the_same_external_pm)
 {
-    const four_v2::Algorithm& a = four_v2::ALGORITHMS[7];
+    const four_v2::Algorithm& a = four_v2::ALGORITHMS[6];
     float out[4] = {};
     float levels[4] = {1.f, 1.f, 1.f, 1.f};
     float previous[4] = {};
@@ -102,10 +102,10 @@ TEST(over_detector_holds_for_250_ms)
     ASSERT(!over.process(0.f, 0.001f));
 }
 
-TEST(algorithm_eight_sums_four_aligned_carriers_raw)
+TEST(algorithm_seven_sums_four_aligned_carriers_raw)
 {
     four_v2::EngineParams params = sine_params();
-    params.algorithm = 7;
+    params.algorithm = 6;
     params.opOutput[0] = 1.f;
     params.opOutput[1] = 1.f;
     params.opOutput[2] = 1.f;
@@ -124,7 +124,7 @@ TEST(algorithm_eight_sums_four_aligned_carriers_raw)
 TEST(master_scales_raw_carrier_sum)
 {
     four_v2::EngineParams params = sine_params();
-    params.algorithm = 7;
+    params.algorithm = 6;
     for (int op = 0; op < 4; ++op)
         params.opOutput[op] = 1.f;
     params.master = 0.25f;
@@ -254,7 +254,7 @@ TEST(extreme_frequencies_are_clamped_before_phase_increment)
 TEST(external_pm_is_injected_into_each_carrier_phase)
 {
     four_v2::EngineParams params = sine_params();
-    params.algorithm = 7;
+    params.algorithm = 6;
     params.baseFreq = 0.f;
     for (int op = 0; op < 4; ++op)
         params.opOutput[op] = 1.f;
@@ -330,7 +330,7 @@ int main()
     run_external_pm_is_added_only_to_carriers();
     run_all_carriers_receive_the_same_external_pm();
     run_over_detector_holds_for_250_ms();
-    run_algorithm_eight_sums_four_aligned_carriers_raw();
+    run_algorithm_seven_sums_four_aligned_carriers_raw();
     run_master_scales_raw_carrier_sum();
     run_default_raw_coarse_uses_one_to_one_ratio_and_fixed_hz_mapping();
     run_external_pm_is_signed_and_not_scaled_by_pm_depth();

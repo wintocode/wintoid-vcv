@@ -174,7 +174,7 @@ struct FourV2 : Module {
     {
         config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 
-        configParam(ALGORITHM_PARAM, 1.f, 11.f, 1.f, "Algorithm");
+        configParam(ALGORITHM_PARAM, 1.f, 10.f, 1.f, "Algorithm");
         getParamQuantity(ALGORITHM_PARAM)->snapEnabled = true;
         configParam(TUNE_PARAM, -100.f, 100.f, 0.f, "Tune", " cents");
         configParam(PM_DEPTH_PARAM, 0.f, 1.f, 1.f, "PM Depth", "%", 0.f, 100.f);
@@ -669,9 +669,7 @@ struct AlgorithmRoutingDisplay : Widget {
             ROUTING_DISPLAY_HEIGHT,
             ROUTING_NODE_RADIUS,
             ROUTING_NODE_HORIZONTAL_MARGIN,
-            ROUTING_NODE_VERTICAL_MARGIN,
-            ROUTING_PORT_GAP,
-            ROUTING_ROUTE_GAP);
+            ROUTING_NODE_VERTICAL_MARGIN);
 
         const float arrowLength = mm2px(ROUTING_ARROW_LENGTH);
         const float arrowWidth = mm2px(ROUTING_ARROW_WIDTH);
@@ -691,6 +689,9 @@ struct AlgorithmRoutingDisplay : Widget {
             nvgStrokeColor(args.vg, color);
             nvgStrokeWidth(args.vg, edgeStroke);
             nvgStroke(args.vg);
+
+            if (!path.arrow)
+                return;
 
             const four_v2::RoutingPoint& previous =
                 path.points[path.pointCount - 2];
@@ -727,15 +728,16 @@ struct AlgorithmRoutingDisplay : Widget {
 
         // Orange paths are phase modulation and always point into their
         // destination. Gold paths are direct carriers and point to the right.
+        const four_v2::RoutingPath* displayPaths = routing.displayPaths;
         for (int pathIndex = 0;
-             pathIndex < routing.pathCount; ++pathIndex) {
-            const four_v2::RoutingPath& path = routing.paths[pathIndex];
+             pathIndex < routing.displayPathCount; ++pathIndex) {
+            const four_v2::RoutingPath& path = displayPaths[pathIndex];
             if (!path.carrier)
                 drawPath(path, nvgRGB(237, 91, 34));
         }
         for (int pathIndex = 0;
-             pathIndex < routing.pathCount; ++pathIndex) {
-            const four_v2::RoutingPath& path = routing.paths[pathIndex];
+             pathIndex < routing.displayPathCount; ++pathIndex) {
+            const four_v2::RoutingPath& path = displayPaths[pathIndex];
             if (path.carrier)
                 drawPath(path, nvgRGB(224, 182, 73));
         }

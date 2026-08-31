@@ -9,8 +9,8 @@ static const int ROUTING_MAX_ROWS = 4;
 static const int ROUTING_MAX_PATHS = 16;
 static const int ROUTING_MAX_POINTS = 6;
 static const int ROUTING_OUTPUT = -1;
-static const float ROUTING_DEFAULT_PORT_GAP = 0.55f;
-static const float ROUTING_DEFAULT_ROUTE_GAP = 1.20f;
+static const int ROUTING_MERGE = -2;
+static const int ROUTING_SPLIT = -3;
 
 struct RoutingPoint {
     float x;
@@ -28,6 +28,7 @@ struct RoutingPath {
     int source;
     int destination;
     bool carrier;
+    bool arrow;
     int pointCount;
     RoutingPoint points[ROUTING_MAX_POINTS];
 };
@@ -36,6 +37,8 @@ struct RoutingLayout {
     RoutingNode nodes[OPERATOR_COUNT];
     RoutingPath paths[ROUTING_MAX_PATHS];
     int pathCount;
+    RoutingPath displayPaths[ROUTING_MAX_PATHS];
+    int displayPathCount;
     int rowCount;
     int columnCount;
 };
@@ -125,69 +128,36 @@ inline bool routing_row_is_occupied(
     return false;
 }
 
-inline float routing_centered_port_offset(
-    int index, int count, float portGap)
+inline bool routing_algorithms_match(
+    const Algorithm& first, const Algorithm& second)
 {
-    return ((float)index - ((float)count - 1.f) * 0.5f) * portGap;
-}
-
-inline float routing_source_port_offset(
-    const Algorithm& algorithm, const int rows[OPERATOR_COUNT],
-    int source, int destination, float portGap)
-{
-    int count = 0;
-    int index = 0;
-    for (int candidate = 0;
-         candidate < OPERATOR_COUNT; ++candidate) {
-        if (!algorithm.mod[source][candidate])
-            continue;
-        if (rows[candidate] < rows[destination]
-            || (rows[candidate] == rows[destination]
-                && candidate < destination)) {
-            ++index;
+    for (int source = 0; source < OPERATOR_COUNT; ++source) {
+        if (first.carrier[source] != second.carrier[source])
+            return false;
+        for (int destination = 0;
+             destination < OPERATOR_COUNT; ++destination) {
+            if (first.mod[source][destination]
+                != second.mod[source][destination]) {
+                return false;
+            }
         }
-        ++count;
     }
-    return routing_centered_port_offset(index, count, portGap);
+    return true;
 }
 
-inline float routing_destination_port_offset(
-    const Algorithm& algorithm, const int rows[OPERATOR_COUNT],
-    int source, int destination, float portGap)
+inline bool routing_uses_staged_branch_layout(const Algorithm& algorithm)
 {
-    int count = 0;
-    int index = 0;
-    for (int candidate = 0;
-         candidate < OPERATOR_COUNT; ++candidate) {
-        if (!algorithm.mod[candidate][destination])
-            continue;
-        if (rows[candidate] < rows[source]
-            || (rows[candidate] == rows[source]
-                && candidate < source)) {
-            ++index;
-        }
-        ++count;
-    }
-    return routing_centered_port_offset(index, count, portGap);
+    return routing_algorithms_match(algorithm, ALGORITHMS[2]);
 }
 
-inline float routing_route_offset(
-    float startY, float endY, int routeIndex, int routeCount,
-    int downwardCount, int upwardCount, float routeGap)
+inline bool routing_uses_merged_split_layout(const Algorithm& algorithm)
 {
-    if (downwardCount > 0 && upwardCount > 0) {
-        const float distance = ((float)routeIndex + 0.5f) * routeGap;
-        return endY > startY ? distance : -distance;
-    }
-    return routing_centered_port_offset(routeIndex, routeCount, routeGap);
+    return routing_algorithms_match(algorithm, ALGORITHMS[8]);
 }
 
 inline void routing_add_path(
-    RoutingLayout& layout, const Algorithm& algorithm,
-    const int rows[OPERATOR_COUNT], int source, int destination, bool carrier,
-    float width, float nodeRadius, float verticalMargin,
-    float portGap, float routeGap, int routeIndex, int routeCount,
-    int downwardCount, int upwardCount, bool outerRoute)
+    RoutingLayout& layout, int source, int destination, bool carrier,
+    float width, float nodeRadius)
 {
     if (layout.pathCount >= ROUTING_MAX_PATHS)
         return;
@@ -196,18 +166,15 @@ inline void routing_add_path(
     path.source = source;
     path.destination = destination;
     path.carrier = carrier;
+    path.arrow = true;
 
     const RoutingNode& sourceNode = layout.nodes[source];
     const float startX = sourceNode.x + nodeRadius;
-    const float startY = sourceNode.y + (carrier ? 0.f
-        : routing_source_port_offset(
-            algorithm, rows, source, destination, portGap));
+    const float startY = sourceNode.y;
     const float endX = carrier
         ? width - nodeRadius
         : layout.nodes[destination].x - nodeRadius;
-    const float endY = carrier ? sourceNode.y
-        : layout.nodes[destination].y + routing_destination_port_offset(
-            algorithm, rows, source, destination, portGap);
+    const float endY = carrier ? startY : layout.nodes[destination].y;
 
     path.points[0] = {startX, startY};
     if (carrier || startY == endY) {
@@ -216,33 +183,134 @@ inline void routing_add_path(
         return;
     }
 
-    if (outerRoute) {
-        const float outerY = verticalMargin - nodeRadius;
-        const float outerX = endX - routeGap;
-        path.points[1] = {startX, outerY};
-        path.points[2] = {outerX, outerY};
-        path.points[3] = {outerX, endY};
-        path.points[4] = {endX, endY};
-        path.pointCount = 5;
-        return;
-    }
-
-    const float routeOffset = routing_route_offset(
-        startY, endY, routeIndex, routeCount,
-        downwardCount, upwardCount, routeGap);
-    const float bendX = startX + (endX - startX) * 0.5f + routeOffset;
+    const float bendX = startX + (endX - startX) * 0.5f;
     path.points[1] = {bendX, startY};
     path.points[2] = {bendX, endY};
     path.points[3] = {endX, endY};
     path.pointCount = 4;
 }
 
+inline void routing_add_display_path(
+    RoutingLayout& layout, int source, int destination, bool carrier,
+    bool arrow, const RoutingPoint points[], int pointCount)
+{
+    if (layout.displayPathCount >= ROUTING_MAX_PATHS
+        || pointCount < 2 || pointCount > ROUTING_MAX_POINTS) {
+        return;
+    }
+
+    RoutingPath& path = layout.displayPaths[layout.displayPathCount++];
+    path.source = source;
+    path.destination = destination;
+    path.carrier = carrier;
+    path.arrow = arrow;
+    path.pointCount = pointCount;
+    for (int index = 0; index < pointCount; ++index)
+        path.points[index] = points[index];
+}
+
+inline void routing_make_merged_split_display(
+    RoutingLayout& layout, float height, float nodeRadius)
+{
+    layout.displayPathCount = 0;
+
+    const float sourceX = layout.nodes[2].x + nodeRadius;
+    const float targetX = layout.nodes[1].x - nodeRadius;
+    const float mergeX = sourceX + (targetX - sourceX) * 0.32f;
+    const float splitX = sourceX + (targetX - sourceX) * 0.68f;
+    const float mergeY = height * 0.5f;
+
+    const RoutingPoint sourceThree[] = {
+        {sourceX, layout.nodes[2].y},
+        {mergeX, layout.nodes[2].y},
+        {mergeX, mergeY}
+    };
+    const RoutingPoint sourceFour[] = {
+        {sourceX, layout.nodes[3].y},
+        {mergeX, layout.nodes[3].y},
+        {mergeX, mergeY}
+    };
+    const RoutingPoint trunk[] = {
+        {mergeX, mergeY},
+        {splitX, mergeY}
+    };
+    const RoutingPoint outputTwo[] = {
+        {splitX, mergeY},
+        {splitX, layout.nodes[1].y},
+        {targetX, layout.nodes[1].y}
+    };
+    const RoutingPoint outputOne[] = {
+        {splitX, mergeY},
+        {splitX, layout.nodes[0].y},
+        {targetX, layout.nodes[0].y}
+    };
+
+    routing_add_display_path(
+        layout, 2, ROUTING_MERGE, false, false,
+        sourceThree, 3);
+    routing_add_display_path(
+        layout, 3, ROUTING_MERGE, false, false,
+        sourceFour, 3);
+    routing_add_display_path(
+        layout, ROUTING_MERGE, ROUTING_SPLIT, false, false,
+        trunk, 2);
+    routing_add_display_path(
+        layout, ROUTING_SPLIT, 1, false, true,
+        outputTwo, 3);
+    routing_add_display_path(
+        layout, ROUTING_SPLIT, 0, false, true,
+        outputOne, 3);
+
+    for (int pathIndex = 0; pathIndex < layout.pathCount; ++pathIndex) {
+        const RoutingPath& path = layout.paths[pathIndex];
+        if (path.carrier) {
+            routing_add_display_path(
+                layout, path.source, path.destination, true, true,
+                path.points, path.pointCount);
+        }
+    }
+}
+
+inline void routing_make_staged_branch_display(
+    RoutingLayout& layout, float nodeRadius)
+{
+    layout.displayPathCount = 0;
+    for (int pathIndex = 0; pathIndex < layout.pathCount; ++pathIndex) {
+        const RoutingPath& path = layout.paths[pathIndex];
+        if (path.carrier) {
+            routing_add_display_path(
+                layout, path.source, path.destination, true, true,
+                path.points, path.pointCount);
+            continue;
+        }
+
+        const bool isBranchIntoOutput = path.destination == 0
+            && layout.nodes[path.source].row > layout.nodes[path.destination].row;
+        if (!isBranchIntoOutput) {
+            routing_add_display_path(
+                layout, path.source, path.destination, false, true,
+                path.points, path.pointCount);
+            continue;
+        }
+
+        const float startX = layout.nodes[path.source].x + nodeRadius;
+        const float endX = layout.nodes[path.destination].x - nodeRadius;
+        const float joinX = startX + (endX - startX) * 0.58f;
+        const RoutingPoint branch[] = {
+            {startX, layout.nodes[path.source].y},
+            {joinX, layout.nodes[path.source].y},
+            {joinX, layout.nodes[path.destination].y}
+        };
+        routing_add_display_path(
+            layout, path.source, path.destination, false, true,
+            branch, 3);
+    }
+}
+
 inline RoutingLayout make_routing_layout(
     const Algorithm& algorithm,
     float width, float height, float nodeRadius,
-    float horizontalMargin, float verticalMargin,
-    float portGap = ROUTING_DEFAULT_PORT_GAP,
-    float routeGap = ROUTING_DEFAULT_ROUTE_GAP)
+    float horizontalMargin, float verticalMargin)
 {
     RoutingLayout layout = {};
     int columns[OPERATOR_COUNT] = {};
@@ -280,31 +348,26 @@ inline RoutingLayout make_routing_layout(
         rows[0] = 3;
     }
 
-    // Keep a branch source in the stage immediately before its destination.
-    // This gives the branch its own readable slice instead of placing its
-    // first bend on top of the main-chain node at that stage.
-    for (int candidate = 0; candidate < OPERATOR_COUNT; ++candidate) {
-        if (rows[candidate] >= 0)
-            continue;
-
-        bool hasIncoming = false;
-        bool hasOutgoing = false;
-        int nearestDestinationColumn = OPERATOR_COUNT;
-        for (int source = 0; source < OPERATOR_COUNT; ++source) {
-            if (algorithm.mod[source][candidate])
-                hasIncoming = true;
-        }
-        for (int destination = 0;
-             destination < OPERATOR_COUNT; ++destination) {
-            if (!algorithm.mod[candidate][destination])
+    if (routing_uses_staged_branch_layout(algorithm)) {
+        // Keep the branch source in the stage immediately before its
+        // destination. This gives algorithms 3 and 4 the same clear shape
+        // as the corresponding hand-drawn two-slice diagrams.
+        for (int candidate = 0; candidate < OPERATOR_COUNT; ++candidate) {
+            if (rows[candidate] >= 0)
                 continue;
-            hasOutgoing = true;
-            if (columns[destination] < nearestDestinationColumn)
-                nearestDestinationColumn = columns[destination];
-        }
-        if (!hasIncoming && hasOutgoing
-            && columns[candidate] < nearestDestinationColumn - 1) {
-            columns[candidate] = nearestDestinationColumn - 1;
+
+            int nearestDestinationColumn = OPERATOR_COUNT;
+            for (int destination = 0;
+                 destination < OPERATOR_COUNT; ++destination) {
+                if (algorithm.mod[candidate][destination]
+                    && columns[destination] < nearestDestinationColumn) {
+                    nearestDestinationColumn = columns[destination];
+                }
+            }
+            if (nearestDestinationColumn < OPERATOR_COUNT
+                && columns[candidate] < nearestDestinationColumn - 1) {
+                columns[candidate] = nearestDestinationColumn - 1;
+            }
         }
     }
 
@@ -379,72 +442,29 @@ inline RoutingLayout make_routing_layout(
     layout.rowCount = rowCount;
     layout.columnCount = maximumColumn + 1;
 
-    int bentPathCount = 0;
-    int downwardPathCount = 0;
-    int upwardPathCount = 0;
     for (int source = 0; source < OPERATOR_COUNT; ++source) {
         for (int destination = 0;
              destination < OPERATOR_COUNT; ++destination) {
-            if (!algorithm.mod[source][destination])
-                continue;
-            const float startY = layout.nodes[source].y
-                + routing_source_port_offset(
-                    algorithm, rows, source, destination, portGap);
-            const float endY = layout.nodes[destination].y
-                + routing_destination_port_offset(
-                    algorithm, rows, source, destination, portGap);
-            if (startY != endY) {
-                ++bentPathCount;
-                if (endY > startY)
-                    ++downwardPathCount;
-                else
-                    ++upwardPathCount;
-            }
+            if (algorithm.mod[source][destination])
+                routing_add_path(
+                    layout, source, destination, false,
+                    width, nodeRadius);
         }
+        if (algorithm.carrier[source])
+            routing_add_path(
+                layout, source, ROUTING_OUTPUT, true,
+                width, nodeRadius);
     }
 
-    int downwardPathIndex = 0;
-    int upwardPathIndex = 0;
-    for (int source = 0; source < OPERATOR_COUNT; ++source) {
-        for (int destination = 0;
-             destination < OPERATOR_COUNT; ++destination) {
-            if (algorithm.mod[source][destination]) {
-                const float startY = layout.nodes[source].y
-                    + routing_source_port_offset(
-                        algorithm, rows, source, destination, portGap);
-                const float endY = layout.nodes[destination].y
-                    + routing_destination_port_offset(
-                        algorithm, rows, source, destination, portGap);
-                const bool needsBend = startY != endY;
-                const bool travelsDownward = endY > startY;
-                const int routeIndex = travelsDownward
-                    ? downwardPathIndex : upwardPathIndex;
-                const int routeCount = travelsDownward
-                    ? downwardPathCount : upwardPathCount;
-                const bool outerRoute = downwardPathCount > 0
-                    && upwardPathCount > 0 && travelsDownward;
-                routing_add_path(
-                    layout, algorithm, rows, source, destination, false,
-                    width, nodeRadius, verticalMargin,
-                    portGap, routeGap,
-                    needsBend ? routeIndex : -1, routeCount,
-                    downwardPathCount, upwardPathCount, outerRoute);
-                if (needsBend) {
-                    if (travelsDownward)
-                        ++downwardPathIndex;
-                    else
-                        ++upwardPathIndex;
-                }
-            }
-        }
-        if (algorithm.carrier[source]) {
-            routing_add_path(
-                layout, algorithm, rows, source, ROUTING_OUTPUT, true,
-                width, nodeRadius, verticalMargin,
-                portGap, routeGap, -1, bentPathCount,
-                downwardPathCount, upwardPathCount, false);
-        }
+    layout.displayPathCount = layout.pathCount;
+    for (int pathIndex = 0;
+         pathIndex < layout.pathCount; ++pathIndex) {
+        layout.displayPaths[pathIndex] = layout.paths[pathIndex];
     }
+    if (routing_uses_merged_split_layout(algorithm))
+        routing_make_merged_split_display(layout, height, nodeRadius);
+    else if (routing_uses_staged_branch_layout(algorithm))
+        routing_make_staged_branch_display(layout, nodeRadius);
 
     return layout;
 }

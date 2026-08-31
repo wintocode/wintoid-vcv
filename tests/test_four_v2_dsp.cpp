@@ -148,11 +148,11 @@ TEST(feedback_bounds_are_preserved)
     ASSERT(extreme >= -1.0f && extreme <= 1.0f);
 }
 
-TEST(algorithm_six_fans_operator_four_to_three_destinations)
+TEST(algorithm_five_fans_operator_four_to_three_destinations)
 {
     float out[4] = {0.f, 0.f, 0.f, 0.5f};
     float level[4] = {1.f, 1.f, 1.f, 0.8f};
-    const four_v2::Algorithm& a = four_v2::ALGORITHMS[5];
+    const four_v2::Algorithm& a = four_v2::ALGORITHMS[4];
     ASSERT_NEAR(four_v2::gather_modulation(0, out, level, 1.f, a), 0.4f, 1e-6f);
     ASSERT_NEAR(four_v2::gather_modulation(1, out, level, 1.f, a), 0.4f, 1e-6f);
     ASSERT_NEAR(four_v2::gather_modulation(2, out, level, 1.f, a), 0.4f, 1e-6f);
@@ -164,7 +164,7 @@ TEST(carriers_sum_raw_without_normalisation)
     float out[4] = {0.5f, 0.5f, 0.5f, 0.5f};
     float level[4] = {1.f, 1.f, 1.f, 1.f};
     ASSERT_NEAR(four_v2::sum_carriers(
-        out, level, four_v2::ALGORITHMS[7]), 2.f, 1e-6f);
+        out, level, four_v2::ALGORITHMS[6]), 2.f, 1e-6f);
 }
 
 TEST(downsample_2x_averages_the_two_samples)
@@ -251,7 +251,7 @@ int main()
     run_fold_soft_clip_stays_bounded();
     run_fold_type_is_clamped_to_the_supported_range();
     run_feedback_bounds_are_preserved();
-    run_algorithm_six_fans_operator_four_to_three_destinations();
+    run_algorithm_five_fans_operator_four_to_three_destinations();
     run_carriers_sum_raw_without_normalisation();
     run_downsample_2x_averages_the_two_samples();
     run_polyblep_corrects_both_cycle_edges();
