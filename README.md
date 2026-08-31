@@ -34,7 +34,7 @@ The Algorithm control is numbered 1–11, matching the topology number below.
 | 1 | `4 → 3 → 2 → 1` | 1 |
 | 2 | `(3 + 4) → 2 → 1` | 1 |
 | 3 | `4 → 3 → 1` and `2 → 1` | 1 |
-| 4 | `4 → 3 → 1` and `2 → 1` | 1 |
+| 4 | `4 → 2 → 1` and `3 → 1` | 1 |
 | 5 | `4 → 3` and `2 → 1` | 1 and 3 |
 | 6 | `4 → (1, 2, 3)` | 1, 2, and 3 |
 | 7 | `4 → 3`, plus independent 2 and 1 | 1, 2, and 3 |
