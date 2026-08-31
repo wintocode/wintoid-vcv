@@ -173,7 +173,7 @@ struct FourV2 : Module {
     {
         config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 
-        configParam(ALGORITHM_PARAM, 0.f, 10.f, 0.f, "Algorithm");
+        configParam(ALGORITHM_PARAM, 1.f, 11.f, 1.f, "Algorithm");
         getParamQuantity(ALGORITHM_PARAM)->snapEnabled = true;
         configParam(TUNE_PARAM, -100.f, 100.f, 0.f, "Tune", " cents");
         configParam(PM_DEPTH_PARAM, 0.f, 1.f, 1.f, "PM Depth", "%", 0.f, 100.f);
@@ -668,19 +668,48 @@ struct AlgorithmRoutingDisplay : Widget {
         const float nodeY = inset + mm2px(8.5f);
         const float railY = wintoid::ui::clamp_stroke_center(
             box.size.y - mm2px(3.4f), box.size.y, edgeStroke);
-        const float arrowLength = mm2px(1.35f);
-        const float arrowWidth = mm2px(0.75f);
 
         const int algorithmIndex = four_v2::algorithm_index(
-            module ? module->params[FourV2::ALGORITHM_PARAM].getValue() : 0.f);
+            module ? module->params[FourV2::ALGORITHM_PARAM].getValue() : 1.f);
         const four_v2::Algorithm& algorithm =
             four_v2::ALGORITHMS[algorithmIndex];
 
         // Orange edges run from each modulator to its destination. Orthogonal
-        // lanes keep fan-in and equal-span routes visually separate while
-        // staying inside the display's clipped drawing box.
+        // lanes keep fan-in and equal-span routes visually separate. Fan-out
+        // sources share a vertical trunk so the branches read as one fork.
         nvgStrokeColor(args.vg, nvgRGB(237, 91, 34));
         nvgStrokeWidth(args.vg, edgeStroke);
+        const auto routeLaneY = [&](int source, int destination) {
+            const int span = source > destination
+                ? source - destination : destination - source;
+            int sameSpanIndex = 0;
+            for (int candidateSource = 0;
+                 candidateSource < four_v2::OPERATOR_COUNT;
+                 ++candidateSource) {
+                for (int candidateDestination = 0;
+                     candidateDestination < four_v2::OPERATOR_COUNT;
+                     ++candidateDestination) {
+                    if (!algorithm.mod[candidateSource][candidateDestination]
+                        || candidateSource == candidateDestination) {
+                        continue;
+                    }
+                    const int candidateSpan = candidateSource > candidateDestination
+                        ? candidateSource - candidateDestination
+                        : candidateDestination - candidateSource;
+                    if (candidateSpan == span
+                        && (candidateSource < source
+                            || (candidateSource == source
+                                && candidateDestination < destination))) {
+                        ++sameSpanIndex;
+                    }
+                }
+            }
+            return nodeY
+                - mm2px(2.2f + 1.3f * static_cast<float>(span))
+                - mm2px(ROUTING_LANE_GAP
+                        * static_cast<float>(sameSpanIndex));
+        };
+        bool sourceTrunkDrawn[four_v2::OPERATOR_COUNT] = {};
         for (int source = 0; source < four_v2::OPERATOR_COUNT; ++source) {
             for (int destination = 0;
                  destination < four_v2::OPERATOR_COUNT; ++destination) {
@@ -692,34 +721,7 @@ struct AlgorithmRoutingDisplay : Widget {
                     + direction * (nodeRadius + edgeStroke);
                 const float endX = nodeX[destination]
                     - direction * (nodeRadius + edgeStroke);
-                const int span = source > destination
-                    ? source - destination : destination - source;
-                int sameSpanIndex = 0;
-                for (int candidateSource = 0;
-                     candidateSource < four_v2::OPERATOR_COUNT;
-                     ++candidateSource) {
-                    for (int candidateDestination = 0;
-                         candidateDestination < four_v2::OPERATOR_COUNT;
-                         ++candidateDestination) {
-                        if (!algorithm.mod[candidateSource][candidateDestination]
-                            || candidateSource == candidateDestination) {
-                            continue;
-                        }
-                        const int candidateSpan = candidateSource > candidateDestination
-                            ? candidateSource - candidateDestination
-                            : candidateDestination - candidateSource;
-                        if (candidateSpan == span
-                            && (candidateSource < source
-                                || (candidateSource == source
-                                    && candidateDestination < destination))) {
-                            ++sameSpanIndex;
-                        }
-                    }
-                }
-                const float laneY = nodeY
-                    - mm2px(2.2f + 1.3f * static_cast<float>(span))
-                    - mm2px(ROUTING_LANE_GAP
-                            * static_cast<float>(sameSpanIndex));
+                const float laneY = routeLaneY(source, destination);
                 int outgoingCount = 0;
                 int outgoingIndex = 0;
                 int incomingCount = 0;
@@ -748,19 +750,32 @@ struct AlgorithmRoutingDisplay : Widget {
                 const float startY = nodeY + sourceOffset;
                 const float endY = nodeY + destinationOffset;
 
+                const bool usesSourceTrunk = outgoingCount > 1;
+                if (usesSourceTrunk && !sourceTrunkDrawn[source]) {
+                    float sourceTrunkY = nodeY;
+                    for (int candidateDestination = 0;
+                         candidateDestination < four_v2::OPERATOR_COUNT;
+                         ++candidateDestination) {
+                        if (candidateDestination != source
+                            && algorithm.mod[source][candidateDestination]) {
+                            sourceTrunkY = fminf(
+                                sourceTrunkY,
+                                routeLaneY(source, candidateDestination));
+                        }
+                    }
+                    nvgBeginPath(args.vg);
+                    nvgMoveTo(args.vg, startX, nodeY);
+                    nvgLineTo(args.vg, startX, sourceTrunkY);
+                    nvgStroke(args.vg);
+                    sourceTrunkDrawn[source] = true;
+                }
+
                 nvgBeginPath(args.vg);
-                nvgMoveTo(args.vg, startX, startY);
-                nvgLineTo(args.vg, startX, laneY);
+                nvgMoveTo(args.vg, startX, usesSourceTrunk ? laneY : startY);
+                if (!usesSourceTrunk)
+                    nvgLineTo(args.vg, startX, laneY);
                 nvgLineTo(args.vg, endX, laneY);
                 nvgLineTo(args.vg, endX, endY);
-                nvgStroke(args.vg);
-
-                const float arrowBaseX = endX - direction * arrowLength;
-                nvgBeginPath(args.vg);
-                nvgMoveTo(args.vg, endX, endY);
-                nvgLineTo(args.vg, arrowBaseX, endY - arrowWidth);
-                nvgMoveTo(args.vg, endX, endY);
-                nvgLineTo(args.vg, arrowBaseX, endY + arrowWidth);
                 nvgStroke(args.vg);
             }
         }

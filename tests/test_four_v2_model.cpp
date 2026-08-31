@@ -38,7 +38,7 @@ TEST(algorithm_table_has_exact_edges_and_carriers)
     static const four_v2::Algorithm expected[11] = {
         {{{0,0,0,0},{1,0,0,0},{0,1,0,0},{0,0,1,0}}, {1,0,0,0}},
         {{{0,0,0,0},{1,0,0,0},{0,1,0,0},{0,1,0,0}}, {1,0,0,0}},
-        {{{0,0,0,0},{1,0,0,0},{1,0,0,0},{0,1,0,0}}, {1,0,0,0}},
+        {{{0,0,0,0},{1,0,0,0},{1,0,0,0},{0,0,1,0}}, {1,0,0,0}},
         {{{0,0,0,0},{1,0,0,0},{1,0,0,0},{0,0,1,0}}, {1,0,0,0}},
         {{{0,0,0,0},{1,0,0,0},{0,0,0,0},{0,0,1,0}}, {1,0,1,0}},
         {{{0,0,0,0},{0,0,0,0},{0,0,0,0},{1,1,1,0}}, {1,1,1,0}},
@@ -100,7 +100,11 @@ TEST(fixed_frequency_is_continuous_and_exponential)
 TEST(indices_modes_and_labels_are_defensive)
 {
     ASSERT(four_v2::algorithm_index(-1.f) == 0);
-    ASSERT(four_v2::algorithm_index(5.5f) == 6);
+    ASSERT(four_v2::algorithm_index(0.f) == 0);
+    ASSERT(four_v2::algorithm_index(1.f) == 0);
+    ASSERT(four_v2::algorithm_index(6.f) == 5);
+    ASSERT(four_v2::algorithm_index(6.5f) == 6);
+    ASSERT(four_v2::algorithm_index(11.f) == 10);
     ASSERT(four_v2::algorithm_index(99.f) == 10);
     ASSERT(four_v2::algorithm_index(NAN) == 0);
     ASSERT(four_v2::clamp_mode(-1.f) == four_v2::RATIO_MODE);

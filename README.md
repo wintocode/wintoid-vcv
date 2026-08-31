@@ -20,18 +20,20 @@ VCV Rack plugin — synthesizer, filter, and CV/logic utilities.
 ### FourV2
 Independent 4-operator phase-modulation oscillator (32HP)
 
-FourV2 is a separate module from Four. It keeps the same 11 topology order, but
-its controls and signal flow are documented independently.
+FourV2 is a separate module from Four. It uses 11 fixed topology slots, but its
+controls and signal flow are documented independently.
 
 #### Routing and frequency
 
 - **11 algorithms** — the fixed routing choices are:
 
+The Algorithm control is numbered 1–11, matching the topology number below.
+
 | Algorithm | Phase-modulation routing | Carriers in the output mix |
 | ---: | --- | --- |
 | 1 | `4 → 3 → 2 → 1` | 1 |
 | 2 | `(3 + 4) → 2 → 1` | 1 |
-| 3 | `4 → 2 → 1` and `3 → 1` | 1 |
+| 3 | `4 → 3 → 1` and `2 → 1` | 1 |
 | 4 | `4 → 3 → 1` and `2 → 1` | 1 |
 | 5 | `4 → 3` and `2 → 1` | 1 and 3 |
 | 6 | `4 → (1, 2, 3)` | 1, 2, and 3 |

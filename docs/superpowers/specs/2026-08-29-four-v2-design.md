@@ -34,13 +34,14 @@ VortexV2, the Brink restyle, final family-wide visual standardisation, and chang
 
 ## Algorithms
 
-FourV2 retains Four V1's 11 algorithms in the existing order. An 11-position algorithm knob selects only valid, static topologies.
+FourV2 uses 11 fixed algorithm slots. An 11-position algorithm knob selects only
+valid, static topologies.
 
 | Number | Modulation routing | Carriers sent to the output mix |
 |---:|---|---|
 | 1 | `4 → 3 → 2 → 1` | 1 |
 | 2 | `(3 + 4) → 2 → 1` | 1 |
-| 3 | `4 → 2 → 1` and `3 → 1` | 1 |
+| 3 | `4 → 3 → 1` and `2 → 1` | 1 |
 | 4 | `4 → 3 → 1` and `2 → 1` | 1 |
 | 5 | `4 → 3` and `2 → 1` | 1 and 3 |
 | 6 | `4 → (1, 2, 3)` | 1, 2, and 3 |

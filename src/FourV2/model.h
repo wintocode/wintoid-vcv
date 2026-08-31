@@ -40,7 +40,7 @@ static const Ratio RATIOS[RATIO_COUNT] = {
 static const Algorithm ALGORITHMS[ALGORITHM_COUNT] = {
     {{{0,0,0,0},{1,0,0,0},{0,1,0,0},{0,0,1,0}}, {1,0,0,0}},
     {{{0,0,0,0},{1,0,0,0},{0,1,0,0},{0,1,0,0}}, {1,0,0,0}},
-    {{{0,0,0,0},{1,0,0,0},{1,0,0,0},{0,1,0,0}}, {1,0,0,0}},
+    {{{0,0,0,0},{1,0,0,0},{1,0,0,0},{0,0,1,0}}, {1,0,0,0}},
     {{{0,0,0,0},{1,0,0,0},{1,0,0,0},{0,0,1,0}}, {1,0,0,0}},
     {{{0,0,0,0},{1,0,0,0},{0,0,0,0},{0,0,1,0}}, {1,0,1,0}},
     {{{0,0,0,0},{0,0,0,0},{0,0,0,0},{1,1,1,0}}, {1,1,1,0}},
@@ -61,9 +61,9 @@ inline int clamp_mode(float value) {
 }
 
 inline int algorithm_index(float value) {
-    value = finite_or(value, 0.f);
-    value = fmaxf(0.f, fminf(10.f, value));
-    return (int)floorf(value + 0.5f);
+    value = finite_or(value, 1.f);
+    value = fmaxf(1.f, fminf(11.f, value));
+    return (int)floorf(value + 0.5f) - 1;
 }
 
 inline int ratio_index(float coarse) {

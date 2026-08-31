@@ -466,6 +466,11 @@ class FourV2PanelTest(unittest.TestCase):
         )
         self.assertNotIn("nvgBezierTo", body)
         self.assertIn("nvgLineTo", body)
+        for arrow_contract in ("arrowLength", "arrowWidth", "arrowBaseX"):
+            with self.subTest(arrow_contract=arrow_contract):
+                self.assertNotIn(arrow_contract, body)
+        self.assertIn("sourceTrunk", body)
+        self.assertIn("outgoingCount > 1", body)
 
     def test_socket_attenuator_pairs_have_small_rounded_group_boxes(self):
         panel = self.require_panel()

@@ -159,7 +159,7 @@ class FourV2ModuleContractTest(unittest.TestCase):
     def test_parameter_defaults_ranges_and_selector_metadata_are_explicit(self):
         source = self.require_source()
         for contract in (
-            'configParam(ALGORITHM_PARAM, 0.f, 10.f, 0.f, "Algorithm")',
+            'configParam(ALGORITHM_PARAM, 1.f, 11.f, 1.f, "Algorithm")',
             'configParam(TUNE_PARAM, -100.f, 100.f, 0.f, "Tune", " cents")',
             'configParam(PM_DEPTH_PARAM, 0.f, 1.f, 1.f, "PM Depth"',
             'configParam(PM_DEPTH_CV_ATTEN_PARAM, -1.f, 1.f, 0.f',
