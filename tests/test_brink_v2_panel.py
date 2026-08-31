@@ -41,6 +41,14 @@ EXPECTED_CONTROL_NAMES = (
 EXPECTED_COMPONENT_NAMES = (
     EXPECTED_CONTROL_NAMES + EXPECTED_INPUT_NAMES + EXPECTED_OUTPUT_NAMES
 )
+EXPECTED_LIGHT_NAMES = (
+    "A_INSIDE_LIGHT", "A_OUTSIDE_LIGHT", "A_LOW_UP_LIGHT",
+    "A_HIGH_UP_LIGHT", "A_LOW_DOWN_LIGHT", "A_HIGH_DOWN_LIGHT",
+    "B_INSIDE_LIGHT", "B_OUTSIDE_LIGHT", "B_LOW_UP_LIGHT",
+    "B_HIGH_UP_LIGHT", "B_LOW_DOWN_LIGHT", "B_HIGH_DOWN_LIGHT",
+    "AND_LIGHT", "OR_LIGHT", "XOR_LIGHT", "STATE_LIGHT",
+)
+STATUS_LIGHT_RADIUS_MM = 1.0
 
 
 def load_generator(path, module_name):
@@ -330,6 +338,42 @@ class BrinkV2PanelTest(unittest.TestCase):
                                             panel.COMPONENT_RADII[name_a]
                                             + panel.COMPONENT_RADII[name_b])
 
+    def test_status_lights_use_generated_non_overlapping_coordinates(self):
+        panel = self.require_panel()
+        lights = tuple(panel.LIGHT_COMPONENTS)
+        self.assertEqual(
+            EXPECTED_LIGHT_NAMES,
+            tuple(name for name, _x, _y in lights),
+        )
+        self.assertEqual(len(lights), len({name for name, _x, _y in lights}))
+
+        socket_positions = {
+            name: (x, y)
+            for name, x, y in panel.INPUT_COMPONENTS + panel.OUTPUT_COMPONENTS
+        }
+        light_to_socket = {
+            name: name.removesuffix("_LIGHT")
+            for name in EXPECTED_LIGHT_NAMES
+        }
+        light_to_socket.update({
+            "AND_LIGHT": "AND_OUTPUT",
+            "OR_LIGHT": "OR_OUTPUT",
+            "XOR_LIGHT": "XOR_OUTPUT",
+            "STATE_LIGHT": "STATE_OUTPUT",
+        })
+        for name, x, y in lights:
+            socket_name = light_to_socket[name]
+            socket_x, socket_y = socket_positions[socket_name]
+            with self.subTest(light=name, socket=socket_name):
+                self.assertGreaterEqual(
+                    math.hypot(x - socket_x, y - socket_y),
+                    RACK_PORT_RADIUS_MM + STATUS_LIGHT_RADIUS_MM,
+                )
+                self.assertGreaterEqual(x - STATUS_LIGHT_RADIUS_MM, 0.0)
+                self.assertLessEqual(x + STATUS_LIGHT_RADIUS_MM, panel.WIDTH_MM)
+                self.assertGreaterEqual(y - STATUS_LIGHT_RADIUS_MM, 0.0)
+                self.assertLessEqual(y + STATUS_LIGHT_RADIUS_MM, panel.HEIGHT_MM)
+
     def test_sem_palette_and_uniform_socket_guides_replace_v1_output_backplates(self):
         panel = self.require_panel()
         self.assertEqual("#ece8d9", panel.PANEL_IVORY)
@@ -486,6 +530,70 @@ class BrinkV2PanelTest(unittest.TestCase):
                          "wint-underline", "oid-underline"}.issubset(ids))
         self.assertIn("Brink V2", {node.text for node in root.iter()
                                     if node.tag.endswith("text")})
+
+    def test_generated_overlay_schema_exactly_matches_svg_labels_and_lines(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+
+        labels = [node for node in root.iter() if node.tag.endswith("text")]
+        schema_labels = tuple(panel.PANEL_LABELS)
+        self.assertEqual(len(schema_labels), len(labels))
+        expected_text = (
+            "Brink V2", "CHANNEL A", "CHANNEL B",
+            "CENTER", "WIDTH", "IN", "POS", "CENTER CV", "CENTER AMT",
+            "WIDTH CV", "WIDTH AMT", "INSIDE", "OUTSIDE",
+            "LOW", "HIGH", "LOW", "HIGH", "↑", "↓",
+            "CENTER", "WIDTH", "IN", "POS", "CENTER CV", "CENTER AMT",
+            "WIDTH CV", "WIDTH AMT", "INSIDE", "OUTSIDE",
+            "LOW", "HIGH", "LOW", "HIGH", "↑", "↓",
+            "AND", "OR", "XOR", "STATE",
+        )
+        self.assertEqual(expected_text, tuple(label.text for label in schema_labels))
+        for spec, node in zip(schema_labels, labels):
+            with self.subTest(label=spec.identifier):
+                self.assertEqual(spec.text, node.text)
+                self.assertAlmostEqual(spec.x, float(node.attrib["x"]), places=6)
+                self.assertAlmostEqual(spec.y, float(node.attrib["y"]), places=6)
+                self.assertAlmostEqual(spec.size,
+                                       float(node.attrib["font-size"]), places=6)
+                self.assertEqual(spec.fill, node.attrib["fill"])
+                self.assertEqual(spec.anchor, node.attrib["text-anchor"])
+                self.assertEqual(spec.weight, node.attrib["font-weight"])
+                self.assertEqual("middle", node.attrib["dominant-baseline"])
+
+        schema_lines = tuple(panel.PANEL_LINES)
+        svg_lines = [
+            node for node in root.iter()
+            if node.tag.endswith("line")
+            and node.attrib.get("id", "").startswith("normalisation-")
+        ]
+        self.assertEqual(len(schema_lines), len(svg_lines))
+        for spec, node in zip(schema_lines, svg_lines):
+            with self.subTest(line=spec.identifier):
+                self.assertEqual(spec.identifier, node.attrib["id"])
+                for attribute in ("x1", "y1", "x2", "y2"):
+                    self.assertAlmostEqual(
+                        getattr(spec, attribute),
+                        float(node.attrib[attribute]),
+                        places=6,
+                    )
+                self.assertEqual(spec.stroke, node.attrib["stroke"])
+                self.assertAlmostEqual(
+                    spec.stroke_width,
+                    float(node.attrib["stroke-width"]),
+                    places=6,
+                )
+
+        event_specs = [
+            label for label in schema_labels
+            if label.text in {"LOW", "HIGH", "↑", "↓"}
+        ]
+        self.assertTrue(event_specs)
+        self.assertEqual({panel.FUNCTION_ORANGE},
+                         {label.fill for label in event_specs})
+        self.assertEqual({"700"}, {label.weight for label in event_specs})
+        self.assertEqual({panel.FUNCTION_ORANGE},
+                         {line.stroke for line in schema_lines})
 
     def test_svg_painted_sections_and_socket_guides_keep_edge_margin(self):
         panel = self.require_panel()

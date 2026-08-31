@@ -57,6 +57,7 @@ constexpr int CHANNEL_A_ACCENT_B = 128;
 constexpr int CHANNEL_B_ACCENT_R = 183;
 constexpr int CHANNEL_B_ACCENT_G = 105;
 constexpr int CHANNEL_B_ACCENT_B = 60;
+constexpr float STATUS_LIGHT_OFFSET = 6.0f;
 
 constexpr float A_CENTER_KNOB_X = 8.1732f;
 constexpr float A_CENTER_KNOB_Y = 25.0f;
@@ -126,5 +127,120 @@ constexpr float XOR_OUTPUT_X = 38.0f;
 constexpr float XOR_OUTPUT_Y = 114.0f;
 constexpr float STATE_OUTPUT_X = 52.7868f;
 constexpr float STATE_OUTPUT_Y = 114.0f;
+
+// Dedicated non-overlapping status-light centres.
+constexpr float A_INSIDE_LIGHT_X = 14.1732f;
+constexpr float A_INSIDE_LIGHT_Y = 75.0f;
+constexpr float A_OUTSIDE_LIGHT_X = 16.3068f;
+constexpr float A_OUTSIDE_LIGHT_Y = 75.0f;
+constexpr float A_LOW_UP_LIGHT_X = 14.1732f;
+constexpr float A_LOW_UP_LIGHT_Y = 89.0f;
+constexpr float A_HIGH_UP_LIGHT_X = 16.3068f;
+constexpr float A_HIGH_UP_LIGHT_Y = 89.0f;
+constexpr float A_LOW_DOWN_LIGHT_X = 14.1732f;
+constexpr float A_LOW_DOWN_LIGHT_Y = 101.0f;
+constexpr float A_HIGH_DOWN_LIGHT_X = 16.3068f;
+constexpr float A_HIGH_DOWN_LIGHT_Y = 101.0f;
+constexpr float B_INSIDE_LIGHT_X = 44.6532f;
+constexpr float B_INSIDE_LIGHT_Y = 75.0f;
+constexpr float B_OUTSIDE_LIGHT_X = 46.7868f;
+constexpr float B_OUTSIDE_LIGHT_Y = 75.0f;
+constexpr float B_LOW_UP_LIGHT_X = 44.6532f;
+constexpr float B_LOW_UP_LIGHT_Y = 89.0f;
+constexpr float B_HIGH_UP_LIGHT_X = 46.7868f;
+constexpr float B_HIGH_UP_LIGHT_Y = 89.0f;
+constexpr float B_LOW_DOWN_LIGHT_X = 44.6532f;
+constexpr float B_LOW_DOWN_LIGHT_Y = 101.0f;
+constexpr float B_HIGH_DOWN_LIGHT_X = 46.7868f;
+constexpr float B_HIGH_DOWN_LIGHT_Y = 101.0f;
+constexpr float AND_LIGHT_X = 14.1732f;
+constexpr float AND_LIGHT_Y = 114.0f;
+constexpr float OR_LIGHT_X = 29.0f;
+constexpr float OR_LIGHT_Y = 114.0f;
+constexpr float XOR_LIGHT_X = 44.0f;
+constexpr float XOR_LIGHT_Y = 114.0f;
+constexpr float STATE_LIGHT_X = 58.7868f;
+constexpr float STATE_LIGHT_Y = 114.0f;
+
+// Generator-owned static layer-1 label and normalisation schema.
+enum LabelAlign { LABEL_ALIGN_CENTER, LABEL_ALIGN_LEFT };
+struct LabelSpec {
+    float x;
+    float y;
+    float size;
+    int red;
+    int green;
+    int blue;
+    const char* text;
+    LabelAlign align;
+    bool bold;
+};
+static const LabelSpec PANEL_LABELS[] = {
+    {6.0f, 7.0f, 6.6f, 36, 37, 34, "Brink V2", LABEL_ALIGN_LEFT, true},
+    {15.24f, 16.0f, 3.0f, 85, 109, 128, "CHANNEL A", LABEL_ALIGN_CENTER, true},
+    {45.72f, 16.0f, 3.0f, 85, 109, 128, "CHANNEL B", LABEL_ALIGN_CENTER, true},
+    {8.1732f, 18.7f, 2.35f, 36, 37, 34, "CENTER", LABEL_ALIGN_CENTER, false},
+    {22.3068f, 18.7f, 2.35f, 36, 37, 34, "WIDTH", LABEL_ALIGN_CENTER, false},
+    {22.3068f, 32.65f, 2.15f, 36, 37, 34, "IN", LABEL_ALIGN_CENTER, false},
+    {8.1732f, 32.65f, 2.15f, 36, 37, 34, "POS", LABEL_ALIGN_CENTER, false},
+    {22.3068f, 44.65f, 2.15f, 36, 37, 34, "CENTER CV", LABEL_ALIGN_CENTER, false},
+    {8.1732f, 44.65f, 2.15f, 36, 37, 34, "CENTER AMT", LABEL_ALIGN_CENTER, false},
+    {22.3068f, 56.65f, 2.15f, 36, 37, 34, "WIDTH CV", LABEL_ALIGN_CENTER, false},
+    {8.1732f, 56.65f, 2.15f, 36, 37, 34, "WIDTH AMT", LABEL_ALIGN_CENTER, false},
+    {8.1732f, 68.65f, 2.15f, 36, 37, 34, "INSIDE", LABEL_ALIGN_CENTER, false},
+    {22.3068f, 68.65f, 2.15f, 36, 37, 34, "OUTSIDE", LABEL_ALIGN_CENTER, false},
+    {8.1732f, 83.0f, 2.2f, 183, 105, 60, "LOW", LABEL_ALIGN_CENTER, true},
+    {22.3068f, 83.0f, 2.2f, 183, 105, 60, "HIGH", LABEL_ALIGN_CENTER, true},
+    {8.1732f, 95.0f, 2.2f, 183, 105, 60, "LOW", LABEL_ALIGN_CENTER, true},
+    {22.3068f, 95.0f, 2.2f, 183, 105, 60, "HIGH", LABEL_ALIGN_CENTER, true},
+    {15.24f, 83.0f, 2.2f, 183, 105, 60, "↑", LABEL_ALIGN_CENTER, true},
+    {15.24f, 95.0f, 2.2f, 183, 105, 60, "↓", LABEL_ALIGN_CENTER, true},
+    {38.6532f, 18.7f, 2.35f, 36, 37, 34, "CENTER", LABEL_ALIGN_CENTER, false},
+    {52.7868f, 18.7f, 2.35f, 36, 37, 34, "WIDTH", LABEL_ALIGN_CENTER, false},
+    {38.6532f, 32.65f, 2.15f, 36, 37, 34, "IN", LABEL_ALIGN_CENTER, false},
+    {52.7868f, 32.65f, 2.15f, 36, 37, 34, "POS", LABEL_ALIGN_CENTER, false},
+    {38.6532f, 44.65f, 2.15f, 36, 37, 34, "CENTER CV", LABEL_ALIGN_CENTER, false},
+    {52.7868f, 44.65f, 2.15f, 36, 37, 34, "CENTER AMT", LABEL_ALIGN_CENTER, false},
+    {38.6532f, 56.65f, 2.15f, 36, 37, 34, "WIDTH CV", LABEL_ALIGN_CENTER, false},
+    {52.7868f, 56.65f, 2.15f, 36, 37, 34, "WIDTH AMT", LABEL_ALIGN_CENTER, false},
+    {38.6532f, 68.65f, 2.15f, 36, 37, 34, "INSIDE", LABEL_ALIGN_CENTER, false},
+    {52.7868f, 68.65f, 2.15f, 36, 37, 34, "OUTSIDE", LABEL_ALIGN_CENTER, false},
+    {38.6532f, 83.0f, 2.2f, 183, 105, 60, "LOW", LABEL_ALIGN_CENTER, true},
+    {52.7868f, 83.0f, 2.2f, 183, 105, 60, "HIGH", LABEL_ALIGN_CENTER, true},
+    {38.6532f, 95.0f, 2.2f, 183, 105, 60, "LOW", LABEL_ALIGN_CENTER, true},
+    {52.7868f, 95.0f, 2.2f, 183, 105, 60, "HIGH", LABEL_ALIGN_CENTER, true},
+    {45.72f, 83.0f, 2.2f, 183, 105, 60, "↑", LABEL_ALIGN_CENTER, true},
+    {45.72f, 95.0f, 2.2f, 183, 105, 60, "↓", LABEL_ALIGN_CENTER, true},
+    {8.1732f, 107.65f, 2.15f, 85, 109, 128, "AND", LABEL_ALIGN_CENTER, true},
+    {23.0f, 107.65f, 2.15f, 85, 109, 128, "OR", LABEL_ALIGN_CENTER, true},
+    {38.0f, 107.65f, 2.15f, 85, 109, 128, "XOR", LABEL_ALIGN_CENTER, true},
+    {52.7868f, 107.65f, 2.15f, 85, 109, 128, "STATE", LABEL_ALIGN_CENTER, true},
+};
+constexpr int PANEL_LABEL_COUNT =
+    sizeof(PANEL_LABELS) / sizeof(PANEL_LABELS[0]);
+
+struct LineSpec {
+    float x1;
+    float y1;
+    float x2;
+    float y2;
+    float strokeWidth;
+    int red;
+    int green;
+    int blue;
+};
+static const LineSpec PANEL_LINES[] = {
+    {24.3068f, 39.0f, 36.6532f, 39.0f, 0.3f, 183, 105, 60},
+    {30.68f, 38.2f, 31.68f, 39.0f, 0.3f, 183, 105, 60},
+    {30.68f, 39.8f, 31.68f, 39.0f, 0.3f, 183, 105, 60},
+    {24.3068f, 51.0f, 36.6532f, 51.0f, 0.3f, 183, 105, 60},
+    {30.68f, 50.2f, 31.68f, 51.0f, 0.3f, 183, 105, 60},
+    {30.68f, 51.8f, 31.68f, 51.0f, 0.3f, 183, 105, 60},
+    {24.3068f, 63.0f, 36.6532f, 63.0f, 0.3f, 183, 105, 60},
+    {30.68f, 62.2f, 31.68f, 63.0f, 0.3f, 183, 105, 60},
+    {30.68f, 63.8f, 31.68f, 63.0f, 0.3f, 183, 105, 60},
+};
+constexpr int PANEL_LINE_COUNT =
+    sizeof(PANEL_LINES) / sizeof(PANEL_LINES[0]);
 
 } // namespace brink_v2_layout

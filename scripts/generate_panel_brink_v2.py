@@ -12,6 +12,7 @@ from html import escape
 import json
 import math
 from pathlib import Path
+from typing import NamedTuple
 import xml.etree.ElementTree as ET
 
 
@@ -124,6 +125,30 @@ LOGIC_LABEL_FONT_SIZE = 2.15
 
 CHANNEL_A_ACCENT_RGB = (85, 109, 128)
 CHANNEL_B_ACCENT_RGB = (183, 105, 60)
+STATUS_LIGHT_OFFSET = 6.0
+STATUS_LIGHT_RADIUS = 1.0
+
+
+class PanelLabel(NamedTuple):
+    identifier: str
+    group: str
+    x: float
+    y: float
+    text: str
+    size: float
+    fill: str
+    anchor: str
+    weight: str
+
+
+class PanelLine(NamedTuple):
+    identifier: str
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+    stroke: str
+    stroke_width: float
 
 
 def _channel_coordinates(prefix: str, channel_x: float) -> tuple[tuple[str, float, float], ...]:
@@ -192,6 +217,121 @@ COMPONENT_RADII = {
     **{name: RACK_PORT_RADIUS for name in INPUT_NAMES + OUTPUT_NAMES},
 }
 
+
+def _light_component(name: str, socket_name: str, direction: float) -> tuple[str, float, float]:
+    socket_x, socket_y = COORDINATES[socket_name]
+    return name, socket_x + direction * STATUS_LIGHT_OFFSET, socket_y
+
+
+LIGHT_COMPONENTS = (
+    _light_component("A_INSIDE_LIGHT", "A_INSIDE", 1.0),
+    _light_component("A_OUTSIDE_LIGHT", "A_OUTSIDE", -1.0),
+    _light_component("A_LOW_UP_LIGHT", "A_LOW_UP", 1.0),
+    _light_component("A_HIGH_UP_LIGHT", "A_HIGH_UP", -1.0),
+    _light_component("A_LOW_DOWN_LIGHT", "A_LOW_DOWN", 1.0),
+    _light_component("A_HIGH_DOWN_LIGHT", "A_HIGH_DOWN", -1.0),
+    _light_component("B_INSIDE_LIGHT", "B_INSIDE", 1.0),
+    _light_component("B_OUTSIDE_LIGHT", "B_OUTSIDE", -1.0),
+    _light_component("B_LOW_UP_LIGHT", "B_LOW_UP", 1.0),
+    _light_component("B_HIGH_UP_LIGHT", "B_HIGH_UP", -1.0),
+    _light_component("B_LOW_DOWN_LIGHT", "B_LOW_DOWN", 1.0),
+    _light_component("B_HIGH_DOWN_LIGHT", "B_HIGH_DOWN", -1.0),
+    _light_component("AND_LIGHT", "AND_OUTPUT", 1.0),
+    _light_component("OR_LIGHT", "OR_OUTPUT", 1.0),
+    _light_component("XOR_LIGHT", "XOR_OUTPUT", 1.0),
+    _light_component("STATE_LIGHT", "STATE_OUTPUT", 1.0),
+)
+
+
+def _channel_label_specs(prefix: str) -> tuple[PanelLabel, ...]:
+    labels = (
+        ("CENTER_KNOB", "CENTER", KNOB_LABEL_OFFSET, CONTROL_LABEL_FONT_SIZE),
+        ("WIDTH_KNOB", "WIDTH", KNOB_LABEL_OFFSET, CONTROL_LABEL_FONT_SIZE),
+        ("SIGNAL", "IN", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
+        ("POSITION", "POS", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
+        ("CENTER_CV", "CENTER CV", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
+        ("CENTER_ATTEN", "CENTER AMT", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
+        ("WIDTH_CV", "WIDTH CV", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
+        ("WIDTH_ATTEN", "WIDTH AMT", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
+        ("INSIDE", "INSIDE", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
+        ("OUTSIDE", "OUTSIDE", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
+    )
+    specs = []
+    for suffix, text, offset, size in labels:
+        x, y = COORDINATES[f"{prefix}_{suffix}"]
+        specs.append(PanelLabel(
+            f"{prefix.lower()}-{suffix.lower().replace('_', '-')}-label",
+            f"channel-{prefix.lower()}", x, y - offset, text, size,
+            LEGEND_CHARCOAL, "middle", "400",
+        ))
+    for suffix, text in (
+        ("LOW_UP", "LOW"), ("HIGH_UP", "HIGH"),
+        ("LOW_DOWN", "LOW"), ("HIGH_DOWN", "HIGH"),
+    ):
+        x, port_y = COORDINATES[f"{prefix}_{suffix}"]
+        specs.append(PanelLabel(
+            f"{prefix.lower()}-{suffix.lower().replace('_', '-')}-label",
+            f"channel-{prefix.lower()}", x, port_y - EVENT_LABEL_OFFSET,
+            text, EVENT_LABEL_FONT_SIZE, FUNCTION_ORANGE, "middle", "700",
+        ))
+    arrow_x = CHANNEL_A_X if prefix == "A" else CHANNEL_B_X
+    specs.extend((
+        PanelLabel(
+            f"{prefix.lower()}-event-up-arrow", f"channel-{prefix.lower()}",
+            arrow_x, Y_EVENTS_UP - EVENT_LABEL_OFFSET, "↑",
+            EVENT_LABEL_FONT_SIZE, FUNCTION_ORANGE, "middle", "700",
+        ),
+        PanelLabel(
+            f"{prefix.lower()}-event-down-arrow", f"channel-{prefix.lower()}",
+            arrow_x, Y_EVENTS_DOWN - EVENT_LABEL_OFFSET, "↓",
+            EVENT_LABEL_FONT_SIZE, FUNCTION_ORANGE, "middle", "700",
+        ),
+    ))
+    return tuple(specs)
+
+
+PANEL_LABELS = (
+    PanelLabel("title", "title", TITLE_X, TITLE_Y, "Brink V2",
+               TITLE_FONT_SIZE, LEGEND_CHARCOAL, "start", "700"),
+    PanelLabel("channel-a-heading", "headings", CHANNEL_A_X, Y_CHANNEL_HEADER,
+               "CHANNEL A", CHANNEL_HEADING_FONT_SIZE, SECTION_BLUE_GREY,
+               "middle", "700"),
+    PanelLabel("channel-b-heading", "headings", CHANNEL_B_X, Y_CHANNEL_HEADER,
+               "CHANNEL B", CHANNEL_HEADING_FONT_SIZE, SECTION_BLUE_GREY,
+               "middle", "700"),
+    *_channel_label_specs("A"),
+    *_channel_label_specs("B"),
+    *(PanelLabel(
+        f"{label.lower()}-logic-label", "logic", COORDINATES[name][0],
+        COORDINATES[name][1] - PORT_LABEL_OFFSET, label,
+        LOGIC_LABEL_FONT_SIZE, SECTION_BLUE_GREY, "middle", "700",
+    ) for label, name in (
+        ("AND", "AND_OUTPUT"), ("OR", "OR_OUTPUT"),
+        ("XOR", "XOR_OUTPUT"), ("STATE", "STATE_OUTPUT"),
+    )),
+)
+
+
+def _normalisation_lines() -> tuple[PanelLine, ...]:
+    lines = []
+    for y in (Y_SIGNAL_POSITION, Y_CENTER_CV, Y_WIDTH_CV):
+        input_suffix = (
+            "SIGNAL" if y == Y_SIGNAL_POSITION
+            else "CENTER_CV" if y == Y_CENTER_CV else "WIDTH_CV"
+        )
+        a_input_x = COORDINATES[f"A_{input_suffix}"][0]
+        b_input_x = COORDINATES[f"B_{input_suffix}"][0]
+        tip_x = WIDTH_MM / 2.0 + 1.2
+        lines.extend((
+            PanelLine(f"normalisation-{_fmt(y)}", a_input_x + 2.0, y,
+                      b_input_x - 2.0, y, FUNCTION_ORANGE, 0.30),
+            PanelLine(f"normalisation-arrow-top-{_fmt(y)}", tip_x - 1.0,
+                      y - 0.8, tip_x, y, FUNCTION_ORANGE, 0.30),
+            PanelLine(f"normalisation-arrow-bottom-{_fmt(y)}", tip_x - 1.0,
+                      y + 0.8, tip_x, y, FUNCTION_ORANGE, 0.30),
+        ))
+    return tuple(lines)
+
 # Labels tracked directly by the public test; repeated event labels have a
 # dedicated ordering/clearance check below and are intentionally not mapped.
 LABEL_COMPONENTS = {
@@ -220,6 +360,9 @@ def _fmt(value: float, digits: int = 6) -> str:
     return text if text and text != "-0" else "0"
 
 
+PANEL_LINES = _normalisation_lines()
+
+
 def _cpp_float(value: float) -> str:
     text = _fmt(value)
     return text if "." in text else f"{text}.0"
@@ -246,6 +389,21 @@ def _line(x1: float, y1: float, x2: float, y2: float, *, identifier: str, stroke
         f'  <line id="{identifier}" x1="{_fmt(x1)}" y1="{_fmt(y1)}" '
         f'x2="{_fmt(x2)}" y2="{_fmt(y2)}" stroke="{stroke}" '
         f'stroke-width="{_fmt(stroke_width)}" />'
+    )
+
+
+def _label_element(label: PanelLabel) -> str:
+    return _text(
+        label.x, label.y, label.text, size=label.size, fill=label.fill,
+        anchor=label.anchor, weight=label.weight,
+    )
+
+
+def _line_element(line: PanelLine) -> str:
+    return _line(
+        line.x1, line.y1, line.x2, line.y2,
+        identifier=line.identifier, stroke=line.stroke,
+        stroke_width=line.stroke_width,
     )
 
 
@@ -310,36 +468,8 @@ def _embedded_logo() -> list[str]:
     ]
 
 
-def _component_label_lines(prefix: str) -> list[str]:
-    coordinates = COORDINATES
-    labels = (
-        ("CENTER_KNOB", "CENTER", KNOB_LABEL_OFFSET, CONTROL_LABEL_FONT_SIZE),
-        ("WIDTH_KNOB", "WIDTH", KNOB_LABEL_OFFSET, CONTROL_LABEL_FONT_SIZE),
-        ("SIGNAL", "IN", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-        ("POSITION", "POS", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-        ("CENTER_CV", "CENTER CV", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-        ("CENTER_ATTEN", "CENTER AMT", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-        ("WIDTH_CV", "WIDTH CV", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-        ("WIDTH_ATTEN", "WIDTH AMT", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-        ("INSIDE", "INSIDE", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-        ("OUTSIDE", "OUTSIDE", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-    )
-    lines = []
-    for suffix, label, offset, size in labels:
-        x, y = coordinates[f"{prefix}_{suffix}"]
-        lines.append(_text(x, y - offset, label, size=size))
-    for suffix, label, y in (
-        ("LOW_UP", "LOW", Y_EVENTS_UP - EVENT_LABEL_OFFSET),
-        ("HIGH_UP", "HIGH", Y_EVENTS_UP - EVENT_LABEL_OFFSET),
-        ("LOW_DOWN", "LOW", Y_EVENTS_DOWN - EVENT_LABEL_OFFSET),
-        ("HIGH_DOWN", "HIGH", Y_EVENTS_DOWN - EVENT_LABEL_OFFSET),
-    ):
-        x, _port_y = coordinates[f"{prefix}_{suffix}"]
-        lines.append(_text(x, y, label, size=EVENT_LABEL_FONT_SIZE, fill=FUNCTION_ORANGE, weight="700"))
-    arrow_x = CHANNEL_A_X if prefix == "A" else CHANNEL_B_X
-    lines.append(_text(arrow_x, Y_EVENTS_UP - EVENT_LABEL_OFFSET, "↑", size=EVENT_LABEL_FONT_SIZE, fill=FUNCTION_ORANGE, weight="700"))
-    lines.append(_text(arrow_x, Y_EVENTS_DOWN - EVENT_LABEL_OFFSET, "↓", size=EVENT_LABEL_FONT_SIZE, fill=FUNCTION_ORANGE, weight="700"))
-    return lines
+def _label_group(group: str) -> list[str]:
+    return [_label_element(label) for label in PANEL_LABELS if label.group == group]
 
 
 def generate_svg() -> str:
@@ -351,36 +481,34 @@ def generate_svg() -> str:
         f'  <rect x="0" y="0" width="{_fmt(WIDTH_MM, 2)}" height="{_fmt(HEIGHT_MM, 1)}" fill="{PANEL_IVORY}" stroke="{PANEL_IVORY}" stroke-width="0" />',
     ]
     lines.extend(_embedded_logo())
-    lines.append(_text(TITLE_X, TITLE_Y, "Brink V2", size=TITLE_FONT_SIZE, anchor="start", weight="700"))
+    lines.extend(_label_group("title"))
     for (identifier, x, y, width, height), fill in zip(CHANNEL_SECTION_RECTS, (SECTION_FILL, SECTION_FILL_ALT)):
         lines.append(_rect(x, y, width, height, fill, SECTION_BLUE_GREY, identifier=identifier, radius=SECTION_RADIUS))
     lines.append(_line(LOGIC_DIVIDER_X, LOGIC_DIVIDER_Y, LOGIC_DIVIDER_X + LOGIC_DIVIDER_WIDTH, LOGIC_DIVIDER_Y, identifier="logic-divider", stroke_width=LOGIC_DIVIDER_STROKE_WIDTH))
     for identifier, x, y, width, height in POSITION_RAILS:
         lines.append(_rect(x, y, width, height, PANEL_IVORY, SECTION_BLUE_GREY, identifier=identifier, radius=0.8))
-    lines.append(_text(CHANNEL_A_X, Y_CHANNEL_HEADER, "CHANNEL A", size=CHANNEL_HEADING_FONT_SIZE, fill=SECTION_BLUE_GREY, weight="700"))
-    lines.append(_text(CHANNEL_B_X, Y_CHANNEL_HEADER, "CHANNEL B", size=CHANNEL_HEADING_FONT_SIZE, fill=SECTION_BLUE_GREY, weight="700"))
-    for y in (Y_SIGNAL_POSITION, Y_CENTER_CV, Y_WIDTH_CV):
-        a_input_x = COORDINATES["A_SIGNAL" if y == Y_SIGNAL_POSITION else "A_CENTER_CV" if y == Y_CENTER_CV else "A_WIDTH_CV"][0]
-        b_input_x = COORDINATES["B_SIGNAL" if y == Y_SIGNAL_POSITION else "B_CENTER_CV" if y == Y_CENTER_CV else "B_WIDTH_CV"][0]
-        lines.append(_line(a_input_x + 2.0, y, b_input_x - 2.0, y, identifier=f"normalisation-{_fmt(y)}", stroke=FUNCTION_ORANGE))
-        tip_x = WIDTH_MM / 2.0 + 1.2
-        lines.append(_line(tip_x - 1.0, y - 0.8, tip_x, y, identifier=f"normalisation-arrow-top-{_fmt(y)}", stroke=FUNCTION_ORANGE))
-        lines.append(_line(tip_x - 1.0, y + 0.8, tip_x, y, identifier=f"normalisation-arrow-bottom-{_fmt(y)}", stroke=FUNCTION_ORANGE))
-    lines.extend(_component_label_lines("A"))
-    lines.extend(_component_label_lines("B"))
+    lines.extend(_label_group("headings"))
+    lines.extend(_line_element(line) for line in PANEL_LINES)
+    lines.extend(_label_group("channel-a"))
+    lines.extend(_label_group("channel-b"))
     for name, x, y in CONTROL_COMPONENTS:
         lines.append(_control_guide(name, x, y))
     for _name, x, y in INPUT_COMPONENTS + OUTPUT_COMPONENTS:
         lines.append(_port_guide(x, y))
-    for label, name in (("AND", "AND_OUTPUT"), ("OR", "OR_OUTPUT"), ("XOR", "XOR_OUTPUT"), ("STATE", "STATE_OUTPUT")):
-        x, y = COORDINATES[name]
-        lines.append(_text(x, y - PORT_LABEL_OFFSET, label, size=LOGIC_LABEL_FONT_SIZE, fill=SECTION_BLUE_GREY, weight="700"))
+    lines.extend(_label_group("logic"))
     lines.append("</svg>")
     return "\n".join(lines) + "\n"
 
 
 def _header_float(name: str, value: float) -> str:
     return f"constexpr float {name} = {_cpp_float(value)}f;"
+
+
+def _rgb(hex_color: str) -> tuple[int, int, int]:
+    value = hex_color.removeprefix("#")
+    if len(value) != 6:
+        raise ValueError(f"expected six-digit RGB color, got {hex_color!r}")
+    return tuple(int(value[index:index + 2], 16) for index in (0, 2, 4))
 
 
 def generate_coords_header() -> str:
@@ -442,6 +570,7 @@ def generate_coords_header() -> str:
         f"constexpr int CHANNEL_B_ACCENT_R = {CHANNEL_B_ACCENT_RGB[0]};",
         f"constexpr int CHANNEL_B_ACCENT_G = {CHANNEL_B_ACCENT_RGB[1]};",
         f"constexpr int CHANNEL_B_ACCENT_B = {CHANNEL_B_ACCENT_RGB[2]};",
+        _header_float("STATUS_LIGHT_OFFSET", STATUS_LIGHT_OFFSET),
         "",
     ))
     coordinate_order = tuple(name for name, _x, _y in _CHANNEL_A_COORDINATES + _CHANNEL_B_COORDINATES) + LOGIC_OUTPUT_NAMES
@@ -449,6 +578,68 @@ def generate_coords_header() -> str:
         x, y = COORDINATES[name]
         lines.append(_header_float(f"{name}_X", x))
         lines.append(_header_float(f"{name}_Y", y))
+    lines.extend(("", "// Dedicated non-overlapping status-light centres."))
+    for name, x, y in LIGHT_COMPONENTS:
+        lines.append(_header_float(f"{name}_X", x))
+        lines.append(_header_float(f"{name}_Y", y))
+
+    lines.extend((
+        "",
+        "// Generator-owned static layer-1 label and normalisation schema.",
+        "enum LabelAlign { LABEL_ALIGN_CENTER, LABEL_ALIGN_LEFT };",
+        "struct LabelSpec {",
+        "    float x;",
+        "    float y;",
+        "    float size;",
+        "    int red;",
+        "    int green;",
+        "    int blue;",
+        "    const char* text;",
+        "    LabelAlign align;",
+        "    bool bold;",
+        "};",
+        "static const LabelSpec PANEL_LABELS[] = {",
+    ))
+    for label in PANEL_LABELS:
+        red, green, blue = _rgb(label.fill)
+        align = ("LABEL_ALIGN_LEFT" if label.anchor == "start"
+                 else "LABEL_ALIGN_CENTER")
+        bold = "true" if label.weight == "700" else "false"
+        text = json.dumps(label.text, ensure_ascii=False)
+        lines.append(
+            f"    {{{_cpp_float(label.x)}f, {_cpp_float(label.y)}f, "
+            f"{_cpp_float(label.size)}f, {red}, {green}, {blue}, {text}, "
+            f"{align}, {bold}}},"
+        )
+    lines.extend((
+        "};",
+        "constexpr int PANEL_LABEL_COUNT =",
+        "    sizeof(PANEL_LABELS) / sizeof(PANEL_LABELS[0]);",
+        "",
+        "struct LineSpec {",
+        "    float x1;",
+        "    float y1;",
+        "    float x2;",
+        "    float y2;",
+        "    float strokeWidth;",
+        "    int red;",
+        "    int green;",
+        "    int blue;",
+        "};",
+        "static const LineSpec PANEL_LINES[] = {",
+    ))
+    for line in PANEL_LINES:
+        red, green, blue = _rgb(line.stroke)
+        lines.append(
+            f"    {{{_cpp_float(line.x1)}f, {_cpp_float(line.y1)}f, "
+            f"{_cpp_float(line.x2)}f, {_cpp_float(line.y2)}f, "
+            f"{_cpp_float(line.stroke_width)}f, {red}, {green}, {blue}}},"
+        )
+    lines.extend((
+        "};",
+        "constexpr int PANEL_LINE_COUNT =",
+        "    sizeof(PANEL_LINES) / sizeof(PANEL_LINES[0]);",
+    ))
     lines.extend(("", "} // namespace brink_v2_layout", ""))
     return "\n".join(lines)
 

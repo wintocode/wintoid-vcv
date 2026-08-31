@@ -22,6 +22,65 @@ RACK_PORT_RADIUS = 23.7 / (2.0 * RACK_PIXELS_PER_MM)
 SOCKET_RADIUS_TOLERANCE = 0.02
 
 
+CPP_TOKEN_RE = re.compile(
+    r'''(?P<space>\s+)|(?P<comment>//[^\n]*|/\*.*?\*/)|'''
+    r'''(?P<string>"(?:\\.|[^"\\])*")|(?P<char>'(?:\\.|[^'\\])*')|'''
+    r'''(?P<identifier>[A-Za-z_]\w*)|'''
+    r'''(?P<number>(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?[fFuUlL]*)|'''
+    r'''(?P<operator>::|->|\+\+|--|==|!=|<=|>=|&&|\|\||'''
+    r'''[{}()\[\];,.*&?:=+\-/%<>!])''',
+    re.DOTALL | re.VERBOSE,
+)
+
+
+def cpp_tokens(source, replacements=None):
+    """Return a deterministic C++ token projection with comments removed."""
+    replacements = replacements or {}
+    tokens = []
+    position = 0
+    for match in CPP_TOKEN_RE.finditer(source):
+        if source[position:match.start()].strip():
+            raise AssertionError(
+                f"unrecognized C++ source near {source[position:match.start() + 20]!r}"
+            )
+        position = match.end()
+        if match.lastgroup in {"space", "comment"}:
+            continue
+        token = match.group(0)
+        if match.lastgroup == "identifier":
+            token = replacements.get(token, token)
+        tokens.append(token)
+    if source[position:].strip():
+        raise AssertionError(f"unrecognized C++ source suffix {source[position:]!r}")
+    return tuple(tokens)
+
+
+def initialized_declaration(source, marker):
+    """Extract one initialized declaration through its terminating semicolon."""
+    start = source.index(marker)
+    brace_start = source.index("{", start)
+    depth = 0
+    for index in range(brace_start, len(source)):
+        if source[index] == "{":
+            depth += 1
+        elif source[index] == "}":
+            depth -= 1
+            if depth == 0:
+                semicolon = source.index(";", index)
+                return source[start:semicolon + 1]
+    raise AssertionError(f"unclosed initialized declaration {marker!r}")
+
+
+def token_sequence_count(source, snippet):
+    source_tokens = cpp_tokens(source)
+    snippet_tokens = cpp_tokens(snippet)
+    width = len(snippet_tokens)
+    return sum(
+        source_tokens[index:index + width] == snippet_tokens
+        for index in range(len(source_tokens) - width + 1)
+    )
+
+
 def enum_declarations(source, enum_name):
     match = re.search(
         rf"enum {enum_name}\s*\{{(?P<body>.*?)\n\s*\}};",
@@ -181,6 +240,17 @@ class BrinkV2ModuleContractTest(unittest.TestCase):
         logic_write = process_body.index(".setVoltage(values[output]")
         self.assertLess(logic_count, logic_write)
 
+    def test_module_wrapper_is_a_normalized_v1_structural_equivalent(self):
+        source = self.require_source()
+        v1_module = struct_body(self.v1_source, "struct Brink : Module")
+        v2_module = struct_body(source, "struct BrinkV2 : Module")
+        self.assertEqual(
+            cpp_tokens(v1_module),
+            cpp_tokens(v2_module, {"BrinkV2": "Brink"}),
+            "BrinkV2 must preserve every V1 module declaration, statement, "
+            "loop bound, mapping, and write order after the class-name substitution",
+        )
+
     def test_runtime_reset_contract_preserves_silent_lane_activation(self):
         source = self.require_source()
         module_body = struct_body(source, "struct BrinkV2 : Module")
@@ -230,29 +300,13 @@ class BrinkV2ModuleContractTest(unittest.TestCase):
             "if (!font)",
             "brink_v2_layout::PANEL_WIDTH",
             "brink_v2_layout::PANEL_HEIGHT",
-            "brink_v2_layout::TITLE_X",
-            "brink_v2_layout::TITLE_Y",
-            "brink_v2_layout::TITLE_FONT_SIZE",
-            "brink_v2_layout::KNOB_LABEL_OFFSET",
-            "brink_v2_layout::PORT_LABEL_OFFSET",
-            "brink_v2_layout::EVENT_LABEL_OFFSET",
-            '"Brink V2"',
-            '"CHANNEL A"',
-            '"CHANNEL B"',
-            '"CENTER"',
-            '"WIDTH"',
-            '"SIGNAL"',
-            '"POSITION"',
-            '"CTR CV"',
-            '"WID CV"',
-            '"INSIDE"',
-            '"OUTSIDE"',
-            '"AND"',
-            '"OR"',
-            '"XOR"',
-            '"TOGGLE"',
-            "drawDirectionArrow",
-            "normalisationPoints",
+            "brink_v2_layout::PANEL_LABELS",
+            "brink_v2_layout::PANEL_LABEL_COUNT",
+            "brink_v2_layout::PANEL_LINES",
+            "brink_v2_layout::PANEL_LINE_COUNT",
+            "wintoid::ui::stroke_inset",
+            "wintoid::ui::inset_extent",
+            "wintoid::ui::clamp_stroke_center",
         ):
             with self.subTest(contract=contract):
                 self.assertIn(contract, labels_body)
@@ -266,6 +320,191 @@ class BrinkV2ModuleContractTest(unittest.TestCase):
         ):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, source)
+
+    def test_widget_id_coordinate_mapping_and_loop_bounds_are_exact(self):
+        source = self.require_source()
+        widget_body = struct_body(source, "struct BrinkV2Widget : ModuleWidget")
+
+        layout_declaration = initialized_declaration(
+            source,
+            "static const BrinkV2ChannelLayout brinkV2ChannelLayouts[2]",
+        )
+        expected_layout = """
+            static const BrinkV2ChannelLayout brinkV2ChannelLayouts[2] = {
+                {
+                    {brink_v2_layout::A_CENTER_KNOB_X, brink_v2_layout::A_CENTER_KNOB_Y},
+                    {brink_v2_layout::A_WIDTH_KNOB_X, brink_v2_layout::A_WIDTH_KNOB_Y},
+                    {brink_v2_layout::A_SIGNAL_X, brink_v2_layout::A_SIGNAL_Y},
+                    {brink_v2_layout::A_POSITION_X, brink_v2_layout::A_POSITION_Y},
+                    {brink_v2_layout::A_CENTER_CV_X, brink_v2_layout::A_CENTER_CV_Y},
+                    {brink_v2_layout::A_CENTER_ATTEN_X, brink_v2_layout::A_CENTER_ATTEN_Y},
+                    {brink_v2_layout::A_WIDTH_CV_X, brink_v2_layout::A_WIDTH_CV_Y},
+                    {brink_v2_layout::A_WIDTH_ATTEN_X, brink_v2_layout::A_WIDTH_ATTEN_Y},
+                    {brink_v2_layout::A_INSIDE_X, brink_v2_layout::A_INSIDE_Y},
+                    {brink_v2_layout::A_OUTSIDE_X, brink_v2_layout::A_OUTSIDE_Y},
+                    {brink_v2_layout::A_LOW_UP_X, brink_v2_layout::A_LOW_UP_Y},
+                    {brink_v2_layout::A_HIGH_UP_X, brink_v2_layout::A_HIGH_UP_Y},
+                    {brink_v2_layout::A_LOW_DOWN_X, brink_v2_layout::A_LOW_DOWN_Y},
+                    {brink_v2_layout::A_HIGH_DOWN_X, brink_v2_layout::A_HIGH_DOWN_Y},
+                    {brink_v2_layout::A_POSITION_RAIL_X, brink_v2_layout::A_POSITION_RAIL_Y}
+                },
+                {
+                    {brink_v2_layout::B_CENTER_KNOB_X, brink_v2_layout::B_CENTER_KNOB_Y},
+                    {brink_v2_layout::B_WIDTH_KNOB_X, brink_v2_layout::B_WIDTH_KNOB_Y},
+                    {brink_v2_layout::B_SIGNAL_X, brink_v2_layout::B_SIGNAL_Y},
+                    {brink_v2_layout::B_POSITION_X, brink_v2_layout::B_POSITION_Y},
+                    {brink_v2_layout::B_CENTER_CV_X, brink_v2_layout::B_CENTER_CV_Y},
+                    {brink_v2_layout::B_CENTER_ATTEN_X, brink_v2_layout::B_CENTER_ATTEN_Y},
+                    {brink_v2_layout::B_WIDTH_CV_X, brink_v2_layout::B_WIDTH_CV_Y},
+                    {brink_v2_layout::B_WIDTH_ATTEN_X, brink_v2_layout::B_WIDTH_ATTEN_Y},
+                    {brink_v2_layout::B_INSIDE_X, brink_v2_layout::B_INSIDE_Y},
+                    {brink_v2_layout::B_OUTSIDE_X, brink_v2_layout::B_OUTSIDE_Y},
+                    {brink_v2_layout::B_LOW_UP_X, brink_v2_layout::B_LOW_UP_Y},
+                    {brink_v2_layout::B_HIGH_UP_X, brink_v2_layout::B_HIGH_UP_Y},
+                    {brink_v2_layout::B_LOW_DOWN_X, brink_v2_layout::B_LOW_DOWN_Y},
+                    {brink_v2_layout::B_HIGH_DOWN_X, brink_v2_layout::B_HIGH_DOWN_Y},
+                    {brink_v2_layout::B_POSITION_RAIL_X, brink_v2_layout::B_POSITION_RAIL_Y}
+                }
+            };
+        """
+        self.assertEqual(cpp_tokens(expected_layout), cpp_tokens(layout_declaration))
+
+        logic_layout = initialized_declaration(
+            source, "static const BrinkV2Point brinkV2LogicLayout[4]"
+        )
+        self.assertEqual(
+            cpp_tokens("""
+                static const BrinkV2Point brinkV2LogicLayout[4] = {
+                    {brink_v2_layout::AND_OUTPUT_X, brink_v2_layout::AND_OUTPUT_Y},
+                    {brink_v2_layout::OR_OUTPUT_X, brink_v2_layout::OR_OUTPUT_Y},
+                    {brink_v2_layout::XOR_OUTPUT_X, brink_v2_layout::XOR_OUTPUT_Y},
+                    {brink_v2_layout::STATE_OUTPUT_X, brink_v2_layout::STATE_OUTPUT_Y}
+                };
+            """),
+            cpp_tokens(logic_layout),
+        )
+        channel_light_layout = initialized_declaration(
+            source,
+            "brinkV2ChannelLightLayouts[2][brink::EVENT_COUNT + 2]",
+        )
+        self.assertEqual(
+            cpp_tokens("""
+                brinkV2ChannelLightLayouts[2][brink::EVENT_COUNT + 2] = {
+                    {
+                        {brink_v2_layout::A_INSIDE_LIGHT_X, brink_v2_layout::A_INSIDE_LIGHT_Y},
+                        {brink_v2_layout::A_OUTSIDE_LIGHT_X, brink_v2_layout::A_OUTSIDE_LIGHT_Y},
+                        {brink_v2_layout::A_LOW_UP_LIGHT_X, brink_v2_layout::A_LOW_UP_LIGHT_Y},
+                        {brink_v2_layout::A_HIGH_UP_LIGHT_X, brink_v2_layout::A_HIGH_UP_LIGHT_Y},
+                        {brink_v2_layout::A_LOW_DOWN_LIGHT_X, brink_v2_layout::A_LOW_DOWN_LIGHT_Y},
+                        {brink_v2_layout::A_HIGH_DOWN_LIGHT_X, brink_v2_layout::A_HIGH_DOWN_LIGHT_Y}
+                    },
+                    {
+                        {brink_v2_layout::B_INSIDE_LIGHT_X, brink_v2_layout::B_INSIDE_LIGHT_Y},
+                        {brink_v2_layout::B_OUTSIDE_LIGHT_X, brink_v2_layout::B_OUTSIDE_LIGHT_Y},
+                        {brink_v2_layout::B_LOW_UP_LIGHT_X, brink_v2_layout::B_LOW_UP_LIGHT_Y},
+                        {brink_v2_layout::B_HIGH_UP_LIGHT_X, brink_v2_layout::B_HIGH_UP_LIGHT_Y},
+                        {brink_v2_layout::B_LOW_DOWN_LIGHT_X, brink_v2_layout::B_LOW_DOWN_LIGHT_Y},
+                        {brink_v2_layout::B_HIGH_DOWN_LIGHT_X, brink_v2_layout::B_HIGH_DOWN_LIGHT_Y}
+                    }
+                };
+            """),
+            cpp_tokens(channel_light_layout),
+        )
+        logic_light_layout = initialized_declaration(
+            source, "static const BrinkV2Point brinkV2LogicLightLayout[4]"
+        )
+        self.assertEqual(
+            cpp_tokens("""
+                static const BrinkV2Point brinkV2LogicLightLayout[4] = {
+                    {brink_v2_layout::AND_LIGHT_X, brink_v2_layout::AND_LIGHT_Y},
+                    {brink_v2_layout::OR_LIGHT_X, brink_v2_layout::OR_LIGHT_Y},
+                    {brink_v2_layout::XOR_LIGHT_X, brink_v2_layout::XOR_LIGHT_Y},
+                    {brink_v2_layout::STATE_LIGHT_X, brink_v2_layout::STATE_LIGHT_Y}
+                };
+            """),
+            cpp_tokens(logic_light_layout),
+        )
+
+        declarations = {
+            "const int centerParams[]": "{BrinkV2::A_CENTER_PARAM, BrinkV2::B_CENTER_PARAM}",
+            "const int widthParams[]": "{BrinkV2::A_WIDTH_PARAM, BrinkV2::B_WIDTH_PARAM}",
+            "const int centerAttenParams[]": "{BrinkV2::A_CENTER_ATTEN_PARAM, BrinkV2::B_CENTER_ATTEN_PARAM}",
+            "const int widthAttenParams[]": "{BrinkV2::A_WIDTH_ATTEN_PARAM, BrinkV2::B_WIDTH_ATTEN_PARAM}",
+            "const int signalInputs[]": "{BrinkV2::A_SIGNAL_INPUT, BrinkV2::B_SIGNAL_INPUT}",
+            "const int centerCvInputs[]": "{BrinkV2::A_CENTER_CV_INPUT, BrinkV2::B_CENTER_CV_INPUT}",
+            "const int widthCvInputs[]": "{BrinkV2::A_WIDTH_CV_INPUT, BrinkV2::B_WIDTH_CV_INPUT}",
+            "const int logicOutputs[]": "{BrinkV2::AND_OUTPUT, BrinkV2::OR_OUTPUT, BrinkV2::XOR_OUTPUT, BrinkV2::STATE_OUTPUT}",
+            "const int gateLights[2][2]": "{{BrinkV2::A_INSIDE_LIGHT, BrinkV2::A_OUTSIDE_LIGHT}, {BrinkV2::B_INSIDE_LIGHT, BrinkV2::B_OUTSIDE_LIGHT}}",
+            "const int eventLights[2][brink::EVENT_COUNT]": "{{BrinkV2::A_LOW_UP_LIGHT, BrinkV2::A_HIGH_UP_LIGHT, BrinkV2::A_LOW_DOWN_LIGHT, BrinkV2::A_HIGH_DOWN_LIGHT}, {BrinkV2::B_LOW_UP_LIGHT, BrinkV2::B_HIGH_UP_LIGHT, BrinkV2::B_LOW_DOWN_LIGHT, BrinkV2::B_HIGH_DOWN_LIGHT}}",
+            "const int logicLights[]": "{BrinkV2::AND_LIGHT, BrinkV2::OR_LIGHT, BrinkV2::XOR_LIGHT, BrinkV2::STATE_LIGHT}",
+        }
+        for marker, initializer in declarations.items():
+            with self.subTest(declaration=marker):
+                actual = initialized_declaration(widget_body, marker)
+                expected = f"{marker} = {initializer};"
+                self.assertEqual(cpp_tokens(expected), cpp_tokens(actual))
+
+        loop_declarations = {
+            "const int paramIds[]": "{centerParams[channel], widthParams[channel]}",
+            "const BrinkV2Point knobPoints[]": "{layout.centerKnob, layout.widthKnob}",
+            "const int inputIds[]": "{signalInputs[channel], centerCvInputs[channel], widthCvInputs[channel]}",
+            "const BrinkV2Point inputPoints[]": "{layout.signal, layout.centerCv, layout.widthCv}",
+            "const int attenIds[]": "{centerAttenParams[channel], widthAttenParams[channel]}",
+            "const BrinkV2Point attenPoints[]": "{layout.centerAtten, layout.widthAtten}",
+            "const BrinkV2Point outputPoints[]": "{layout.inside, layout.outside, layout.position, layout.lowUp, layout.highUp, layout.lowDown, layout.highDown}",
+        }
+        for marker, initializer in loop_declarations.items():
+            with self.subTest(loop_declaration=marker):
+                actual = initialized_declaration(widget_body, marker)
+                expected = f"{marker} = {initializer};"
+                self.assertEqual(cpp_tokens(expected), cpp_tokens(actual))
+
+        channel_outputs = initialized_declaration(
+            widget_body, "const int channelOutputs[2][brink::EVENT_COUNT + 3]"
+        )
+        self.assertEqual(
+            cpp_tokens("""
+                const int channelOutputs[2][brink::EVENT_COUNT + 3] = {
+                    {BrinkV2::A_INSIDE_OUTPUT, BrinkV2::A_OUTSIDE_OUTPUT,
+                     BrinkV2::A_POSITION_OUTPUT, BrinkV2::A_LOW_UP_OUTPUT,
+                     BrinkV2::A_HIGH_UP_OUTPUT, BrinkV2::A_LOW_DOWN_OUTPUT,
+                     BrinkV2::A_HIGH_DOWN_OUTPUT},
+                    {BrinkV2::B_INSIDE_OUTPUT, BrinkV2::B_OUTSIDE_OUTPUT,
+                     BrinkV2::B_POSITION_OUTPUT, BrinkV2::B_LOW_UP_OUTPUT,
+                     BrinkV2::B_HIGH_UP_OUTPUT, BrinkV2::B_LOW_DOWN_OUTPUT,
+                     BrinkV2::B_HIGH_DOWN_OUTPUT}
+                };
+            """),
+            cpp_tokens(channel_outputs),
+        )
+
+        expected_loop_counts = {
+            "for (int channel = 0; channel < 2; ++channel)": 3,
+            "for (int knob = 0; knob < 2; ++knob)": 1,
+            "for (int input = 0; input < 3; ++input)": 1,
+            "for (int atten = 0; atten < 2; ++atten)": 1,
+            "for (int output = 0; output < brink::EVENT_COUNT + 3; ++output)": 1,
+            "for (int logic = 0; logic < 4; ++logic)": 2,
+            "for (int gate = 0; gate < 2; ++gate)": 1,
+            "for (int event = 0; event < brink::EVENT_COUNT; ++event)": 1,
+        }
+        for loop, expected_count in expected_loop_counts.items():
+            with self.subTest(loop=loop):
+                self.assertEqual(expected_count, token_sequence_count(widget_body, loop))
+
+        bindings = (
+            "Vec(knobPoints[knob].x, knobPoints[knob].y)), module, paramIds[knob]",
+            "Vec(inputPoints[input].x, inputPoints[input].y)), module, inputIds[input]",
+            "Vec(attenPoints[atten].x, attenPoints[atten].y)), module, attenIds[atten]",
+            "Vec(outputPoints[output].x, outputPoints[output].y)), module, channelOutputs[channel][output]",
+            "Vec(brinkV2LogicLayout[logic].x, brinkV2LogicLayout[logic].y)), module, logicOutputs[logic]",
+            "brinkV2ChannelLightLayouts[channel][gate]",
+            "brinkV2ChannelLightLayouts[channel][event + 2]",
+            "brinkV2LogicLightLayout[logic]",
+        )
+        for binding in bindings:
+            with self.subTest(binding=binding):
+                self.assertGreater(token_sequence_count(widget_body, binding), 0)
 
     def test_enum_declarations_match_brink_v1_in_order(self):
         source = self.require_source()
