@@ -487,6 +487,48 @@ class BrinkV2PanelTest(unittest.TestCase):
         self.assertIn("Brink V2", {node.text for node in root.iter()
                                     if node.tag.endswith("text")})
 
+    def test_svg_painted_sections_and_socket_guides_keep_edge_margin(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        clearances = []
+
+        for identifier in ("channel-a-section", "channel-b-section"):
+            section = element_by_id(panel.generate_svg(), identifier)
+            half_stroke = abs(float(section.attrib.get("stroke-width", "0"))) / 2.0
+            x = float(section.attrib["x"])
+            y = float(section.attrib["y"])
+            width = float(section.attrib["width"])
+            height = float(section.attrib["height"])
+            clearances.extend((
+                x - half_stroke,
+                y - half_stroke,
+                panel.WIDTH_MM - x - width - half_stroke,
+                panel.HEIGHT_MM - y - height - half_stroke,
+            ))
+
+        socket_coordinates = {
+            (x, y) for _name, x, y in
+            tuple(panel.INPUT_COMPONENTS) + tuple(panel.OUTPUT_COMPONENTS)
+        }
+        for circle in root.iter():
+            if circle.tag.rsplit("}", 1)[-1] != "circle":
+                continue
+            centre = (float(circle.attrib["cx"]), float(circle.attrib["cy"]))
+            if centre not in socket_coordinates:
+                continue
+            painted_radius = (
+                float(circle.attrib["r"])
+                + abs(float(circle.attrib.get("stroke-width", "0"))) / 2.0
+            )
+            clearances.extend((
+                centre[0] - painted_radius,
+                centre[1] - painted_radius,
+                panel.WIDTH_MM - centre[0] - painted_radius,
+                panel.HEIGHT_MM - centre[1] - painted_radius,
+            ))
+
+        self.assertGreaterEqual(min(clearances), MINIMUM_EDGE_CLEARANCE_MM)
+
     def test_label_and_event_baselines_clear_real_widget_envelopes(self):
         panel = self.require_panel()
         root = ET.fromstring(panel.generate_svg())

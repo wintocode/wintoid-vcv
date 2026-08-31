@@ -59,13 +59,17 @@ LOGO_TARGET_X = WIDTH_MM - 18.0
 LOGO_TARGET_Y = 1.8
 LOGO_SCALE = 0.06
 
-# V1 is the starting physical layout.  The 7.22 mm pair offset and the two
-# outer logic positions make the 4 mm real-PJ301MPort edge clearance exact
-# without changing port ordering or any row position.
+# V1 is the starting physical layout.  The pair offset is inset by the
+# half-stroke of the socket guide (plus a small deterministic safety margin)
+# so its painted envelope clears the edge without changing port ordering or
+# any row position.
 CHANNEL_A_X = WIDTH_MM / 4.0
 CHANNEL_B_X = WIDTH_MM * 3.0 / 4.0
-PAIR_OFFSET = 7.22
-LOGIC_X = (8.02, 23.0, 38.0, 52.94)
+PAINTED_EDGE_SAFETY_MM = 0.01
+PAIR_OFFSET = (CHANNEL_A_X - MINIMUM_EDGE_CLEARANCE_MM - PORT_RADIUS
+               - PORT_STROKE_WIDTH / 2.0 - PAINTED_EDGE_SAFETY_MM)
+LOGIC_X = (CHANNEL_A_X - PAIR_OFFSET, 23.0, 38.0,
+           WIDTH_MM - (CHANNEL_A_X - PAIR_OFFSET))
 Y_CHANNEL_HEADER = 16.0
 Y_KNOBS = 25.0
 Y_SIGNAL_POSITION = 39.0
@@ -76,7 +80,10 @@ Y_EVENTS_UP = 89.0
 Y_EVENTS_DOWN = 101.0
 Y_LOGIC = 114.0
 
-SECTION_HORIZONTAL_INSET = MINIMUM_EDGE_CLEARANCE_MM
+SECTION_STROKE_WIDTH = 0.35
+SECTION_HORIZONTAL_INSET = (MINIMUM_EDGE_CLEARANCE_MM
+                            + SECTION_STROKE_WIDTH / 2.0
+                            + PAINTED_EDGE_SAFETY_MM)
 SECTION_GAP = 4.0
 SECTION_Y = 12.0
 SECTION_BOTTOM = 106.0
@@ -88,12 +95,11 @@ CHANNEL_SECTION_RECTS = (
     ("channel-b-section", WIDTH_MM - SECTION_HORIZONTAL_INSET - SECTION_WIDTH,
      SECTION_Y, SECTION_WIDTH, SECTION_HEIGHT),
 )
-SECTION_STROKE_WIDTH = 0.35
 SECTION_RADIUS = 1.4
 LOGIC_DIVIDER_X = SECTION_HORIZONTAL_INSET
 LOGIC_DIVIDER_Y = 107.0
 LOGIC_DIVIDER_WIDTH = WIDTH_MM - 2.0 * SECTION_HORIZONTAL_INSET
-LOGIC_DIVIDER_STROKE_WIDTH = 0.35
+LOGIC_DIVIDER_STROKE_WIDTH = SECTION_STROKE_WIDTH
 
 RAIL_WIDTH = 2.0
 POSITION_RAIL_TOP = Y_KNOBS - RACK_SMALL_KNOB_RADIUS
