@@ -34,7 +34,7 @@ VortexV2, the Brink restyle, final family-wide visual standardisation, and chang
 
 ## Algorithms
 
-FourV2 uses 10 fixed algorithm slots. A 10-position algorithm knob selects only
+FourV2 uses 16 fixed algorithm slots. A 16-position algorithm knob selects only
 valid, static topologies.
 
 | Number | Modulation routing | Carriers sent to the output mix |
@@ -49,10 +49,16 @@ valid, static topologies.
 | 8 | `4 → 3 → (1, 2)` | 1 and 2 |
 | 9 | `(3 + 4) → (1, 2)` | 1 and 2 |
 | 10 | `(2 + 3 + 4) → 1` | 1 |
+| 11 | `4 → 3 → 1`, plus independent 2 | 1 and 2 |
+| 12 | `(3 + 4) → 1`, plus independent 2 | 1 and 2 |
+| 13 | `4 → (1, 2)`, plus independent 3 | 1, 2, and 3 |
+| 14 | `4 → 2 → 1` and `4 → 3` | 1 and 3 |
+| 15 | `4 → (1, 2)` and `3 → 1` | 1 and 2 |
+| 16 | `4 → (2, 3) → 1` | 1 |
 
-The engine treats the table as immutable data. It converts the user-facing `1–10` selection to an internal `0–9` index and defensively clamps that index before table access.
+The engine treats the table as immutable data. It converts the user-facing `1–16` selection to an internal `0–15` index and defensively clamps that index before table access.
 
-Every one of the 10 algorithms uses all four operators as a carrier, a modulator, or both. FourV2 therefore has no disconnected `NONE` state and does not implement the dormant-operator CPU gating considered for free routing. All operator phases continue advancing even when an Output control is zero, so raising a level or applying CV cannot restart an operator at an arbitrary phase. Any later optimisation must preserve that behaviour exactly and be justified by profiling.
+Every one of the 16 algorithms uses all four operators as a carrier, a modulator, or both. FourV2 therefore has no disconnected `NONE` state and does not implement the dormant-operator CPU gating considered for free routing. All operator phases continue advancing even when an Output control is zero, so raising a level or applying CV cannot restart an operator at an arbitrary phase. Any later optimisation must preserve that behaviour exactly and be justified by profiling.
 
 ## Routing display
 
@@ -222,7 +228,7 @@ The appearance of the `FourV2` panel title—font treatment, size, and placement
 
 FourV2 must be consumable by a future MetaModule plugin without redesigning its interaction model.
 
-- Algorithm: ordinary static 10-position parameter.
+- Algorithm: ordinary static 16-position parameter.
 - Ratio/Fixed and Fold Type: ordinary static switches/selectors.
 - Ratio selection: deterministic quantisation of a continuous parameter into 15 static zones.
 - Routing and frequency readouts: non-interactive dynamic graphics/text implemented through supported display facilities.
@@ -252,13 +258,13 @@ At the DSP boundary:
 - maintain independent engine state for every active polyphonic lane;
 - reset changed lanes consistently with the existing polyphony utilities.
 
-No user selection can create an invalid or cyclic graph because only the 10 compile-time algorithms exist.
+No user selection can create an invalid or cyclic graph because only the 16 compile-time algorithms exist.
 
 ## Testing and acceptance
 
 ### DSP and state tests
 
-- Assert the exact edges and carriers of all 10 algorithms.
+- Assert the exact edges and carriers of all 16 algorithms.
 - Assert all 15 ratio zones, descending order, edge thresholds, and canonical strings.
 - Assert Fixed mode remains continuous and covers approximately 1 Hz–10 kHz.
 - Assert the per-operator Fine control affects both frequency modes correctly.

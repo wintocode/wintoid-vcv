@@ -174,7 +174,7 @@ struct FourV2 : Module {
     {
         config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 
-        configParam(ALGORITHM_PARAM, 1.f, 10.f, 1.f, "Algorithm");
+        configParam(ALGORITHM_PARAM, 1.f, 16.f, 1.f, "Algorithm");
         getParamQuantity(ALGORITHM_PARAM)->snapEnabled = true;
         configParam(TUNE_PARAM, -100.f, 100.f, 0.f, "Tune", " cents");
         configParam(PM_DEPTH_PARAM, 0.f, 1.f, 1.f, "PM Depth", "%", 0.f, 100.f);

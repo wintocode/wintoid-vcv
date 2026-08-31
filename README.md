@@ -20,14 +20,14 @@ VCV Rack plugin — synthesizer, filter, and CV/logic utilities.
 ### FourV2
 Independent 4-operator phase-modulation oscillator (32HP)
 
-FourV2 is a separate module from Four. It uses 10 fixed topology slots, but its
+FourV2 is a separate module from Four. It uses 16 fixed topology slots, but its
 controls and signal flow are documented independently.
 
 #### Routing and frequency
 
-- **10 algorithms** — the fixed routing choices are:
+- **16 algorithms** — the fixed routing choices are:
 
-The Algorithm control is numbered 1–10, matching the topology number below.
+The Algorithm control is numbered 1–16, matching the topology number below.
 
 | Algorithm | Phase-modulation routing | Carriers in the output mix |
 | ---: | --- | --- |
@@ -41,6 +41,12 @@ The Algorithm control is numbered 1–10, matching the topology number below.
 | 8 | `4 → 3 → (1, 2)` | 1 and 2 |
 | 9 | `(3 + 4) → (1, 2)` | 1 and 2 |
 | 10 | `(2 + 3 + 4) → 1` | 1 |
+| 11 | `4 → 3 → 1`, plus independent 2 | 1 and 2 |
+| 12 | `(3 + 4) → 1`, plus independent 2 | 1 and 2 |
+| 13 | `4 → (1, 2)`, plus independent 3 | 1, 2, and 3 |
+| 14 | `4 → 2 → 1` and `4 → 3` | 1 and 3 |
+| 15 | `4 → (1, 2)` and `3 → 1` | 1 and 2 |
+| 16 | `4 → (2, 3) → 1` | 1 |
 
 - **15 curated harmonic ratios** — Ratio mode selects equally sized zones in
   this exact order: `4:1`, `3:1`, `2:1`, `3:2`, `4:3`, `1:1`, `3:4`, `2:3`, `1:2`, `1:3`, `1:4`, `1:5`, `1:6`, `1:7`, `1:8`. The values are reduced canonical ratios, so `1:4` is used instead of `0.25:1`.

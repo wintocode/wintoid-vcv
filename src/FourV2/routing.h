@@ -155,6 +155,42 @@ inline bool routing_uses_merged_split_layout(const Algorithm& algorithm)
     return routing_algorithms_match(algorithm, ALGORITHMS[8]);
 }
 
+inline bool routing_uses_shared_private_layout(const Algorithm& algorithm)
+{
+    return routing_algorithms_match(algorithm, ALGORITHMS[14]);
+}
+
+inline void routing_apply_ascending_rows(
+    const Algorithm& algorithm, int rows[OPERATOR_COUNT])
+{
+    if (routing_algorithms_match(algorithm, ALGORITHMS[8])) {
+        // The two carrier/modulator pairs read as 1/3 then 2/4.
+        rows[0] = 0;
+        rows[1] = 1;
+        rows[2] = 0;
+        rows[3] = 1;
+    } else if (routing_algorithms_match(algorithm, ALGORITHMS[9])) {
+        // Keep the 2 -> 1 chain on top, followed by modulators 3 and 4.
+        rows[0] = 0;
+        rows[1] = 0;
+        rows[2] = 1;
+        rows[3] = 2;
+    } else if (routing_algorithms_match(algorithm, ALGORITHMS[4])
+        || routing_algorithms_match(algorithm, ALGORITHMS[12])) {
+        // Carriers 1, 2, 3 read top to bottom; operator 4 sits centrally.
+        rows[0] = 0;
+        rows[1] = 1;
+        rows[2] = 2;
+        rows[3] = 1;
+    } else if (routing_algorithms_match(algorithm, ALGORITHMS[5])) {
+        // Carriers 1, 2, 3 read top to bottom; 4 shares 3's chain.
+        rows[0] = 0;
+        rows[1] = 1;
+        rows[2] = 2;
+        rows[3] = 2;
+    }
+}
+
 inline void routing_add_path(
     RoutingLayout& layout, int source, int destination, bool carrier,
     float width, float nodeRadius)
@@ -307,6 +343,56 @@ inline void routing_make_staged_branch_display(
     }
 }
 
+inline void routing_make_shared_private_display(
+    RoutingLayout& layout, float nodeRadius)
+{
+    layout.displayPathCount = 0;
+
+    const float sourceX = layout.nodes[3].x + nodeRadius;
+    const float targetX = layout.nodes[1].x - nodeRadius;
+    const float splitX = sourceX + (targetX - sourceX) * 0.5f;
+    const float sharedY = layout.nodes[2].y;
+    const float privateY = layout.nodes[3].y;
+
+    const RoutingPoint shared[] = {
+        {layout.nodes[2].x + nodeRadius, sharedY},
+        {layout.nodes[0].x - nodeRadius, sharedY}
+    };
+    const RoutingPoint trunk[] = {
+        {sourceX, privateY},
+        {splitX, privateY}
+    };
+    const RoutingPoint privateBranch[] = {
+        {splitX, privateY},
+        {targetX, privateY}
+    };
+    const RoutingPoint joinedBranch[] = {
+        {splitX, privateY},
+        {splitX, sharedY}
+    };
+
+    routing_add_display_path(
+        layout, 2, 0, false, true, shared, 2);
+    routing_add_display_path(
+        layout, 3, ROUTING_SPLIT, false, false, trunk, 2);
+    routing_add_display_path(
+        layout, ROUTING_SPLIT, 1, false, true, privateBranch, 2);
+    // Draw this last among the modulation paths so its arrowhead clearly
+    // marks operator 4 joining the operator 3 -> 1 cable.
+    routing_add_display_path(
+        layout, ROUTING_SPLIT, ROUTING_MERGE, false, true,
+        joinedBranch, 2);
+
+    for (int pathIndex = 0; pathIndex < layout.pathCount; ++pathIndex) {
+        const RoutingPath& path = layout.paths[pathIndex];
+        if (path.carrier) {
+            routing_add_display_path(
+                layout, path.source, path.destination, true, true,
+                path.points, path.pointCount);
+        }
+    }
+}
+
 inline RoutingLayout make_routing_layout(
     const Algorithm& algorithm,
     float width, float height, float nodeRadius,
@@ -341,11 +427,11 @@ inline RoutingLayout make_routing_layout(
             rows[bestPath[index]] = 0;
     } else {
         // With no modulation edges, read the four independent carriers from
-        // top to bottom as 4, 3, 2, 1.
-        rows[3] = 0;
-        rows[2] = 1;
-        rows[1] = 2;
-        rows[0] = 3;
+        // top to bottom in ascending operator order.
+        rows[0] = 0;
+        rows[1] = 1;
+        rows[2] = 2;
+        rows[3] = 3;
     }
 
     if (routing_uses_staged_branch_layout(algorithm)) {
@@ -408,6 +494,8 @@ inline RoutingLayout make_routing_layout(
         rows[candidate] = preferredRow;
     }
 
+    routing_apply_ascending_rows(algorithm, rows);
+
     int rowCount = 1;
     for (int op = 0; op < OPERATOR_COUNT; ++op) {
         if (rows[op] + 1 > rowCount)
@@ -465,6 +553,8 @@ inline RoutingLayout make_routing_layout(
         routing_make_merged_split_display(layout, height, nodeRadius);
     else if (routing_uses_staged_branch_layout(algorithm))
         routing_make_staged_branch_display(layout, nodeRadius);
+    else if (routing_uses_shared_private_layout(algorithm))
+        routing_make_shared_private_display(layout, nodeRadius);
 
     return layout;
 }

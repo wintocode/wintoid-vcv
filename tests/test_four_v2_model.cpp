@@ -34,8 +34,8 @@ static int tests_passed = 0;
 
 TEST(algorithm_table_has_exact_edges_and_carriers)
 {
-    ASSERT(four_v2::ALGORITHM_COUNT == 10);
-    static const four_v2::Algorithm expected[10] = {
+    ASSERT(four_v2::ALGORITHM_COUNT == 16);
+    static const four_v2::Algorithm expected[16] = {
         {{{0,0,0,0},{1,0,0,0},{0,1,0,0},{0,0,1,0}}, {1,0,0,0}},
         {{{0,0,0,0},{1,0,0,0},{0,1,0,0},{0,1,0,0}}, {1,0,0,0}},
         {{{0,0,0,0},{1,0,0,0},{1,0,0,0},{0,1,0,0}}, {1,0,0,0}},
@@ -45,7 +45,13 @@ TEST(algorithm_table_has_exact_edges_and_carriers)
         {{{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}, {1,1,1,1}},
         {{{0,0,0,0},{0,0,0,0},{1,1,0,0},{0,0,1,0}}, {1,1,0,0}},
         {{{0,0,0,0},{0,0,0,0},{1,1,0,0},{1,1,0,0}}, {1,1,0,0}},
-        {{{0,0,0,0},{1,0,0,0},{1,0,0,0},{1,0,0,0}}, {1,0,0,0}}
+        {{{0,0,0,0},{1,0,0,0},{1,0,0,0},{1,0,0,0}}, {1,0,0,0}},
+        {{{0,0,0,0},{0,0,0,0},{1,0,0,0},{0,0,1,0}}, {1,1,0,0}},
+        {{{0,0,0,0},{0,0,0,0},{1,0,0,0},{1,0,0,0}}, {1,1,0,0}},
+        {{{0,0,0,0},{0,0,0,0},{0,0,0,0},{1,1,0,0}}, {1,1,1,0}},
+        {{{0,0,0,0},{1,0,0,0},{0,0,0,0},{0,1,1,0}}, {1,0,1,0}},
+        {{{0,0,0,0},{0,0,0,0},{1,0,0,0},{1,1,0,0}}, {1,1,0,0}},
+        {{{0,0,0,0},{1,0,0,0},{1,0,0,0},{0,1,1,0}}, {1,0,0,0}}
     };
     for (int a = 0; a < four_v2::ALGORITHM_COUNT; ++a) {
         for (int src = 0; src < four_v2::OPERATOR_COUNT; ++src) {
@@ -104,8 +110,10 @@ TEST(indices_modes_and_labels_are_defensive)
     ASSERT(four_v2::algorithm_index(6.f) == 5);
     ASSERT(four_v2::algorithm_index(6.5f) == 6);
     ASSERT(four_v2::algorithm_index(10.f) == 9);
-    ASSERT(four_v2::algorithm_index(11.f) == 9);
-    ASSERT(four_v2::algorithm_index(99.f) == 9);
+    ASSERT(four_v2::algorithm_index(11.f) == 10);
+    ASSERT(four_v2::algorithm_index(16.f) == 15);
+    ASSERT(four_v2::algorithm_index(17.f) == 15);
+    ASSERT(four_v2::algorithm_index(99.f) == 15);
     ASSERT(four_v2::algorithm_index(NAN) == 0);
     ASSERT(four_v2::clamp_mode(-1.f) == four_v2::RATIO_MODE);
     ASSERT(four_v2::clamp_mode(1.f) == four_v2::FIXED_MODE);
