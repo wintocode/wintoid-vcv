@@ -96,6 +96,79 @@ def shape_bounds(node):
     return None
 
 
+def stroked_line_bounds(node):
+    if node.tag.rsplit("}", 1)[-1] != "line":
+        return None
+    x1 = float(node.attrib["x1"])
+    y1 = float(node.attrib["y1"])
+    x2 = float(node.attrib["x2"])
+    y2 = float(node.attrib["y2"])
+    half_stroke = abs(float(node.attrib.get("stroke-width", "0"))) / 2.0
+    return (
+        min(x1, x2) - half_stroke,
+        min(y1, y2) - half_stroke,
+        max(x1, x2) + half_stroke,
+        max(y1, y2) + half_stroke,
+    )
+
+
+def line_descendant_bounds(node):
+    bounds = [stroked_line_bounds(child) for child in node.iter()]
+    bounds = [value for value in bounds if value is not None]
+    if not bounds:
+        return None
+    return (
+        min(value[0] for value in bounds),
+        min(value[1] for value in bounds),
+        max(value[2] for value in bounds),
+        max(value[3] for value in bounds),
+    )
+
+
+def is_structural_line(node, panel):
+    """Allow only recognizable long structure or channel-arrow strokes."""
+    x1 = float(node.attrib["x1"])
+    y1 = float(node.attrib["y1"])
+    x2 = float(node.attrib["x2"])
+    y2 = float(node.attrib["y2"])
+    length = math.hypot(x2 - x1, y2 - y1)
+    identifier = node.attrib.get("id", "").lower()
+
+    # Full-width/height rules are section or divider structure, never a
+    # socket-sized backplate.  The small allowance preserves the 4 mm edge
+    # inset used by the SEM fields.
+    if length >= panel.WIDTH_MM - 8.0 or length >= panel.HEIGHT_MM - 8.0:
+        return True
+
+    # Normalisation arrows occupy the three input rows and point between the
+    # two channel input columns.  Arrowheads are short strokes at the panel
+    # centre on those same rows.
+    input_rows = {
+        next(y for name, _x, y in panel.INPUT_COMPONENTS
+             if name == input_name)
+        for input_name in ("A_SIGNAL", "A_CENTER_CV", "A_WIDTH_CV")
+    }
+    if abs(y1 - y2) < 0.001 and any(abs(y1 - row) < 0.001 for row in input_rows):
+        left = min(x1, x2)
+        right = max(x1, x2)
+        inner_a = panel.CHANNEL_A_X + panel.PAIR_OFFSET
+        inner_b = panel.CHANNEL_B_X - panel.PAIR_OFFSET
+        if left >= inner_a - 2.0 and right <= inner_b + 2.0:
+            return True
+    if ("arrow" in identifier or "normal" in identifier) and any(
+        abs((y1 + y2) / 2.0 - row) < 1.5 for row in input_rows
+    ):
+        return True
+
+    # A named rail stroke is structural only when it lies on a channel rail;
+    # this prevents an output line from passing by borrowing a rail name.
+    if "rail" in identifier:
+        midpoint_x = (x1 + x2) / 2.0
+        return any(abs(midpoint_x - channel_x) < 0.01
+                   for channel_x in (panel.CHANNEL_A_X, panel.CHANNEL_B_X))
+    return False
+
+
 def text_horizontal_bounds(node):
     if "textLength" not in node.attrib:
         raise AssertionError(
@@ -299,6 +372,10 @@ class BrinkV2PanelTest(unittest.TestCase):
         structural_rect_ids.update(rail[0] for rail in panel.POSITION_RAILS)
         background = next(node for node in root if node.tag.endswith("rect"))
         output_coordinates = [(x, y) for name, x, y in panel.OUTPUT_COMPONENTS]
+        logo_line_ids = {
+            id(node) for node in logo.iter()
+            if node.tag.rsplit("}", 1)[-1] == "line"
+        }
         for node in root.iter():
             tag = node.tag.rsplit("}", 1)[-1]
             if tag in {"ellipse", "polygon", "polyline"}:
@@ -313,6 +390,62 @@ class BrinkV2PanelTest(unittest.TestCase):
                        and bounds[1] <= y <= bounds[3]
                        for x, y in output_coordinates):
                     self.fail("non-structural SVG rectangle encloses an output socket")
+            if tag == "line" and id(node) not in logo_line_ids:
+                bounds = stroked_line_bounds(node)
+                midpoint = (
+                    (float(node.attrib["x1"]) + float(node.attrib["x2"])) / 2.0,
+                    (float(node.attrib["y1"]) + float(node.attrib["y2"])) / 2.0,
+                )
+                for output_x, output_y in output_coordinates:
+                    local_radius = RACK_PORT_RADIUS_MM + 1.0
+                    is_local = (
+                        output_x - local_radius <= bounds[0]
+                        and bounds[2] <= output_x + local_radius
+                        and output_y - local_radius <= bounds[1]
+                        and bounds[3] <= output_y + local_radius
+                    )
+                    is_centered = (
+                        abs(midpoint[0] - output_x) < 0.001
+                        and abs(midpoint[1] - output_y) < 0.001
+                    )
+                    if is_local or is_centered:
+                        with self.subTest(output=(output_x, output_y),
+                                          shape="line"):
+                            self.assertTrue(
+                                is_structural_line(node, panel),
+                                "non-structural line artwork is centered on or "
+                                "contained by an output socket",
+                            )
+
+        for node in root.iter():
+            if node is root or node is logo:
+                continue
+            if node.tag.rsplit("}", 1)[-1] != "g":
+                continue
+            line_bounds = line_descendant_bounds(node)
+            if line_bounds is None:
+                continue
+            bounds_centre = (
+                (line_bounds[0] + line_bounds[2]) / 2.0,
+                (line_bounds[1] + line_bounds[3]) / 2.0,
+            )
+            for output_x, output_y in output_coordinates:
+                local_radius = RACK_PORT_RADIUS_MM + 1.0
+                is_local = (
+                    output_x - local_radius <= line_bounds[0]
+                    and line_bounds[2] <= output_x + local_radius
+                    and output_y - local_radius <= line_bounds[1]
+                    and line_bounds[3] <= output_y + local_radius
+                )
+                is_centered = (
+                    abs(bounds_centre[0] - output_x) < 0.001
+                    and abs(bounds_centre[1] - output_y) < 0.001
+                )
+                if is_local or is_centered:
+                    self.fail(
+                        "non-structural line group is centered on or contained "
+                        f"by output socket ({output_x}, {output_y})"
+                    )
 
     def test_svg_has_sem_sections_title_and_canonical_logo(self):
         panel = self.require_panel()
