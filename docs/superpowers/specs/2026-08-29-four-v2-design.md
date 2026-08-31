@@ -62,7 +62,7 @@ The selected algorithm is shown in an approximately 21 mm-high, landscape routin
 - Numbered circles represent operators.
 - Orange paths represent phase modulation and point from modulator to destination.
 - Gold paths represent direct carrier output.
-- Multiple carriers join a shared gold output rail, making algorithm 8 unambiguous without implying modulation between operators.
+- Each carrier has an individual gold path ending in a right-pointing output arrow, making algorithm 8 unambiguous without implying modulation between operators.
 - The display accommodates both geometric extremes: the serial `4 → 3 → 2 → 1` chain and the fan-in `(2 + 3 + 4) → 1` graph.
 - The display is informational. The algorithm knob is the only algorithm control.
 
@@ -279,7 +279,7 @@ No user selection can create an invalid or cyclic graph because only the 11 comp
 - Build the VCV plugin and load FourV2 in VCV Rack.
 - Inspect the complete panel at actual 32 HP scale.
 - Exercise every parameter, input, output, light, and dynamic display.
-- Verify the worst-case routing diagrams and algorithm 8's shared output rail.
+- Verify the worst-case routing diagrams and algorithm 8's four separate carrier arrows.
 - Verify ratio and Fixed-mode readouts at their smallest rendered size.
 - Verify logo glyph alignment, colour boundary, and exact underline extents.
 - Evaluate External PM scaling by ear with one and multiple carriers.

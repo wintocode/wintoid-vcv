@@ -113,13 +113,16 @@ LOGO_SCALE = 0.06
 # Global routing/control band.
 ROUTING_SECTION = (4.0, 10.3, WIDTH_MM - 8.0, 25.7)
 ROUTING_DISPLAY = (17.5, 13.0, 48.0, 21.0)
-ROUTING_DISPLAY_INSET = 1.3
 ROUTING_EDGE_STROKE_WIDTH = 0.50
 ROUTING_NODE_RADIUS = 1.50
 ROUTING_NODE_STROKE_WIDTH = 0.40
 ROUTING_NODE_LABEL_SIZE = 2.10
-ROUTING_BRANCH_OFFSET = 0.70
-ROUTING_LANE_GAP = 1.00
+ROUTING_NODE_HORIZONTAL_MARGIN = 3.00
+ROUTING_NODE_VERTICAL_MARGIN = 3.00
+ROUTING_PORT_GAP = 0.55
+ROUTING_ROUTE_GAP = 1.20
+ROUTING_ARROW_LENGTH = 1.35
+ROUTING_ARROW_WIDTH = 0.70
 GLOBAL_CONTROLS = {
     "algorithm_knob": (12.258, 29.0),
     "tune_knob": (70.5, 17.5),
@@ -757,11 +760,6 @@ def _embedded_logo() -> list[str]:
 
 def _append_routing_artwork(lines: list[str]) -> None:
     x, y, width, height = ROUTING_DISPLAY
-    inset = ROUTING_DISPLAY_INSET
-    inner_x = x + inset
-    inner_y = y + inset
-    inner_width = width - 2.0 * inset
-    inner_height = height - 2.0 * inset
     lines.append(
         _rect(
             x,
@@ -776,36 +774,66 @@ def _append_routing_artwork(lines: list[str]) -> None:
         )
     )
     lines.append('  <g id="routing-display-art">')
-    node_y = inner_y + inner_height * 0.42
-    node_xs = tuple(inner_x + inner_width * fraction for fraction in (0.10, 0.37, 0.64, 0.90))
-    # A restrained serial graph gives the static panel a useful visual cue;
-    # the live Rack display owns the selected algorithm and redraws this box.
-    for edge_index, (source, destination) in enumerate(zip(node_xs, node_xs[1:])):
-        lane_y = node_y - (
-            2.2 + 1.3 + ROUTING_LANE_GAP * edge_index
-        )
+    node_y = y + height * 0.5
+    left_x = x + ROUTING_NODE_HORIZONTAL_MARGIN + ROUTING_NODE_RADIUS
+    right_x = x + width - ROUTING_NODE_HORIZONTAL_MARGIN - ROUTING_NODE_RADIUS
+    node_xs = tuple(
+        left_x + (right_x - left_x) * fraction
+        for fraction in (0.0, 1.0 / 3.0, 2.0 / 3.0, 1.0)
+    )
+    # The static faceplate shows the serial algorithm as a fallback cue; the
+    # live Rack display redraws this same footprint for the selected graph.
+    for source, destination in zip(node_xs, node_xs[1:]):
+        start_x = source + ROUTING_NODE_RADIUS
+        end_x = destination - ROUTING_NODE_RADIUS
         lines.append(
             _path(
-                f"M {_fmt(source + 2.0)} {_fmt(node_y)} "
-                f"L {_fmt(source + 2.0)} {_fmt(lane_y)} "
-                f"L {_fmt(destination - 2.0)} {_fmt(lane_y)} "
-                f"L {_fmt(destination - 2.0)} {_fmt(node_y)}",
+                f"M {_fmt(start_x)} {_fmt(node_y)} "
+                f"L {_fmt(end_x)} {_fmt(node_y)}",
                 ROUTING_MODULATION,
                 ROUTING_EDGE_STROKE_WIDTH,
             )
         )
-    rail_y = inner_y + inner_height * 0.76
+        lines.append(
+            _path(
+                f"M {_fmt(end_x)} {_fmt(node_y)} "
+                f"L {_fmt(end_x - ROUTING_ARROW_LENGTH)} "
+                f"{_fmt(node_y - ROUTING_ARROW_WIDTH)} "
+                f"L {_fmt(end_x - ROUTING_ARROW_LENGTH)} "
+                f"{_fmt(node_y + ROUTING_ARROW_WIDTH)} Z",
+                ROUTING_MODULATION,
+                0.0,
+                fill=ROUTING_MODULATION,
+            )
+        )
+
+    carrier_end_x = x + width - ROUTING_NODE_RADIUS
     lines.append(
-        _line(
-            node_xs[0], rail_y, node_xs[-1], rail_y,
-            ROUTING_CARRIER, ROUTING_EDGE_STROKE_WIDTH,
+        _path(
+            f"M {_fmt(node_xs[-1] + ROUTING_NODE_RADIUS)} {_fmt(node_y)} "
+            f"L {_fmt(carrier_end_x)} {_fmt(node_y)}",
+            ROUTING_CARRIER,
+            ROUTING_EDGE_STROKE_WIDTH,
         )
     )
-    for index, node_x in enumerate(node_xs, start=1):
+    lines.append(
+        _path(
+            f"M {_fmt(carrier_end_x)} {_fmt(node_y)} "
+            f"L {_fmt(carrier_end_x - ROUTING_ARROW_LENGTH)} "
+            f"{_fmt(node_y - ROUTING_ARROW_WIDTH)} "
+            f"L {_fmt(carrier_end_x - ROUTING_ARROW_LENGTH)} "
+            f"{_fmt(node_y + ROUTING_ARROW_WIDTH)} Z",
+            ROUTING_CARRIER,
+            0.0,
+            fill=ROUTING_CARRIER,
+        )
+    )
+    for index, node_x in enumerate(reversed(node_xs), start=1):
+        is_carrier = index == 1
         lines.append(
             f'    <circle cx="{_fmt(node_x)}" cy="{_fmt(node_y)}" '
             f'r="{_fmt(ROUTING_NODE_RADIUS)}" fill="{DISPLAY_CHARCOAL}" '
-            f'stroke="{PANEL_IVORY}" '
+            f'stroke="{ROUTING_CARRIER if is_carrier else ROUTING_MODULATION}" '
             f'stroke-width="{_fmt(ROUTING_NODE_STROKE_WIDTH)}" />'
         )
         lines.append(
@@ -1087,8 +1115,18 @@ def generate_coords_header() -> str:
             _header_float("ROUTING_NODE_RADIUS", ROUTING_NODE_RADIUS),
             _header_float("ROUTING_NODE_STROKE_WIDTH", ROUTING_NODE_STROKE_WIDTH),
             _header_float("ROUTING_NODE_LABEL_SIZE", ROUTING_NODE_LABEL_SIZE),
-            _header_float("ROUTING_BRANCH_OFFSET", ROUTING_BRANCH_OFFSET),
-            _header_float("ROUTING_LANE_GAP", ROUTING_LANE_GAP),
+            _header_float(
+                "ROUTING_NODE_HORIZONTAL_MARGIN",
+                ROUTING_NODE_HORIZONTAL_MARGIN,
+            ),
+            _header_float(
+                "ROUTING_NODE_VERTICAL_MARGIN",
+                ROUTING_NODE_VERTICAL_MARGIN,
+            ),
+            _header_float("ROUTING_PORT_GAP", ROUTING_PORT_GAP),
+            _header_float("ROUTING_ROUTE_GAP", ROUTING_ROUTE_GAP),
+            _header_float("ROUTING_ARROW_LENGTH", ROUTING_ARROW_LENGTH),
+            _header_float("ROUTING_ARROW_WIDTH", ROUTING_ARROW_WIDTH),
         )
     )
     lines.extend(("", "// Global controls"))

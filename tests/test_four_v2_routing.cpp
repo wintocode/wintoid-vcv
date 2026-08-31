@@ -1,0 +1,302 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+static int tests_run = 0;
+static int tests_passed = 0;
+
+#define TEST(name) \
+    static void test_##name(); \
+    static void run_##name() { \
+        tests_run++; \
+        printf("  %s ... ", #name); \
+        test_##name(); \
+        tests_passed++; \
+        printf("PASS\n"); \
+    } \
+    static void test_##name()
+
+#define ASSERT(cond) \
+    do { if (!(cond)) { \
+        printf("FAIL\n    %s:%d: %s\n", __FILE__, __LINE__, #cond); \
+        exit(1); \
+    } } while(0)
+
+#define ASSERT_NEAR(a, b, eps) \
+    do { float _a=(a), _b=(b); if (!isfinite(_a) || !isfinite(_b) || fabsf(_a-_b) > (eps)) { \
+        printf("FAIL\n    %s:%d: %f != %f (eps=%f)\n", \
+               __FILE__, __LINE__, (double)_a, (double)_b, (double)(eps)); \
+        exit(1); \
+    } } while(0)
+
+#include "../src/FourV2/routing.h"
+#include "../src/FourV2/layout.h"
+
+static four_v2::RoutingLayout layout_for(int algorithm)
+{
+    return four_v2::make_routing_layout(
+        four_v2::ALGORITHMS[algorithm],
+        four_v2_layout::ROUTING_DISPLAY_WIDTH,
+        four_v2_layout::ROUTING_DISPLAY_HEIGHT,
+        four_v2_layout::ROUTING_NODE_RADIUS,
+        four_v2_layout::ROUTING_NODE_HORIZONTAL_MARGIN,
+        four_v2_layout::ROUTING_NODE_VERTICAL_MARGIN,
+        four_v2_layout::ROUTING_PORT_GAP,
+        four_v2_layout::ROUTING_ROUTE_GAP);
+}
+
+static const four_v2::RoutingPath* find_path(
+    const four_v2::RoutingLayout& layout, int source, int destination)
+{
+    for (int index = 0; index < layout.pathCount; ++index) {
+        const four_v2::RoutingPath& path = layout.paths[index];
+        if (path.source == source && path.destination == destination)
+            return &path;
+    }
+    return nullptr;
+}
+
+static bool has_horizontal_overlap(
+    const four_v2::RoutingPath& first,
+    const four_v2::RoutingPath& second)
+{
+    for (int firstIndex = 0;
+         firstIndex + 1 < first.pointCount; ++firstIndex) {
+        const four_v2::RoutingPoint& firstStart = first.points[firstIndex];
+        const four_v2::RoutingPoint& firstEnd = first.points[firstIndex + 1];
+        if (firstStart.y != firstEnd.y || firstStart.x >= firstEnd.x)
+            continue;
+        for (int secondIndex = 0;
+             secondIndex + 1 < second.pointCount; ++secondIndex) {
+            const four_v2::RoutingPoint& secondStart = second.points[secondIndex];
+            const four_v2::RoutingPoint& secondEnd = second.points[secondIndex + 1];
+            if (secondStart.y != secondEnd.y || secondStart.x >= secondEnd.x)
+                continue;
+            if (firstStart.y != secondStart.y)
+                continue;
+            const float overlapStart = firstStart.x > secondStart.x
+                ? firstStart.x : secondStart.x;
+            const float overlapEnd = firstEnd.x < secondEnd.x
+                ? firstEnd.x : secondEnd.x;
+            if (overlapEnd - overlapStart > 0.001f)
+                return true;
+        }
+    }
+    return false;
+}
+
+static bool passes_through_unrelated_node(
+    const four_v2::RoutingLayout& layout,
+    const four_v2::RoutingPath& path)
+{
+    for (int op = 0; op < four_v2::OPERATOR_COUNT; ++op) {
+        if (op == path.source || op == path.destination)
+            continue;
+        for (int pointIndex = 0; pointIndex < path.pointCount; ++pointIndex) {
+            const four_v2::RoutingPoint& point = path.points[pointIndex];
+            const float dx = point.x - layout.nodes[op].x;
+            const float dy = point.y - layout.nodes[op].y;
+            if (dx * dx + dy * dy < 1.5f * 1.5f)
+                return true;
+        }
+    }
+    return false;
+}
+
+TEST(serial_algorithm_uses_one_left_to_right_slice)
+{
+    const four_v2::RoutingLayout layout = layout_for(0);
+    ASSERT(layout.rowCount == 1);
+    ASSERT(layout.nodes[0].row == 0);
+    ASSERT(layout.nodes[1].row == 0);
+    ASSERT(layout.nodes[2].row == 0);
+    ASSERT(layout.nodes[3].row == 0);
+    ASSERT(layout.nodes[3].x < layout.nodes[2].x);
+    ASSERT(layout.nodes[2].x < layout.nodes[1].x);
+    ASSERT(layout.nodes[1].x < layout.nodes[0].x);
+    ASSERT(find_path(layout, 3, 2) != nullptr);
+    ASSERT(find_path(layout, 2, 1) != nullptr);
+    ASSERT(find_path(layout, 1, 0) != nullptr);
+    ASSERT(find_path(layout, 0, four_v2::ROUTING_OUTPUT) != nullptr);
+}
+
+TEST(branching_algorithms_keep_the_main_chain_on_top)
+{
+    const four_v2::RoutingLayout algo2 = layout_for(1);
+    ASSERT(algo2.nodes[2].row == 0);
+    ASSERT(algo2.nodes[1].row == 0);
+    ASSERT(algo2.nodes[0].row == 0);
+    ASSERT(algo2.nodes[3].row == 1);
+    ASSERT(find_path(algo2, 2, 1) != nullptr);
+    ASSERT(find_path(algo2, 1, 0) != nullptr);
+    ASSERT(find_path(algo2, 3, 1) != nullptr);
+    ASSERT(find_path(algo2, 3, 0) == nullptr);
+
+    const four_v2::RoutingLayout algo3 = layout_for(2);
+    ASSERT(algo3.nodes[3].row == 0);
+    ASSERT(algo3.nodes[2].row == 0);
+    ASSERT(algo3.nodes[0].row == 0);
+    ASSERT(algo3.nodes[1].row == 1);
+
+    const four_v2::RoutingLayout algo4 = layout_for(3);
+    ASSERT(algo4.nodes[3].row == 0);
+    ASSERT(algo4.nodes[1].row == 0);
+    ASSERT(algo4.nodes[0].row == 0);
+    ASSERT(algo4.nodes[2].row == 1);
+}
+
+TEST(branch_nodes_are_aligned_with_their_destination_stage)
+{
+    const four_v2::RoutingLayout algo3 = layout_for(2);
+    ASSERT_NEAR(algo3.nodes[1].x, algo3.nodes[2].x, 1e-6f);
+    ASSERT(algo3.nodes[1].row > algo3.nodes[2].row);
+
+    const four_v2::RoutingLayout algo4 = layout_for(3);
+    ASSERT_NEAR(algo4.nodes[2].x, algo4.nodes[1].x, 1e-6f);
+    ASSERT(algo4.nodes[2].row > algo4.nodes[1].row);
+}
+
+TEST(modulation_paths_do_not_hit_nodes_or_share_ambiguous_runs)
+{
+    for (int algorithm = 0;
+         algorithm < four_v2::ALGORITHM_COUNT; ++algorithm) {
+        const four_v2::RoutingLayout layout = layout_for(algorithm);
+        for (int firstIndex = 0;
+             firstIndex < layout.pathCount; ++firstIndex) {
+            const four_v2::RoutingPath& first = layout.paths[firstIndex];
+            if (first.carrier)
+                continue;
+            ASSERT(!passes_through_unrelated_node(layout, first));
+            for (int secondIndex = firstIndex + 1;
+                 secondIndex < layout.pathCount; ++secondIndex) {
+                const four_v2::RoutingPath& second = layout.paths[secondIndex];
+                if (second.carrier)
+                    continue;
+                ASSERT(!has_horizontal_overlap(first, second));
+            }
+        }
+    }
+}
+
+TEST(algorithm_10_routes_crossing_edges_through_distinct_channels)
+{
+    const four_v2::RoutingLayout layout = layout_for(9);
+    const four_v2::RoutingPath* upperToLower = find_path(layout, 2, 0);
+    const four_v2::RoutingPath* lowerToUpper = find_path(layout, 3, 1);
+    ASSERT(upperToLower != nullptr);
+    ASSERT(lowerToUpper != nullptr);
+    ASSERT(upperToLower->pointCount == 5);
+    ASSERT(upperToLower->points[1].y < upperToLower->points[0].y);
+    ASSERT(upperToLower->points[2].x > upperToLower->points[1].x);
+    ASSERT(lowerToUpper->pointCount == 4);
+    ASSERT(!has_horizontal_overlap(*upperToLower, *lowerToUpper));
+}
+
+TEST(parallel_carrier_chains_get_separate_slices)
+{
+    const four_v2::RoutingLayout algo5 = layout_for(4);
+    ASSERT(algo5.nodes[1].row == 0);
+    ASSERT(algo5.nodes[0].row == 0);
+    ASSERT(algo5.nodes[3].row == 1);
+    ASSERT(algo5.nodes[2].row == 1);
+
+    const four_v2::RoutingLayout algo6 = layout_for(5);
+    ASSERT(algo6.nodes[3].row == 0);
+    ASSERT(algo6.nodes[2].row == 0);
+    ASSERT(algo6.nodes[1].row == 1);
+    ASSERT(algo6.nodes[0].row == 2);
+    ASSERT(algo6.rowCount <= four_v2::ROUTING_MAX_ROWS);
+}
+
+TEST(independent_carriers_fill_four_slices)
+{
+    const four_v2::RoutingLayout layout = layout_for(7);
+    ASSERT(layout.rowCount == 4);
+    ASSERT(layout.nodes[3].row == 0);
+    ASSERT(layout.nodes[2].row == 1);
+    ASSERT(layout.nodes[1].row == 2);
+    ASSERT(layout.nodes[0].row == 3);
+    ASSERT(find_path(layout, 0, four_v2::ROUTING_OUTPUT) != nullptr);
+    ASSERT(find_path(layout, 1, four_v2::ROUTING_OUTPUT) != nullptr);
+    ASSERT(find_path(layout, 2, four_v2::ROUTING_OUTPUT) != nullptr);
+    ASSERT(find_path(layout, 3, four_v2::ROUTING_OUTPUT) != nullptr);
+}
+
+TEST(all_paths_stay_inside_the_display_and_flow_forward)
+{
+    for (int algorithm = 0;
+         algorithm < four_v2::ALGORITHM_COUNT; ++algorithm) {
+        const four_v2::RoutingLayout layout = layout_for(algorithm);
+        ASSERT(layout.rowCount >= 1);
+        ASSERT(layout.rowCount <= four_v2::ROUTING_MAX_ROWS);
+        for (int op = 0; op < four_v2::OPERATOR_COUNT; ++op) {
+            ASSERT(layout.nodes[op].x >= 0.f);
+            ASSERT(layout.nodes[op].x <= 48.f);
+            ASSERT(layout.nodes[op].y >= 0.f);
+            ASSERT(layout.nodes[op].y <= 21.f);
+        }
+        for (int pathIndex = 0;
+             pathIndex < layout.pathCount; ++pathIndex) {
+            const four_v2::RoutingPath& path = layout.paths[pathIndex];
+            ASSERT(path.pointCount >= 2);
+            for (int pointIndex = 0;
+                 pointIndex < path.pointCount; ++pointIndex) {
+                const four_v2::RoutingPoint& point = path.points[pointIndex];
+                ASSERT(point.x >= 0.f);
+                ASSERT(point.x <= 48.f);
+                ASSERT(point.y >= 0.f);
+                ASSERT(point.y <= 21.f);
+                if (pointIndex > 0)
+                    ASSERT(point.x >= path.points[pointIndex - 1].x);
+            }
+            if (path.carrier)
+                ASSERT(path.points[path.pointCount - 1].x
+                       > path.points[0].x);
+        }
+    }
+}
+
+TEST(path_table_matches_every_canonical_edge_and_carrier)
+{
+    for (int algorithm = 0;
+         algorithm < four_v2::ALGORITHM_COUNT; ++algorithm) {
+        const four_v2::Algorithm& source = four_v2::ALGORITHMS[algorithm];
+        const four_v2::RoutingLayout layout = layout_for(algorithm);
+        int expectedPathCount = 0;
+        for (int src = 0; src < four_v2::OPERATOR_COUNT; ++src) {
+            for (int dst = 0; dst < four_v2::OPERATOR_COUNT; ++dst) {
+                if (!source.mod[src][dst])
+                    continue;
+                expectedPathCount++;
+                const four_v2::RoutingPath* path = find_path(layout, src, dst);
+                ASSERT(path != nullptr);
+                ASSERT(!path->carrier);
+            }
+            if (source.carrier[src]) {
+                expectedPathCount++;
+                const four_v2::RoutingPath* path = find_path(
+                    layout, src, four_v2::ROUTING_OUTPUT);
+                ASSERT(path != nullptr);
+                ASSERT(path->carrier);
+            }
+        }
+        ASSERT(layout.pathCount == expectedPathCount);
+    }
+}
+
+int main()
+{
+    printf("Four V2 routing layout tests:\n");
+    run_serial_algorithm_uses_one_left_to_right_slice();
+    run_branching_algorithms_keep_the_main_chain_on_top();
+    run_branch_nodes_are_aligned_with_their_destination_stage();
+    run_modulation_paths_do_not_hit_nodes_or_share_ambiguous_runs();
+    run_algorithm_10_routes_crossing_edges_through_distinct_channels();
+    run_parallel_carrier_chains_get_separate_slices();
+    run_independent_carriers_fill_four_slices();
+    run_all_paths_stay_inside_the_display_and_flow_forward();
+    run_path_table_matches_every_canonical_edge_and_carrier();
+
+    printf("\n%d/%d tests passed.\n", tests_passed, tests_run);
+    return tests_passed == tests_run ? 0 : 1;
+}

@@ -460,17 +460,23 @@ class FourV2PanelTest(unittest.TestCase):
         for path in paths:
             with self.subTest(path=path.attrib["d"]):
                 self.assertNotIn(" C ", path.attrib["d"])
-                self.assertGreaterEqual(path.attrib["d"].count("L"), 2)
+                self.assertGreaterEqual(path.attrib["d"].count("L"), 1)
+        self.assertTrue(any(" Z" in path.attrib["d"] for path in paths))
         body = _extract_struct_body(
             self.source, "struct AlgorithmRoutingDisplay"
         )
         self.assertNotIn("nvgBezierTo", body)
         self.assertIn("nvgLineTo", body)
-        for arrow_contract in ("arrowLength", "arrowWidth", "arrowBaseX"):
+        for arrow_contract in ("arrowLength", "arrowWidth", "nvgClosePath"):
             with self.subTest(arrow_contract=arrow_contract):
-                self.assertNotIn(arrow_contract, body)
-        self.assertIn("sourceTrunk", body)
-        self.assertIn("outgoingCount > 1", body)
+                self.assertIn(arrow_contract, body)
+        for layout_contract in (
+            "four_v2::make_routing_layout",
+            "ROUTING_NODE_HORIZONTAL_MARGIN",
+            "ROUTING_NODE_VERTICAL_MARGIN",
+        ):
+            with self.subTest(layout_contract=layout_contract):
+                self.assertIn(layout_contract, body)
 
     def test_socket_attenuator_pairs_have_small_rounded_group_boxes(self):
         panel = self.require_panel()
@@ -619,18 +625,22 @@ class FourV2PanelTest(unittest.TestCase):
                             for node in circles))
         self.assertTrue(all(float(node.attrib["font-size"]) == 2.1
                             for node in labels))
-        self.assertTrue(all(float(node.attrib["stroke-width"]) == 0.5
+        self.assertTrue(any(float(node.attrib["stroke-width"]) == 0.5
+                            for node in strokes))
+        self.assertTrue(any(node.attrib.get("fill") != "none"
                             for node in strokes))
         self.assertAlmostEqual(1.5, panel.ROUTING_NODE_RADIUS)
         self.assertAlmostEqual(0.5, panel.ROUTING_EDGE_STROKE_WIDTH)
         self.assertAlmostEqual(0.4, panel.ROUTING_NODE_STROKE_WIDTH)
         self.assertAlmostEqual(2.1, panel.ROUTING_NODE_LABEL_SIZE)
-        self.assertAlmostEqual(0.7, panel.ROUTING_BRANCH_OFFSET)
+        self.assertAlmostEqual(3.0, panel.ROUTING_NODE_HORIZONTAL_MARGIN)
+        self.assertAlmostEqual(3.0, panel.ROUTING_NODE_VERTICAL_MARGIN)
+        self.assertAlmostEqual(1.35, panel.ROUTING_ARROW_LENGTH)
+        self.assertAlmostEqual(0.7, panel.ROUTING_ARROW_WIDTH)
         routing_body = _extract_struct_body(
             self.source, "struct AlgorithmRoutingDisplay"
         )
-        for contract in ("sourceOffset", "destinationOffset",
-                         "ROUTING_BRANCH_OFFSET"):
+        for contract in ("make_routing_layout", "RoutingPath", "drawPath"):
             with self.subTest(contract=contract):
                 self.assertIn(contract, routing_body)
 

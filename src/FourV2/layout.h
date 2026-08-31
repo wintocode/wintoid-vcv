@@ -30,8 +30,12 @@ constexpr float ROUTING_EDGE_STROKE_WIDTH = 0.5f;
 constexpr float ROUTING_NODE_RADIUS = 1.5f;
 constexpr float ROUTING_NODE_STROKE_WIDTH = 0.4f;
 constexpr float ROUTING_NODE_LABEL_SIZE = 2.1f;
-constexpr float ROUTING_BRANCH_OFFSET = 0.7f;
-constexpr float ROUTING_LANE_GAP = 1.0f;
+constexpr float ROUTING_NODE_HORIZONTAL_MARGIN = 3.0f;
+constexpr float ROUTING_NODE_VERTICAL_MARGIN = 3.0f;
+constexpr float ROUTING_PORT_GAP = 0.55f;
+constexpr float ROUTING_ROUTE_GAP = 1.2f;
+constexpr float ROUTING_ARROW_LENGTH = 1.35f;
+constexpr float ROUTING_ARROW_WIDTH = 0.7f;
 
 // Global controls
 constexpr float ALGORITHM_KNOB_X = 12.258f;
