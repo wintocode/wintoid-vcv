@@ -273,12 +273,29 @@ class BrinkV2PanelTest(unittest.TestCase):
             for suffix in ("SIGNAL", "CENTER_CV", "WIDTH_CV"):
                 with self.subTest(channel=prefix, input=suffix):
                     self.assertAlmostEqual(inner_x, positions[f"{prefix}_{suffix}"][0])
-            for suffix in (
-                "POSITION", "INSIDE", "OUTSIDE", "LOW_UP", "HIGH_UP",
-                "LOW_DOWN", "HIGH_DOWN",
-            ):
+            # Brink V1 keeps each gate/event pair on its physical left/right
+            # sides.  Treating all seven outputs as one outer column would
+            # put distinct real PJ301MPort envelopes on the same centre and
+            # contradict the non-overlap contract below.
+            output_x_by_suffix = {
+                "POSITION": outer_x,
+                "INSIDE": panel.CHANNEL_A_X - panel.PAIR_OFFSET
+                if prefix == "A" else panel.CHANNEL_B_X - panel.PAIR_OFFSET,
+                "OUTSIDE": panel.CHANNEL_A_X + panel.PAIR_OFFSET
+                if prefix == "A" else panel.CHANNEL_B_X + panel.PAIR_OFFSET,
+                "LOW_UP": panel.CHANNEL_A_X - panel.PAIR_OFFSET
+                if prefix == "A" else panel.CHANNEL_B_X - panel.PAIR_OFFSET,
+                "HIGH_UP": panel.CHANNEL_A_X + panel.PAIR_OFFSET
+                if prefix == "A" else panel.CHANNEL_B_X + panel.PAIR_OFFSET,
+                "LOW_DOWN": panel.CHANNEL_A_X - panel.PAIR_OFFSET
+                if prefix == "A" else panel.CHANNEL_B_X - panel.PAIR_OFFSET,
+                "HIGH_DOWN": panel.CHANNEL_A_X + panel.PAIR_OFFSET
+                if prefix == "A" else panel.CHANNEL_B_X + panel.PAIR_OFFSET,
+            }
+            for suffix, expected_x in output_x_by_suffix.items():
                 with self.subTest(channel=prefix, output=suffix):
-                    self.assertAlmostEqual(outer_x, positions[f"{prefix}_{suffix}"][0])
+                    self.assertAlmostEqual(expected_x,
+                                           positions[f"{prefix}_{suffix}"][0])
 
     def test_real_rack_component_envelopes_clear_edges_and_each_other(self):
         panel = self.require_panel()
