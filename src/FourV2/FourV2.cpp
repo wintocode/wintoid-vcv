@@ -537,6 +537,7 @@ struct FourV2PanelLabels : Widget {
         using namespace four_v2_layout;
         const int leftBaseline = NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE;
         const int centerBaseline = NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE;
+        const int rightMiddle = NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE;
 
         const Label labels[] = {
             {TITLE_X, TITLE_Y, TITLE_FONT_SIZE, leftBaseline,
@@ -549,9 +550,7 @@ struct FourV2PanelLabels : Widget {
              36, 37, 34, "PM DEPTH", false},
             {MASTER_KNOB_X, GLOBAL_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
              36, 37, 34, "MASTER", false},
-            {PM_DEPTH_CV_JACK_X, GLOBAL_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
-             36, 37, 34, "PM CV", false},
-            {EXTERNAL_PM_JACK_X, EXTERNAL_PM_LABEL_Y, GLOBAL_LABEL_SIZE, centerBaseline,
+            {EXTERNAL_PM_LABEL_X, EXTERNAL_PM_LABEL_Y, GLOBAL_LABEL_SIZE, rightMiddle,
              36, 37, 34, "EXT PM", false},
         };
         for (const Label& label : labels)
@@ -677,9 +676,9 @@ struct AlgorithmRoutingDisplay : Widget {
         const four_v2::Algorithm& algorithm =
             four_v2::ALGORITHMS[algorithmIndex];
 
-        // Orange edges run from each modulator to its destination. Curves
-        // separate the serial and fan-in routes while staying inside the
-        // display's clipped drawing box.
+        // Orange edges run from each modulator to its destination. Orthogonal
+        // lanes keep fan-in and equal-span routes visually separate while
+        // staying inside the display's clipped drawing box.
         nvgStrokeColor(args.vg, nvgRGB(237, 91, 34));
         nvgStrokeWidth(args.vg, edgeStroke);
         for (int source = 0; source < four_v2::OPERATOR_COUNT; ++source) {
@@ -695,9 +694,32 @@ struct AlgorithmRoutingDisplay : Widget {
                     - direction * (nodeRadius + edgeStroke);
                 const int span = source > destination
                     ? source - destination : destination - source;
-                const float controlX = mm2px(2.4f);
-                const float controlY = nodeY
-                    - mm2px(2.2f + 1.3f * static_cast<float>(span));
+                int sameSpanIndex = 0;
+                for (int candidateSource = 0;
+                     candidateSource < four_v2::OPERATOR_COUNT;
+                     ++candidateSource) {
+                    for (int candidateDestination = 0;
+                         candidateDestination < four_v2::OPERATOR_COUNT;
+                         ++candidateDestination) {
+                        if (!algorithm.mod[candidateSource][candidateDestination]
+                            || candidateSource == candidateDestination) {
+                            continue;
+                        }
+                        const int candidateSpan = candidateSource > candidateDestination
+                            ? candidateSource - candidateDestination
+                            : candidateDestination - candidateSource;
+                        if (candidateSpan == span
+                            && (candidateSource < source
+                                || (candidateSource == source
+                                    && candidateDestination < destination))) {
+                            ++sameSpanIndex;
+                        }
+                    }
+                }
+                const float laneY = nodeY
+                    - mm2px(2.2f + 1.3f * static_cast<float>(span))
+                    - mm2px(ROUTING_LANE_GAP
+                            * static_cast<float>(sameSpanIndex));
                 int outgoingCount = 0;
                 int outgoingIndex = 0;
                 int incomingCount = 0;
@@ -728,11 +750,9 @@ struct AlgorithmRoutingDisplay : Widget {
 
                 nvgBeginPath(args.vg);
                 nvgMoveTo(args.vg, startX, startY);
-                nvgBezierTo(
-                    args.vg,
-                    startX + direction * controlX, controlY,
-                    endX - direction * controlX, controlY,
-                    endX, endY);
+                nvgLineTo(args.vg, startX, laneY);
+                nvgLineTo(args.vg, endX, laneY);
+                nvgLineTo(args.vg, endX, endY);
                 nvgStroke(args.vg);
 
                 const float arrowBaseX = endX - direction * arrowLength;

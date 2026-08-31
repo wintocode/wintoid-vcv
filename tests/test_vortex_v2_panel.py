@@ -73,9 +73,9 @@ class VortexV2PanelTest(unittest.TestCase):
     def test_control_triplets_are_horizontal_and_keep_their_order(self):
         panel = self.require_panel()
         expected = (
-            ("cutoff", 13.0, 27.0, 35.5, 20.0),
-            ("resonance", 13.0, 27.0, 35.5, 32.0),
-            ("drive", 13.0, 27.0, 35.5, 44.0),
+            ("cutoff", 23.5, 37.5, 46.0, 20.0),
+            ("resonance", 23.5, 37.5, 46.0, 32.0),
+            ("drive", 23.5, 37.5, 46.0, 44.0),
         )
         actual = tuple(
             (
@@ -91,6 +91,15 @@ class VortexV2PanelTest(unittest.TestCase):
         for _name, knob, cv, atten in panel.CONTROL_GROUPS:
             self.assertEqual(knob[1], cv[1])
             self.assertEqual(cv[1], atten[1])
+
+    def test_audio_input_is_top_left_of_the_shifted_control_block(self):
+        panel = self.require_panel()
+        self.assertEqual((13.0, 20.0), (panel.AUDIO_IN_X, panel.AUDIO_IN_Y))
+        self.assertEqual(23.5, panel.CONTROL_KNOB_X)
+        self.assertEqual(37.5, panel.CONTROL_CV_X)
+        self.assertEqual(46.0, panel.CONTROL_ATTEN_X)
+        self.assertLess(panel.AUDIO_IN_X, panel.CONTROL_KNOB_X)
+        self.assertLess(panel.AUDIO_IN_Y, panel.CONTROL_ROW_YS[1])
 
     def test_outputs_are_the_twelve_modes_in_row_major_order(self):
         panel = self.require_panel()

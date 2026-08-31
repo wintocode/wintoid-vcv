@@ -347,7 +347,6 @@ class FourV2PanelTest(unittest.TestCase):
             ("TUNE", "tune_knob"),
             ("PM DEPTH", "pm_depth_knob"),
             ("MASTER", "master_knob"),
-            ("PM CV", "pm_depth_cv_jack"),
             ("EXT PM", "external_pm_jack"),
             ("MAIN OUT", "main_output"),
         )
@@ -361,17 +360,17 @@ class FourV2PanelTest(unittest.TestCase):
             "TUNE": 12.6,
             "PM DEPTH": 12.6,
             "MASTER": 12.6,
-            "PM CV": 12.6,
-            "EXT PM": 23.8,
+            "EXT PM": 29.0,
             "MAIN OUT": 12.3,
         }
         for text, component_name in label_specs:
             component_x, component_y = panel.GLOBAL_CONTROLS[component_name]
+            expected_x = 100.737 if text == "EXT PM" else component_x
             matches = [
                 node for node in root.iter()
                 if node.tag.endswith("text")
                 and node.text == text
-                and abs(float(node.attrib["x"]) - component_x) < 0.01
+                and abs(float(node.attrib["x"]) - expected_x) < 0.01
             ]
             with self.subTest(label=text, component=component_name,
                               contract="single matching label"):
@@ -384,9 +383,14 @@ class FourV2PanelTest(unittest.TestCase):
             label_bottom = baseline + font_size * 0.25
             radius = panel.COMPONENT_RADII[component_name]
             with self.subTest(label=text, component=component_name):
-                self.assertEqual("middle", label.attrib["text-anchor"])
+                expected_anchor = "end" if text == "EXT PM" else "middle"
+                self.assertEqual(expected_anchor, label.attrib["text-anchor"])
                 self.assertAlmostEqual(expected_size[text], font_size)
                 self.assertAlmostEqual(expected_baseline[text], baseline)
+                if text == "EXT PM":
+                    self.assertEqual("middle", label.attrib["dominant-baseline"])
+                    self.assertLess(float(label.attrib["x"]), component_x)
+                    continue
                 self.assertGreaterEqual(
                     component_y - radius - label_bottom,
                     MINIMUM_LABEL_CLEARANCE_MM,
@@ -398,6 +402,15 @@ class FourV2PanelTest(unittest.TestCase):
 
     def test_global_controls_match_the_revised_control_order(self):
         panel = self.require_panel()
+        op1_left_column_x = (
+            panel.OPERATOR_CENTRES_X[0] + panel.OPERATOR_X_OFFSETS["coarse"]
+        )
+        self.assertAlmostEqual(
+            op1_left_column_x, panel.GLOBAL_CONTROLS["voct_jack"][0], delta=0.001
+        )
+        self.assertAlmostEqual(
+            op1_left_column_x, panel.GLOBAL_CONTROLS["algorithm_knob"][0], delta=0.001
+        )
         self.assertEqual(
             (94.5, 17.5), panel.GLOBAL_CONTROLS["pm_depth_knob"]
         )
@@ -424,7 +437,35 @@ class FourV2PanelTest(unittest.TestCase):
         self.assertLess(master_x, output_x)
         self.assertAlmostEqual(master_y, output_y)
         self.assertAlmostEqual(over_x, output_x)
-        self.assertGreater(over_y, output_y)
+        self.assertEqual((153.0, 24.0), (over_x, over_y))
+
+    def test_four_v2_removes_pm_cv_caption_and_moves_operator_headings_up(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        labels = {node.text for node in root.iter()
+                  if node.tag.endswith("text") and node.text}
+        self.assertNotIn("PM CV", labels)
+        self.assertNotIn("pm_depth_cv", panel.LABEL_CLEARANCES)
+        self.assertAlmostEqual(42.7, panel.OPERATOR_HEADING_Y)
+
+    def test_algorithm_routing_uses_orthogonal_paths(self):
+        panel = self.require_panel()
+        root = ET.fromstring(panel.generate_svg())
+        routing_art = next(
+            node for node in root.iter()
+            if node.attrib.get("id") == "routing-display-art"
+        )
+        paths = [node for node in routing_art if node.tag.endswith("path")]
+        self.assertTrue(paths)
+        for path in paths:
+            with self.subTest(path=path.attrib["d"]):
+                self.assertNotIn(" C ", path.attrib["d"])
+                self.assertGreaterEqual(path.attrib["d"].count("L"), 2)
+        body = _extract_struct_body(
+            self.source, "struct AlgorithmRoutingDisplay"
+        )
+        self.assertNotIn("nvgBezierTo", body)
+        self.assertIn("nvgLineTo", body)
 
     def test_socket_attenuator_pairs_have_small_rounded_group_boxes(self):
         panel = self.require_panel()
@@ -928,10 +969,10 @@ class FourV2PanelTest(unittest.TestCase):
         for expected in ("Four V2", "OP1", "OP2", "OP3", "OP4",
                          "LEVEL", "WARP", "FOLD", "FEEDBACK",
                          "FOLD TYPE",
-                         "PM DEPTH", "MASTER", "PM CV", "EXT PM"):
+                         "PM DEPTH", "MASTER", "EXT PM"):
             with self.subTest(label=expected):
                 self.assertIn(expected, labels)
-        for removed in ("ROUTING", "ALGORITHM", "CV PATCHBAY",
+        for removed in ("PM CV", "ROUTING", "ALGORITHM", "CV PATCHBAY",
                         "OUTPUT", "ATTEN", "OVER"):
             with self.subTest(removed_label=removed):
                 self.assertNotIn(removed, labels)
@@ -955,15 +996,15 @@ class FourV2PanelTest(unittest.TestCase):
             '"FOLD TYPE"',
             '"FEEDBACK"',
             '"LEVEL"',
-            '"PM CV"',
             '"EXT PM"',
             '"MAIN OUT"',
             "GLOBAL_LABEL_SIZE",
             "MAIN_OUTPUT_LABEL_SIZE",
+            "EXTERNAL_PM_LABEL_X",
         ):
             with self.subTest(contract=contract):
                 self.assertIn(contract, body)
-        for removed in ('"ROUTING"', '"ALGORITHM"', '"CV PATCHBAY"',
+        for removed in ('"PM CV"', '"ROUTING"', '"ALGORITHM"', '"CV PATCHBAY"',
                         '"ATTEN"', '"OVER"'):
             with self.subTest(removed_label=removed):
                 self.assertNotIn(removed, body)

@@ -8,12 +8,12 @@
   </g>
   <text x="6" y="7" text-anchor="start" font-family="DejaVu Sans" font-size="6.6" font-weight="700" fill="#242522">Four V2</text>
   <rect id="routing-section" x="4" y="10.3" width="154.56" height="25.7" fill="#e3e0d1" stroke="#556d80" stroke-width="0.35" rx="1.4" />
-  <text x="8.5" y="24.1" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="600" fill="#242522">ALGO</text>
+  <text x="12.258" y="24.1" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="600" fill="#242522">ALGO</text>
   <rect id="routing-display" x="17.5" y="13" width="48" height="21" fill="#242522" stroke="#556d80" stroke-width="0.35" rx="1" />
   <g id="routing-display-art">
-  <path d="M 25.34 22.028 C 30.34 18.028, 28.598 26.028, 33.598 22.028" fill="none" stroke="#b7693c" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 37.598 22.028 C 42.598 18.028, 40.856 26.028, 45.856 22.028" fill="none" stroke="#b7693c" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M 49.856 22.028 C 54.856 18.028, 52.66 26.028, 57.66 22.028" fill="none" stroke="#b7693c" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 25.34 22.028 L 25.34 18.528 L 33.598 18.528 L 33.598 22.028" fill="none" stroke="#b7693c" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 37.598 22.028 L 37.598 17.528 L 45.856 17.528 L 45.856 22.028" fill="none" stroke="#b7693c" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 49.856 22.028 L 49.856 16.528 L 57.66 16.528 L 57.66 22.028" fill="none" stroke="#b7693c" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
   <line x1="23.34" y1="28.284" x2="59.66" y2="28.284" stroke="#9c7a35" stroke-width="0.5" />
     <circle cx="23.34" cy="22.028" r="1.5" fill="#242522" stroke="#ece8d9" stroke-width="0.4" />
     <text x="23.34" y="22.828" text-anchor="middle" font-family="DejaVu Sans" font-size="2.1" fill="#ece8d9">1</text>
@@ -29,10 +29,9 @@
   <text x="70.5" y="12.6" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">TUNE</text>
   <text x="94.5" y="12.6" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">PM DEPTH</text>
   <text x="141" y="12.6" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">MASTER</text>
-  <text x="106.5" y="12.6" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">PM CV</text>
-  <text x="106.5" y="23.8" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">EXT PM</text>
+  <text x="100.737" y="29" text-anchor="end" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522" dominant-baseline="middle">EXT PM</text>
   <rect id="operator-section-1" x="4" y="37.5" width="37.515" height="87" fill="#e7e3d4" stroke="#556d80" stroke-width="0.3" rx="1.2" />
-  <text x="8" y="43.2" text-anchor="start" font-family="DejaVu Sans" font-size="5" font-weight="700" fill="#242522">OP1</text>
+  <text x="8" y="42.7" text-anchor="start" font-family="DejaVu Sans" font-size="5" font-weight="700" fill="#242522">OP1</text>
   <rect id="op1-frequency-display" x="19" y="39" width="18.515" height="5.5" fill="#242522" stroke="#556d80" stroke-width="0.25" rx="0.6" />
   <rect id="op1-coarse-fine-group" x="7.168" y="43.65" width="10.18" height="25.69" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
   <rect id="op1-output-cv-group" x="17.494" y="73.637" width="20.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
@@ -48,7 +47,7 @@
   <text x="12.258" y="99.8" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">FOLD</text>
   <text x="12.258" y="113.3" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">FEEDBACK</text>
   <rect id="operator-section-2" x="43.015" y="37.5" width="37.515" height="87" fill="#e3e0d1" stroke="#556d80" stroke-width="0.3" rx="1.2" />
-  <text x="47.015" y="43.2" text-anchor="start" font-family="DejaVu Sans" font-size="5" font-weight="700" fill="#242522">OP2</text>
+  <text x="47.015" y="42.7" text-anchor="start" font-family="DejaVu Sans" font-size="5" font-weight="700" fill="#242522">OP2</text>
   <rect id="op2-frequency-display" x="58.015" y="39" width="18.515" height="5.5" fill="#242522" stroke="#556d80" stroke-width="0.25" rx="0.6" />
   <rect id="op2-coarse-fine-group" x="46.183" y="43.65" width="10.18" height="25.69" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
   <rect id="op2-output-cv-group" x="56.509" y="73.637" width="20.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
@@ -64,7 +63,7 @@
   <text x="51.273" y="99.8" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">FOLD</text>
   <text x="51.273" y="113.3" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">FEEDBACK</text>
   <rect id="operator-section-3" x="82.03" y="37.5" width="37.515" height="87" fill="#e7e3d4" stroke="#556d80" stroke-width="0.3" rx="1.2" />
-  <text x="86.03" y="43.2" text-anchor="start" font-family="DejaVu Sans" font-size="5" font-weight="700" fill="#242522">OP3</text>
+  <text x="86.03" y="42.7" text-anchor="start" font-family="DejaVu Sans" font-size="5" font-weight="700" fill="#242522">OP3</text>
   <rect id="op3-frequency-display" x="97.03" y="39" width="18.515" height="5.5" fill="#242522" stroke="#556d80" stroke-width="0.25" rx="0.6" />
   <rect id="op3-coarse-fine-group" x="85.198" y="43.65" width="10.18" height="25.69" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
   <rect id="op3-output-cv-group" x="95.524" y="73.637" width="20.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
@@ -80,7 +79,7 @@
   <text x="90.287" y="99.8" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">FOLD</text>
   <text x="90.287" y="113.3" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">FEEDBACK</text>
   <rect id="operator-section-4" x="121.045" y="37.5" width="37.515" height="87" fill="#e3e0d1" stroke="#556d80" stroke-width="0.3" rx="1.2" />
-  <text x="125.045" y="43.2" text-anchor="start" font-family="DejaVu Sans" font-size="5" font-weight="700" fill="#242522">OP4</text>
+  <text x="125.045" y="42.7" text-anchor="start" font-family="DejaVu Sans" font-size="5" font-weight="700" fill="#242522">OP4</text>
   <rect id="op4-frequency-display" x="136.045" y="39" width="18.515" height="5.5" fill="#242522" stroke="#556d80" stroke-width="0.25" rx="0.6" />
   <rect id="op4-coarse-fine-group" x="124.213" y="43.65" width="10.18" height="25.69" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
   <rect id="op4-output-cv-group" x="134.539" y="73.637" width="20.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
@@ -95,9 +94,9 @@
   <text x="129.303" y="86.3" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">WARP</text>
   <text x="129.303" y="99.8" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">FOLD</text>
   <text x="129.303" y="113.3" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">FEEDBACK</text>
-  <text x="8.5" y="12.6" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522" textLength="4.5" lengthAdjust="spacingAndGlyphs">V/OCT</text>
+  <text x="12.258" y="12.6" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522" textLength="4.5" lengthAdjust="spacingAndGlyphs">V/OCT</text>
   <text x="153" y="12.3" text-anchor="middle" font-family="DejaVu Sans" font-size="1.9" font-weight="400" fill="#242522" textLength="9.5" lengthAdjust="spacingAndGlyphs">MAIN OUT</text>
-  <circle cx="8.5" cy="29" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="12.258" cy="29" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="70.5" cy="17.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="94.5" cy="17.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="141" cy="17.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
@@ -105,9 +104,9 @@
   <circle cx="118.5" cy="17.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="106.5" cy="29" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="118.5" cy="29" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="8.5" cy="17.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="12.258" cy="17.5" r="4.013" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <circle cx="153" cy="17.5" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
-  <circle cx="153" cy="29" r="1.2" fill="#a93636" stroke="#242522" stroke-width="0.25" />
+  <circle cx="153" cy="24" r="1.2" fill="#a93636" stroke="#242522" stroke-width="0.25" />
   <circle cx="12.258" cy="52" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />
   <rect x="27.515" y="49.5" width="10" height="5" fill="#242522" stroke="#556d80" stroke-width="0.5" rx="0.9" />
   <circle cx="12.258" cy="64.5" r="3.84" fill="#242522" stroke="#556d80" stroke-width="0.3" />

@@ -119,8 +119,9 @@ ROUTING_NODE_RADIUS = 1.50
 ROUTING_NODE_STROKE_WIDTH = 0.40
 ROUTING_NODE_LABEL_SIZE = 2.10
 ROUTING_BRANCH_OFFSET = 0.70
+ROUTING_LANE_GAP = 1.00
 GLOBAL_CONTROLS = {
-    "algorithm_knob": (8.5, 29.0),
+    "algorithm_knob": (12.258, 29.0),
     "tune_knob": (70.5, 17.5),
     "pm_depth_knob": (94.5, 17.5),
     "master_knob": (141.0, 17.5),
@@ -128,14 +129,15 @@ GLOBAL_CONTROLS = {
     "pm_depth_cv_atten": (118.5, 17.5),
     "external_pm_jack": (106.5, 29.0),
     "external_pm_atten": (118.5, 29.0),
-    "voct_jack": (8.5, 17.5),
+    "voct_jack": (12.258, 17.5),
     "main_output": (153.0, 17.5),
-    "over_light": (153.0, 29.0),
+    "over_light": (153.0, 24.0),
 }
 ALGORITHM_LABEL_Y = 24.1
 GLOBAL_LABEL_Y = 12.6
 GLOBAL_LABEL_SIZE = 2.25
-EXTERNAL_PM_LABEL_Y = 23.8
+EXTERNAL_PM_LABEL_X = GLOBAL_CONTROLS["external_pm_jack"][0] - PORT_RADIUS - 1.75
+EXTERNAL_PM_LABEL_Y = GLOBAL_CONTROLS["external_pm_jack"][1]
 MAIN_OUTPUT_LABEL_Y = 12.3
 MAIN_OUTPUT_LABEL_SIZE = 1.90
 
@@ -192,7 +194,7 @@ OPERATOR_LABEL_YS = {
     "feedback": 113.3,
 }
 OPERATOR_HEADING_X_OFFSET = 4.0
-OPERATOR_HEADING_Y = 43.2
+OPERATOR_HEADING_Y = 42.7
 OPERATOR_HEADING_SIZE = 5.00
 OPERATOR_LABEL_SIZE = 2.35
 OPERATOR_MODE_LABEL_SIZE = 2.25
@@ -499,6 +501,7 @@ def _text(
     weight: str = "400",
     letter_spacing: float | None = None,
     text_length: float | None = None,
+    dominant_baseline: str | None = None,
 ) -> str:
     spacing = (
         f' letter-spacing="{_fmt(letter_spacing)}"'
@@ -510,10 +513,16 @@ def _text(
         if text_length is not None
         else ""
     )
+    baseline = (
+        f' dominant-baseline="{dominant_baseline}"'
+        if dominant_baseline is not None
+        else ""
+    )
     return (
         f'  <text x="{_fmt(x)}" y="{_fmt(y)}" text-anchor="{anchor}" '
         f'font-family="DejaVu Sans" font-size="{_fmt(size)}" '
-        f'font-weight="{weight}" fill="{fill}"{spacing}{rendered_length}>'
+        f'font-weight="{weight}" fill="{fill}"{spacing}{rendered_length}'
+        f'{baseline}>'
         f"{escape(value)}"
         "</text>"
     )
@@ -668,7 +677,6 @@ LABEL_CLEARANCES = {
     "pm_depth": {"clearance_mm": 0.35},
     "master": {"clearance_mm": 0.35},
     "voct": {"clearance_mm": 0.35},
-    "pm_depth_cv": {"clearance_mm": 0.35},
     "external_pm": {"clearance_mm": 0.35},
     "main_output": {"clearance_mm": 0.35},
     **{
@@ -772,13 +780,16 @@ def _append_routing_artwork(lines: list[str]) -> None:
     node_xs = tuple(inner_x + inner_width * fraction for fraction in (0.10, 0.37, 0.64, 0.90))
     # A restrained serial graph gives the static panel a useful visual cue;
     # the live Rack display owns the selected algorithm and redraws this box.
-    for source, destination in zip(node_xs, node_xs[1:]):
+    for edge_index, (source, destination) in enumerate(zip(node_xs, node_xs[1:])):
+        lane_y = node_y - (
+            2.2 + 1.3 + ROUTING_LANE_GAP * edge_index
+        )
         lines.append(
             _path(
                 f"M {_fmt(source + 2.0)} {_fmt(node_y)} "
-                f"C {_fmt(source + 7.0)} {_fmt(node_y - 4.0)}, "
-                f"{_fmt(destination - 7.0)} {_fmt(node_y + 4.0)}, "
-                f"{_fmt(destination - 2.0)} {_fmt(node_y)}",
+                f"L {_fmt(source + 2.0)} {_fmt(lane_y)} "
+                f"L {_fmt(destination - 2.0)} {_fmt(lane_y)} "
+                f"L {_fmt(destination - 2.0)} {_fmt(node_y)}",
                 ROUTING_MODULATION,
                 ROUTING_EDGE_STROKE_WIDTH,
             )
@@ -867,15 +878,16 @@ def generate_svg() -> str:
         ("TUNE", GLOBAL_CONTROLS["tune_knob"][0]),
         ("PM DEPTH", GLOBAL_CONTROLS["pm_depth_knob"][0]),
         ("MASTER", GLOBAL_CONTROLS["master_knob"][0]),
-        ("PM CV", GLOBAL_CONTROLS["pm_depth_cv_jack"][0]),
     ):
         lines.append(_text(x, GLOBAL_LABEL_Y, value, size=GLOBAL_LABEL_SIZE))
     lines.append(
         _text(
-            GLOBAL_CONTROLS["external_pm_jack"][0],
+            EXTERNAL_PM_LABEL_X,
             EXTERNAL_PM_LABEL_Y,
             "EXT PM",
             size=GLOBAL_LABEL_SIZE,
+            anchor="end",
+            dominant_baseline="middle",
         )
     )
 
@@ -1059,6 +1071,7 @@ def generate_coords_header() -> str:
         _header_float("ALGORITHM_LABEL_Y", ALGORITHM_LABEL_Y),
         _header_float("GLOBAL_LABEL_Y", GLOBAL_LABEL_Y),
         _header_float("GLOBAL_LABEL_SIZE", GLOBAL_LABEL_SIZE),
+        _header_float("EXTERNAL_PM_LABEL_X", EXTERNAL_PM_LABEL_X),
         _header_float("EXTERNAL_PM_LABEL_Y", EXTERNAL_PM_LABEL_Y),
         "",
         "// Global routing display rectangle",
@@ -1075,6 +1088,7 @@ def generate_coords_header() -> str:
             _header_float("ROUTING_NODE_STROKE_WIDTH", ROUTING_NODE_STROKE_WIDTH),
             _header_float("ROUTING_NODE_LABEL_SIZE", ROUTING_NODE_LABEL_SIZE),
             _header_float("ROUTING_BRANCH_OFFSET", ROUTING_BRANCH_OFFSET),
+            _header_float("ROUTING_LANE_GAP", ROUTING_LANE_GAP),
         )
     )
     lines.extend(("", "// Global controls"))

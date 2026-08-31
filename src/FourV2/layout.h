@@ -18,7 +18,8 @@ constexpr float MINIMUM_LABEL_CLEARANCE_MM = 0.25f;
 constexpr float ALGORITHM_LABEL_Y = 24.1f;
 constexpr float GLOBAL_LABEL_Y = 12.6f;
 constexpr float GLOBAL_LABEL_SIZE = 2.25f;
-constexpr float EXTERNAL_PM_LABEL_Y = 23.8f;
+constexpr float EXTERNAL_PM_LABEL_X = 100.737f;
+constexpr float EXTERNAL_PM_LABEL_Y = 29.0f;
 
 // Global routing display rectangle
 constexpr float ROUTING_DISPLAY_X = 17.5f;
@@ -30,9 +31,10 @@ constexpr float ROUTING_NODE_RADIUS = 1.5f;
 constexpr float ROUTING_NODE_STROKE_WIDTH = 0.4f;
 constexpr float ROUTING_NODE_LABEL_SIZE = 2.1f;
 constexpr float ROUTING_BRANCH_OFFSET = 0.7f;
+constexpr float ROUTING_LANE_GAP = 1.0f;
 
 // Global controls
-constexpr float ALGORITHM_KNOB_X = 8.5f;
+constexpr float ALGORITHM_KNOB_X = 12.258f;
 constexpr float ALGORITHM_KNOB_Y = 29.0f;
 constexpr float TUNE_KNOB_X = 70.5f;
 constexpr float TUNE_KNOB_Y = 17.5f;
@@ -48,12 +50,12 @@ constexpr float EXTERNAL_PM_JACK_X = 106.5f;
 constexpr float EXTERNAL_PM_JACK_Y = 29.0f;
 constexpr float EXTERNAL_PM_ATTEN_X = 118.5f;
 constexpr float EXTERNAL_PM_ATTEN_Y = 29.0f;
-constexpr float VOCT_JACK_X = 8.5f;
+constexpr float VOCT_JACK_X = 12.258f;
 constexpr float VOCT_JACK_Y = 17.5f;
 constexpr float MAIN_OUTPUT_X = 153.0f;
 constexpr float MAIN_OUTPUT_Y = 17.5f;
 constexpr float OVER_LIGHT_X = 153.0f;
-constexpr float OVER_LIGHT_Y = 29.0f;
+constexpr float OVER_LIGHT_Y = 24.0f;
 
 // Friendly aliases used by the Rack module implementation
 constexpr float ALGORITHM_X = ALGORITHM_KNOB_X;
@@ -73,7 +75,7 @@ constexpr float OPERATOR_SECTION_HEIGHT = 87.0f;
 constexpr float OPERATOR_SECTION_WIDTH = 37.515f;
 constexpr float OPERATOR_SECTION_GAP = 1.5f;
 constexpr float OPERATOR_HEADING_X_OFFSET = 4.0f;
-constexpr float OPERATOR_HEADING_Y = 43.2f;
+constexpr float OPERATOR_HEADING_Y = 42.7f;
 constexpr float OPERATOR_HEADING_SIZE = 5.0f;
 constexpr float OPERATOR_COARSE_MODE_Y = 52.0f;
 constexpr float OPERATOR_FINE_FOLD_TYPE_Y = 64.5f;
@@ -368,7 +370,7 @@ constexpr float SHARED_IO_X = 4.0f;
 constexpr float SHARED_IO_Y = 10.3f;
 constexpr float SHARED_IO_WIDTH = 154.56f;
 constexpr float SHARED_IO_HEIGHT = 25.7f;
-constexpr float VOCT_LABEL_X = 8.5f;
+constexpr float VOCT_LABEL_X = 12.258f;
 constexpr float MAIN_OUTPUT_LABEL_X = 153.0f;
 constexpr float SHARED_IO_LABEL_Y = 12.6f;
 constexpr float MAIN_OUTPUT_LABEL_Y = 12.3f;

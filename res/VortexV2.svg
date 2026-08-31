@@ -9,23 +9,23 @@
   <text x="6" y="7" text-anchor="start" font-family="DejaVu Sans" font-size="6.6" font-weight="700" fill="#242522">Vortex V2</text>
   <rect id="controls-section" x="4" y="11" width="52.96" height="39.5" fill="#e3e0d1" stroke="#556d80" stroke-width="0.35" rx="1.4" />
   <rect id="outputs-section" x="4" y="54" width="52.96" height="70.5" fill="#e7e3d4" stroke="#556d80" stroke-width="0.35" rx="1.4" />
-  <rect id="cutoff-cv-group" x="21.737" y="15.637" width="18.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
-  <rect id="resonance-cv-group" x="21.737" y="27.637" width="18.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
-  <rect id="drive-cv-group" x="21.737" y="39.637" width="18.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
-  <text x="13" y="14.9" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">CUTOFF</text>
-  <circle cx="13" cy="20" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="27" cy="20" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="35.5" cy="20" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
-  <text x="13" y="26.9" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">RESO</text>
-  <circle cx="13" cy="32" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="27" cy="32" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="35.5" cy="32" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
-  <text x="13" y="38.9" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">DRIVE</text>
-  <circle cx="13" cy="44" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="27" cy="44" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="35.5" cy="44" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
-  <text x="48.96" y="38.9" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">IN</text>
-  <circle cx="48.96" cy="44" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <rect id="cutoff-cv-group" x="32.237" y="15.637" width="18.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
+  <rect id="resonance-cv-group" x="32.237" y="27.637" width="18.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
+  <rect id="drive-cv-group" x="32.237" y="39.637" width="18.853" height="9.126" fill="none" stroke="#556d80" stroke-width="0.25" rx="1" />
+  <text x="23.5" y="14.9" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">CUTOFF</text>
+  <circle cx="23.5" cy="20" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="37.5" cy="20" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="46" cy="20" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
+  <text x="23.5" y="26.9" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">RESO</text>
+  <circle cx="23.5" cy="32" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="37.5" cy="32" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="46" cy="32" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
+  <text x="23.5" y="38.9" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">DRIVE</text>
+  <circle cx="23.5" cy="44" r="3.4" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="37.5" cy="44" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="46" cy="44" r="2.2" fill="#b7693c" stroke="#556d80" stroke-width="0.3" />
+  <text x="13" y="14.9" text-anchor="middle" font-family="DejaVu Sans" font-size="2.25" font-weight="400" fill="#242522">IN</text>
+  <circle cx="13" cy="20" r="3.1" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
   <text x="12" y="61.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">LP 6dB</text>
   <circle cx="12" cy="67" r="4.463" fill="#39445f" stroke="#dfe7f3" stroke-width="0.55" />
   <text x="30.48" y="61.4" text-anchor="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">LP 12dB</text>
