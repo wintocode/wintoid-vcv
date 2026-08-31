@@ -63,6 +63,13 @@
         "Polyphonic",
         "Utility"
       ]
+    },
+    {
+      "slug": "BrinkV2",
+      "name": "BrinkV2",
+      "description": "16-channel polyphonic dual-window utility with bipolar position, directional boundary events, and shared logic",
+      "manualUrl": "https://github.com/wintocode/wintoid-vcv#brinkv2",
+      "tags": ["Logic", "Polyphonic", "Utility"]
     }
   ]
 }

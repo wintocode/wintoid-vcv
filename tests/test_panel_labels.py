@@ -28,10 +28,14 @@ class PanelLabelTest(unittest.TestCase):
         cls.four = load_generator("four")
         cls.vortex = load_generator("vortex")
         cls.vortex_v2 = load_generator("vortex_v2")
+        cls.brink_v2 = load_generator("brink_v2")
         cls.four_source = (ROOT / "src" / "Four" / "Four.cpp").read_text()
         cls.vortex_source = (ROOT / "src" / "Vortex" / "Vortex.cpp").read_text()
         cls.vortex_v2_source = (
             ROOT / "src" / "VortexV2" / "VortexV2.cpp"
+        ).read_text()
+        cls.brink_v2_source = (
+            ROOT / "src" / "BrinkV2" / "BrinkV2.cpp"
         ).read_text()
 
     def test_four_global_label_offsets_clear_the_real_controls(self):
@@ -171,7 +175,7 @@ class PanelLabelTest(unittest.TestCase):
         self.assertIn("nvgFontSize(args.vg, 10);", brink_source)
 
     def test_modules_do_not_draw_decorative_screws(self):
-        for name in ("Four", "Vortex", "VortexV2", "Brink"):
+        for name in ("Four", "Vortex", "VortexV2", "Brink", "BrinkV2"):
             with self.subTest(module=name):
                 source = (ROOT / "src" / name / f"{name}.cpp").read_text()
                 self.assertNotIn("ScrewSilver", source)
@@ -187,6 +191,31 @@ class PanelLabelTest(unittest.TestCase):
                       self.vortex_v2.generate_coords_header())
         self.assertNotIn('"wint"', self.vortex_v2_source)
         self.assertNotIn('"oid"', self.vortex_v2_source)
+
+    def test_brink_v2_uses_the_canonical_logo_and_generated_label_schema(self):
+        self.assertEqual(0.06, self.brink_v2.LOGO_SCALE)
+        self.assertEqual(7.0, self.brink_v2.TITLE_Y)
+        self.assertEqual("Brink V2", self.brink_v2.PANEL_LABELS[0].text)
+
+        header = self.brink_v2.generate_coords_header()
+        for contract in (
+            "scripts/generate_panel_brink_v2.py",
+            "constexpr float LOGO_SCALE = 0.06f;",
+            "constexpr float TITLE_Y = 7.0f;",
+            "static const LabelSpec PANEL_LABELS[]",
+            "constexpr int PANEL_LABEL_COUNT",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, header)
+
+        for contract in (
+            "brink_v2_layout::PANEL_LABELS",
+            "brink_v2_layout::PANEL_LABEL_COUNT",
+        ):
+            with self.subTest(source_contract=contract):
+                self.assertIn(contract, self.brink_v2_source)
+        self.assertNotIn('"wint"', self.brink_v2_source)
+        self.assertNotIn('"oid"', self.brink_v2_source)
 
     def test_vortex_v2_emits_and_consumes_label_geometry_constants(self):
         self.assertEqual(7.0, self.vortex_v2.TITLE_Y)
@@ -257,6 +286,8 @@ class PanelLabelTest(unittest.TestCase):
                       self.vortex.generate_coords_header())
         self.assertIn("scripts/generate_panel_vortex_v2.py",
                       self.vortex_v2.generate_coords_header())
+        self.assertIn("scripts/generate_panel_brink_v2.py",
+                      self.brink_v2.generate_coords_header())
 
 
 if __name__ == "__main__":

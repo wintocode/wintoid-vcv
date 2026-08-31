@@ -15,7 +15,7 @@ import unittest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-MODULES = ("Four", "Vortex", "VortexV2", "Brink", "FourV2")
+MODULES = ("Four", "Vortex", "VortexV2", "Brink", "BrinkV2", "FourV2")
 
 
 def extract_struct(source, marker):
@@ -65,6 +65,8 @@ class MetaModuleGraphicsTest(unittest.TestCase):
             ("Vortex", "struct ModeDisplay"),
             ("VortexV2", "struct VortexV2PanelLabels"),
             ("Brink", "struct WindowRail"),
+            ("BrinkV2", "struct BrinkV2WindowRail"),
+            ("BrinkV2", "struct BrinkV2PanelLabels"),
             ("FourV2", "struct AlgorithmRoutingDisplay"),
             ("FourV2", "struct OperatorFrequencyDisplay"),
             ("FourV2", "struct FourV2FrequencyControlGroups"),
@@ -83,6 +85,7 @@ class MetaModuleGraphicsTest(unittest.TestCase):
             ("Four", "struct FoldTypeDisplay"),
             ("Vortex", "struct ModeDisplay"),
             ("VortexV2", "struct VortexV2PanelLabels"),
+            ("BrinkV2", "struct BrinkV2PanelLabels"),
             ("FourV2", "struct AlgorithmRoutingDisplay"),
             ("FourV2", "struct OperatorFrequencyDisplay"),
         )
@@ -126,10 +129,32 @@ class MetaModuleGraphicsTest(unittest.TestCase):
         self.assertIn("getParamQuantity(fineParamId)->getValue()", frequency)
 
     def test_window_rail_uses_all_stroke_geometry_helpers(self):
-        rail = extract_struct(self.sources["Brink"], "struct WindowRail")
-        for helper in ("clamp_stroke_center", "stroke_inset", "inset_extent"):
-            with self.subTest(helper=helper):
-                self.assertIn(helper, rail)
+        rails = (
+            ("Brink", "struct WindowRail"),
+            ("BrinkV2", "struct BrinkV2WindowRail"),
+        )
+        for name, marker in rails:
+            rail = extract_struct(self.sources[name], marker)
+            for helper in ("clamp_stroke_center", "stroke_inset", "inset_extent"):
+                with self.subTest(module=name, helper=helper):
+                    self.assertIn(helper, rail)
+
+    def test_brink_v2_custom_widgets_are_read_only(self):
+        for marker in ("struct BrinkV2WindowRail", "struct BrinkV2PanelLabels"):
+            body = extract_struct(self.sources["BrinkV2"], marker)
+            with self.subTest(widget=marker):
+                self.assertIn("drawLayer", body)
+                self.assertIn("layer != 1", body)
+                self.assertIn("wintoid::ui::", body)
+                self.assertNotIn("onButton", body)
+                self.assertNotIn("onDrag", body)
+                self.assertNotIn("appendContextMenu", body)
+                self.assertNotIn("setValue", body)
+
+        labels = extract_struct(
+            self.sources["BrinkV2"], "struct BrinkV2PanelLabels")
+        self.assertIn("res/fonts/DejaVuSans.ttf", labels)
+        self.assertIn("nvgFontFaceId", labels)
 
     def test_no_display_rectangle_uses_the_full_box_form(self):
         full_box = "nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y,"

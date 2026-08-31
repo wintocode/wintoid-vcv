@@ -71,6 +71,26 @@ layout as a matched revision boundary:
   PNG assets, metadata, and build files must not be edited from this project.
   If a compatibility probe needs changes, copy the consumer to `/tmp` first.
 
+## BrinkV2 handoff
+
+BrinkV2's generated faceplate and header form a matched revision boundary. A
+future MetaModule consumer must compile `src/BrinkV2/BrinkV2.cpp` with the
+`src/BrinkV2/layout.h` generated in the same wintoid-vcv revision, then convert
+that revision's `res/BrinkV2.svg` to a matched 240 px `BrinkV2.png` faceplate.
+The SVG and generated header must not be mixed across revisions.
+
+BrinkV2 uses standard Rack controls and ports. Its two custom widgets are
+read-only, draw static or snapshot-driven graphics on layer 1, keep their
+graphics bounded to their widget boxes with the shared geometry helpers, and
+explicitly select `res/fonts/DejaVuSans.ttf`; they do not add click, drag,
+menu, or parameter-write behaviour. VCV's module retains all 16 channels even
+if a future consumer exposes only four lanes.
+
+The current sibling wrapper lists Brink V1 only. Separate BrinkV2 registration,
+PNG assets, package/build metadata, parameter mapping, four-lane exposure, and
+hardware rendering/resource validation are a later MetaModule project, not
+work performed by this VCV integration.
+
 ## Hardware-only acceptance gates
 
 These cannot be closed against the stale wrapper and must remain explicit

@@ -10,3 +10,4 @@ extern Model* modelFourV2;
 extern Model* modelVortex;
 extern Model* modelVortexV2;
 extern Model* modelBrink;
+extern Model* modelBrinkV2;

@@ -46,6 +46,7 @@ class PanelOutputStyleTest(unittest.TestCase):
         cls.vortex = load_generator("vortex")
         cls.vortex_v2 = load_generator("vortex_v2")
         cls.brink = load_generator("brink")
+        cls.brink_v2 = load_generator("brink_v2")
 
     def assert_output_style(self, circles, module, coordinate):
         circle = circle_at(circles, coordinate)
@@ -108,6 +109,7 @@ class PanelOutputStyleTest(unittest.TestCase):
             ("Four", self.four, ""),
             ("FourV2", self.four_v2, ""),
             ("Brink", self.brink, "\n"),
+            ("BrinkV2", self.brink_v2, ""),
             ("Vortex", self.vortex, ""),
             ("VortexV2", self.vortex_v2, ""),
         )
@@ -140,6 +142,31 @@ class PanelOutputStyleTest(unittest.TestCase):
                      "B_SIGNAL", "B_CENTER_CV", "B_WIDTH_CV"):
             with self.subTest(name=name):
                 self.assert_input_style(circles, self.brink.COORDINATES[name])
+
+    def test_brink_v2_inputs_and_outputs_share_one_socket_guide_style(self):
+        circles = circles_by_position(self.brink_v2.generate_svg())
+        input_styles = set()
+        output_styles = set()
+        forbidden_colours = {OUTPUT_FILL, OUTPUT_STROKE}
+
+        for collection, styles in (
+            (self.brink_v2.INPUT_COMPONENTS, input_styles),
+            (self.brink_v2.OUTPUT_COMPONENTS, output_styles),
+        ):
+            for name, x, y in collection:
+                with self.subTest(socket=name):
+                    circle = circle_at(circles, (x, y))
+                    style = tuple(
+                        circle.attrib[key]
+                        for key in ("r", "fill", "stroke", "stroke-width")
+                    )
+                    self.assertTrue(forbidden_colours.isdisjoint(style))
+                    styles.add(style)
+
+        self.assertEqual(1, len(input_styles))
+        self.assertEqual(input_styles, output_styles)
+        self.assertFalse(hasattr(self.brink_v2, "OUTPUT_BACKPLATE"))
+        self.assertFalse(hasattr(self.brink_v2, "OUTPUT_RING"))
 
 
 if __name__ == "__main__":

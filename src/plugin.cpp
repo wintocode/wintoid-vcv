@@ -9,4 +9,5 @@ void init(Plugin* p) {
     p->addModel(modelVortex);
     p->addModel(modelVortexV2);
     p->addModel(modelBrink);
+    p->addModel(modelBrinkV2);
 }

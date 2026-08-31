@@ -250,6 +250,19 @@ activity on any lane.
   latched 0/10 V state that alternates each time their inside/outside states
   begin to differ.
 
+### BrinkV2
+Behaviour-identical dual voltage-window processor with a V2 SEM panel (12HP)
+
+BrinkV2 is a separate model with the same controls, A-to-B normalisation,
+inside/outside gates, bipolar position output, directional boundary events,
+shared logic, reset behaviour, and 16-channel polyphonic processing as Brink.
+Each channel processes up to 16 lanes, with mono or shorter centre/width CVs
+broadcast lane 0 to additional signal lanes.
+
+The V2 SEM faceplate uses uniform socket treatment: every input and output has
+the same jack styling. Brink remains the original V1 model for existing patch
+compatibility; BrinkV2 does not replace or reinterpret Brink patches.
+
 ## Building
 
 Follow the [VCV Rack Plugin Development Tutorial](https://vcvrack.com/manual/PluginDevelopmentTutorial).
