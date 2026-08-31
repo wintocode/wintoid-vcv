@@ -398,23 +398,23 @@ class BrinkV2PanelTest(unittest.TestCase):
                 )
                 for output_x, output_y in output_coordinates:
                     local_radius = RACK_PORT_RADIUS_MM + 1.0
-                    is_local = (
-                        output_x - local_radius <= bounds[0]
-                        and bounds[2] <= output_x + local_radius
-                        and output_y - local_radius <= bounds[1]
-                        and bounds[3] <= output_y + local_radius
+                    is_touching = (
+                        bounds[0] <= output_x + local_radius
+                        and bounds[2] >= output_x - local_radius
+                        and bounds[1] <= output_y + local_radius
+                        and bounds[3] >= output_y - local_radius
                     )
                     is_centered = (
                         abs(midpoint[0] - output_x) < 0.001
                         and abs(midpoint[1] - output_y) < 0.001
                     )
-                    if is_local or is_centered:
+                    if is_touching or is_centered:
                         with self.subTest(output=(output_x, output_y),
                                           shape="line"):
                             self.assertTrue(
                                 is_structural_line(node, panel),
-                                "non-structural line artwork is centered on or "
-                                "contained by an output socket",
+                                "non-structural line artwork touches or extends "
+                                "from an output socket",
                             )
 
         for node in root.iter():
