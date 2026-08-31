@@ -199,9 +199,9 @@ def text_horizontal_bounds(node):
 
 
 def text_clearance_mm(node, component_x, component_y, component_radius):
-    if node.attrib.get("dominant-baseline") != "middle":
+    if node.attrib.get("dominant-baseline") not in {"middle", "alphabetic"}:
         raise AssertionError(
-            f"SVG label {node.text!r} must use dominant-baseline=middle"
+            f"SVG label {node.text!r} must use a supported dominant baseline"
         )
     font_size_px = float(node.attrib["font-size"]) * RACK_PIXELS_PER_MM
     return centered_text_clearance(
@@ -227,8 +227,8 @@ class BrinkV2PanelTest(unittest.TestCase):
 
     def test_dimensions_and_section_inventory_are_frozen(self):
         panel = self.require_panel()
-        self.assertEqual(12, panel.HP)
-        self.assertAlmostEqual(60.96, panel.WIDTH_MM)
+        self.assertEqual(16, panel.HP)
+        self.assertAlmostEqual(81.28, panel.WIDTH_MM)
         self.assertAlmostEqual(128.5, panel.HEIGHT_MM)
         self.assertAlmostEqual(panel.WIDTH_MM,
                                panel.CHANNEL_A_X + panel.CHANNEL_B_X)
@@ -304,6 +304,54 @@ class BrinkV2PanelTest(unittest.TestCase):
                 with self.subTest(channel=prefix, output=suffix):
                     self.assertAlmostEqual(expected_x,
                                            positions[f"{prefix}_{suffix}"][0])
+
+    def test_channel_pairs_are_centered_with_equal_group_box_clearance(self):
+        panel = self.require_panel()
+        for prefix, section_index in (("A", 0), ("B", 1)):
+            _identifier, section_x, _section_y, section_width, _section_height = (
+                panel.CHANNEL_SECTION_RECTS[section_index]
+            )
+            section_left = section_x - panel.SECTION_STROKE_WIDTH / 2.0
+            section_right = (
+                section_x + section_width + panel.SECTION_STROKE_WIDTH / 2.0
+            )
+            low_x = panel.COORDINATES[f"{prefix}_LOW_UP"][0]
+            high_x = panel.COORDINATES[f"{prefix}_HIGH_UP"][0]
+            channel_center = (low_x + high_x) / 2.0
+            section_center = (section_left + section_right) / 2.0
+            port_envelope = panel.PORT_RADIUS + panel.PORT_STROKE_WIDTH / 2.0
+            left_clearance = low_x - port_envelope - section_left
+            right_clearance = section_right - high_x - port_envelope
+
+            with self.subTest(channel=prefix, constraint="center"):
+                self.assertAlmostEqual(section_center, channel_center)
+            with self.subTest(channel=prefix, constraint="equal clearance"):
+                self.assertAlmostEqual(left_clearance, right_clearance)
+            with self.subTest(channel=prefix, constraint="positive clearance"):
+                self.assertGreater(left_clearance, 0.0)
+                self.assertGreater(right_clearance, 0.0)
+
+    def test_logic_outputs_follow_event_columns_with_equal_pitch(self):
+        panel = self.require_panel()
+        event_columns = tuple(
+            panel.COORDINATES[name][0]
+            for name in ("A_LOW_UP", "A_HIGH_UP", "B_LOW_UP", "B_HIGH_UP")
+        )
+        logic_columns = tuple(
+            panel.COORDINATES[name][0]
+            for name in panel.LOGIC_OUTPUT_NAMES
+        )
+        for event_x, logic_x in zip(event_columns, logic_columns):
+            with self.subTest(event_x=event_x, logic_x=logic_x):
+                self.assertAlmostEqual(event_x, logic_x)
+
+        pitches = tuple(
+            right - left
+            for left, right in zip(logic_columns, logic_columns[1:])
+        )
+        self.assertTrue(all(pitch > 0.0 for pitch in pitches))
+        for pitch in pitches[1:]:
+            self.assertAlmostEqual(pitches[0], pitch)
 
     def test_real_rack_component_envelopes_clear_edges_and_each_other(self):
         panel = self.require_panel()
@@ -540,13 +588,13 @@ class BrinkV2PanelTest(unittest.TestCase):
         self.assertEqual(len(schema_labels), len(labels))
         expected_text = (
             "Brink V2", "CHANNEL A", "CHANNEL B",
-            "CENTER", "WIDTH", "IN", "POS", "CENTER CV", "CENTER AMT",
-            "WIDTH CV", "WIDTH AMT", "INSIDE", "OUTSIDE",
+            "CENTER", "WIDTH", "SIGNAL", "POSITION", "CTR CV",
+            "WID CV", "INSIDE", "OUTSIDE",
             "LOW", "HIGH", "LOW", "HIGH", "↑", "↓",
-            "CENTER", "WIDTH", "IN", "POS", "CENTER CV", "CENTER AMT",
-            "WIDTH CV", "WIDTH AMT", "INSIDE", "OUTSIDE",
+            "CENTER", "WIDTH", "SIGNAL", "POSITION", "CTR CV",
+            "WID CV", "INSIDE", "OUTSIDE",
             "LOW", "HIGH", "LOW", "HIGH", "↑", "↓",
-            "AND", "OR", "XOR", "STATE",
+            "AND", "OR", "XOR", "TOGGLE",
         )
         self.assertEqual(expected_text, tuple(label.text for label in schema_labels))
         for spec, node in zip(schema_labels, labels):
@@ -559,7 +607,12 @@ class BrinkV2PanelTest(unittest.TestCase):
                 self.assertEqual(spec.fill, node.attrib["fill"])
                 self.assertEqual(spec.anchor, node.attrib["text-anchor"])
                 self.assertEqual(spec.weight, node.attrib["font-weight"])
-                self.assertEqual("middle", node.attrib["dominant-baseline"])
+                expected_baseline = (
+                    "alphabetic" if getattr(spec, "vertical_align", "middle") == "baseline"
+                    else "middle"
+                )
+                self.assertEqual(expected_baseline,
+                                 node.attrib["dominant-baseline"])
 
         schema_lines = tuple(panel.PANEL_LINES)
         svg_lines = [
@@ -589,11 +642,135 @@ class BrinkV2PanelTest(unittest.TestCase):
             if label.text in {"LOW", "HIGH", "↑", "↓"}
         ]
         self.assertTrue(event_specs)
-        self.assertEqual({panel.FUNCTION_ORANGE},
+        self.assertEqual({panel.LEGEND_CHARCOAL},
                          {label.fill for label in event_specs})
-        self.assertEqual({"700"}, {label.weight for label in event_specs})
+        event_labels = [label for label in event_specs
+                        if label.text in {"LOW", "HIGH"}]
+        arrow_labels = [label for label in event_specs
+                        if label.text in {"↑", "↓"}]
+        self.assertEqual({"400"}, {label.weight for label in event_labels})
+        self.assertEqual({"700"}, {label.weight for label in arrow_labels})
+        self.assertEqual({panel.EVENT_LABEL_FONT_SIZE},
+                         {label.size for label in event_labels})
+        self.assertTrue(all(label.size > panel.EVENT_LABEL_FONT_SIZE
+                            for label in arrow_labels))
         self.assertEqual({panel.FUNCTION_ORANGE},
                          {line.stroke for line in schema_lines})
+
+    def test_event_arrows_are_larger_and_centered_between_event_sockets(self):
+        panel = self.require_panel()
+        positions = {
+            name: (x, y)
+            for name, x, y in panel.COMPONENTS
+        }
+        labels = {
+            label.identifier: label
+            for label in panel.PANEL_LABELS
+            if label.text in {"↑", "↓"}
+        }
+        self.assertGreater(panel.EVENT_ARROW_FONT_SIZE, 3.0)
+        for prefix in ("A", "B"):
+            for direction, suffix, arrow_y in (
+                ("up", "UP", panel.Y_EVENTS_UP),
+                ("down", "DOWN", panel.Y_EVENTS_DOWN),
+            ):
+                low_x, low_y = positions[f"{prefix}_LOW_{suffix}"]
+                high_x, high_y = positions[f"{prefix}_HIGH_{suffix}"]
+                arrow = labels[f"{prefix.lower()}-event-{direction}-arrow"]
+                with self.subTest(channel=prefix, direction=direction,
+                                  alignment="horizontal"):
+                    self.assertAlmostEqual(
+                        (low_x + high_x) / 2.0,
+                        arrow.x,
+                    )
+                with self.subTest(channel=prefix, direction=direction,
+                                  alignment="vertical"):
+                    self.assertAlmostEqual(arrow_y, low_y)
+                    self.assertAlmostEqual(arrow_y, high_y)
+                    self.assertAlmostEqual(arrow_y, arrow.y)
+                with self.subTest(channel=prefix, direction=direction,
+                                  typography="size"):
+                    self.assertAlmostEqual(
+                        panel.EVENT_ARROW_FONT_SIZE,
+                        arrow.size,
+                    )
+
+    def test_labels_favor_their_associated_control_or_socket_below(self):
+        panel = self.require_panel()
+        labels = {label.identifier: label for label in panel.PANEL_LABELS}
+        positions = {name: (x, y) for name, x, y in panel.COMPONENTS}
+
+        # These rows are 12 mm apart.  The label midpoint should be below the
+        # midpoint between the preceding and associated component, making it
+        # visually nearer to the item it names.
+        for prefix in ("A", "B"):
+            for suffix, preceding_suffix in (
+                ("CENTER_CV", "SIGNAL"),
+                ("WIDTH_CV", "CENTER_CV"),
+                ("INSIDE", "WIDTH_ATTEN"),
+                ("OUTSIDE", "WIDTH_CV"),
+                ("LOW_DOWN", "LOW_UP"),
+                ("HIGH_DOWN", "HIGH_UP"),
+            ):
+                component_name = f"{prefix}_{suffix}"
+                preceding_name = f"{prefix}_{preceding_suffix}"
+                label_id = (
+                    f"{prefix.lower()}-{suffix.lower().replace('_', '-')}-label"
+                )
+                component_y = positions[component_name][1]
+                preceding_y = positions[preceding_name][1]
+                label_y = labels[label_id].y
+                with self.subTest(channel=prefix, label=label_id):
+                    self.assertLess(component_y - label_y,
+                                    label_y - preceding_y)
+
+        # The first-row control labels receive the same small downward nudge;
+        # retain enough separation from the group headings above them.
+        self.assertLess(panel.KNOB_LABEL_OFFSET, 6.0)
+        self.assertLess(panel.PORT_LABEL_OFFSET, 6.0)
+        self.assertLess(panel.EVENT_LABEL_OFFSET, 6.0)
+
+    def test_channel_headings_are_bold_in_svg_and_rack_schema(self):
+        panel = self.require_panel()
+        headings = {
+            label.identifier: label
+            for label in panel.PANEL_LABELS
+            if label.identifier in {"channel-a-heading", "channel-b-heading"}
+        }
+        self.assertEqual({"700"}, {label.weight for label in headings.values()})
+
+        svg_labels = [
+            node for node in ET.fromstring(panel.generate_svg()).iter()
+            if node.tag.endswith("text")
+        ]
+        for identifier, heading in headings.items():
+            with self.subTest(heading=identifier):
+                matches = [
+                    node for node in svg_labels
+                    if node.text == heading.text
+                    and abs(float(node.attrib["x"]) - heading.x) < 0.001
+                ]
+                self.assertEqual(1, len(matches))
+                self.assertEqual("700", matches[0].attrib["font-weight"])
+
+        header = panel.generate_coords_header()
+        for text in ("CHANNEL A", "CHANNEL B"):
+            with self.subTest(schema=text):
+                self.assertIn(
+                    f'"{text}", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, true',
+                    header,
+                )
+
+    def test_title_uses_the_shared_v2_baseline_and_logic_divider_is_absent(self):
+        panel = self.require_panel()
+        self.assertEqual("baseline",
+                         getattr(panel.PANEL_LABELS[0], "vertical_align", None))
+        self.assertTrue(all(
+            getattr(label, "vertical_align", "middle") == "middle"
+            for label in panel.PANEL_LABELS[1:]
+        ))
+        self.assertNotIn('id="logic-divider"', panel.generate_svg())
+        self.assertNotIn("LOGIC_DIVIDER", panel.generate_coords_header())
 
     def test_svg_painted_sections_and_socket_guides_keep_edge_margin(self):
         panel = self.require_panel()

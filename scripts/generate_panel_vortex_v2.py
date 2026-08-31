@@ -54,19 +54,28 @@ OUTPUT_BACKPLATE_STROKE = "#dfe7f3"
 MINIMUM_EDGE_CLEARANCE_MM = 4.0
 MINIMUM_LABEL_CLEARANCE_MM = 0.25
 
-# Identity and canonical outlined logo placement.  LOGO_TARGET_X is the
-# visible path bound, matching the placement convention used by FourV2.
-TITLE_X = 6.0
+# Canonical V2 branding geometry.  The title anchor follows the left edge of
+# the outer control group, while the logo target is derived from the right
+# edge and the canonical logo path bound so panel widths cannot drift apart.
 TITLE_Y = 7.0
 TITLE_FONT_SIZE = 6.6
-LOGO_TARGET_X = WIDTH_MM - 18.0
 LOGO_TARGET_Y = 1.8
 LOGO_SCALE = 0.06
+LOGO_VIEWBOX_X = 0.6875
+LOGO_PATH_RIGHT_X = 227.8125
+V2_GROUP_LEFT_X = MINIMUM_EDGE_CLEARANCE_MM
+V2_GROUP_RIGHT_X = WIDTH_MM - MINIMUM_EDGE_CLEARANCE_MM
+V2_GROUP_TOP_Y = 10.3
+TITLE_X = V2_GROUP_LEFT_X
+LOGO_TARGET_X = (
+    V2_GROUP_RIGHT_X
+    - LOGO_SCALE * (LOGO_PATH_RIGHT_X - LOGO_VIEWBOX_X)
+)
 
 # FourV2-style filled sections with no section-heading labels.
 SECTION_HORIZONTAL_INSET = MINIMUM_EDGE_CLEARANCE_MM
 SECTION_WIDTH = WIDTH_MM - 2.0 * SECTION_HORIZONTAL_INSET
-CONTROL_SECTION = (SECTION_HORIZONTAL_INSET, 11.0, SECTION_WIDTH, 39.5)
+CONTROL_SECTION = (V2_GROUP_LEFT_X, V2_GROUP_TOP_Y, SECTION_WIDTH, 40.2)
 OUTPUT_SECTION = (SECTION_HORIZONTAL_INSET, 54.0, SECTION_WIDTH, 70.5)
 SECTION_STROKE_WIDTH = 0.35
 
@@ -409,6 +418,9 @@ def generate_coords_header() -> str:
         _header_float("LOGO_TARGET_X", LOGO_TARGET_X),
         _header_float("LOGO_TARGET_Y", LOGO_TARGET_Y),
         _header_float("LOGO_SCALE", LOGO_SCALE),
+        _header_float("V2_GROUP_LEFT_X", V2_GROUP_LEFT_X),
+        _header_float("V2_GROUP_RIGHT_X", V2_GROUP_RIGHT_X),
+        _header_float("V2_GROUP_TOP_Y", V2_GROUP_TOP_Y),
         _header_float("MINIMUM_EDGE_CLEARANCE_MM", MINIMUM_EDGE_CLEARANCE_MM),
         _header_float("MINIMUM_LABEL_CLEARANCE_MM", MINIMUM_LABEL_CLEARANCE_MM),
         "",

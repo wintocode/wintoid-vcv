@@ -1,94 +1,89 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="60.96mm" height="128.5mm" viewBox="0 0 60.96 128.5">
-  <rect x="0" y="0" width="60.96" height="128.5" fill="#ece8d9" stroke="#ece8d9" stroke-width="0" />
-  <g id="wintoid-logo" transform="translate(42.91875 0.6375) scale(0.06)">
+<svg xmlns="http://www.w3.org/2000/svg" width="81.28mm" height="128.5mm" viewBox="0 0 81.28 128.5">
+  <rect x="0" y="0" width="81.28" height="128.5" fill="#ece8d9" stroke="#ece8d9" stroke-width="0" />
+  <g id="wintoid-logo" transform="translate(63.42625 0.6375) scale(0.06)">
     <g id="wint-glyphs" fill="#1a1a2e"><path data-glyph="w" data-glyph-index="90" data-bbox="2.6875,-35,49.6562,0" transform="translate(0 70)" fill="#1a1a2e" d="M 2.6875 -35 L 8.4375 -35 L 15.625 -7.6875 L 22.7812 -35 L 29.5625 -35 L 36.75 -7.6875 L 43.9062 -35 L 49.6562 -35 L 40.5 0 L 33.7188 0 L 26.1875 -28.6875 L 18.625 0 L 11.8438 0 Z" /><path data-glyph="i" data-glyph-index="76" data-bbox="6.0312,-48.625,11.7812,0" transform="translate(52 70)" fill="#1a1a2e" d="M 6.0312 -35 L 11.7812 -35 L 11.7812 0 L 6.0312 0 Z M 6.0312 -48.625 L 11.7812 -48.625 L 11.7812 -41.3438 L 6.0312 -41.3438 Z" /><path data-glyph="n" data-glyph-index="81" data-bbox="5.8125,-35.8438,35.125,0" transform="translate(70 70)" fill="#1a1a2e" d="M 35.125 -21.125 L 35.125 0 L 29.375 0 L 29.375 -20.9375 Q 29.375 -25.9062 27.4375 -28.375 Q 25.5 -30.8438 21.625 -30.8438 Q 16.9688 -30.8438 14.2812 -27.875 Q 11.5938 -24.9062 11.5938 -19.7812 L 11.5938 0 L 5.8125 0 L 5.8125 -35 L 11.5938 -35 L 11.5938 -29.5625 Q 13.6562 -32.7188 16.4531 -34.2812 Q 19.25 -35.8438 22.9062 -35.8438 Q 28.9375 -35.8438 32.0312 -32.1094 Q 35.125 -28.375 35.125 -21.125 Z" /><path data-glyph="t" data-glyph-index="87" data-bbox="1.7188,-44.9375,23.5625,0" transform="translate(111 70)" fill="#1a1a2e" d="M 11.7188 -44.9375 L 11.7188 -35 L 23.5625 -35 L 23.5625 -30.5312 L 11.7188 -30.5312 L 11.7188 -11.5312 Q 11.7188 -7.25 12.8906 -6.0312 Q 14.0625 -4.8125 17.6562 -4.8125 L 23.5625 -4.8125 L 23.5625 0 L 17.6562 0 Q 11 0 8.4688 -2.4844 Q 5.9375 -4.9688 5.9375 -11.5312 L 5.9375 -30.5312 L 1.7188 -30.5312 L 1.7188 -35 L 5.9375 -35 L 5.9375 -44.9375 Z" /></g>
     <line id="wint-underline" x1="2.6875" y1="74" x2="134.5625" y2="74" stroke="#1a1a2e" stroke-width="1.4" stroke-linecap="square" />
     <g id="oid-glyphs" fill="#ff4d00"><path data-glyph="o" data-glyph-index="82" data-bbox="3.5312,-35.8438,35.6562,0.9062" transform="translate(136 70)" fill="#ff4d00" d="M 19.5938 -30.9688 Q 14.9688 -30.9688 12.2812 -27.3594 Q 9.5938 -23.75 9.5938 -17.4688 Q 9.5938 -11.1875 12.2656 -7.5781 Q 14.9375 -3.9688 19.5938 -3.9688 Q 24.1875 -3.9688 26.875 -7.5938 Q 29.5625 -11.2188 29.5625 -17.4688 Q 29.5625 -23.6875 26.875 -27.3281 Q 24.1875 -30.9688 19.5938 -30.9688 Z M 19.5938 -35.8438 Q 27.0938 -35.8438 31.375 -30.9688 Q 35.6562 -26.0938 35.6562 -17.4688 Q 35.6562 -8.875 31.375 -3.9844 Q 27.0938 0.9062 19.5938 0.9062 Q 12.0625 0.9062 7.7969 -3.9844 Q 3.5312 -8.875 3.5312 -17.4688 Q 3.5312 -26.0938 7.7969 -30.9688 Q 12.0625 -35.8438 19.5938 -35.8438 Z" /><path data-glyph="i" data-glyph-index="76" data-bbox="6.0312,-48.625,11.7812,0" transform="translate(175 70)" fill="#ff4d00" d="M 6.0312 -35 L 11.7812 -35 L 11.7812 0 L 6.0312 0 Z M 6.0312 -48.625 L 11.7812 -48.625 L 11.7812 -41.3438 L 6.0312 -41.3438 Z" /><path data-glyph="d" data-glyph-index="71" data-bbox="3.5312,-48.625,34.8125,0.9062" transform="translate(193 70)" fill="#ff4d00" d="M 29.0625 -29.6875 L 29.0625 -48.625 L 34.8125 -48.625 L 34.8125 0 L 29.0625 0 L 29.0625 -5.25 Q 27.25 -2.125 24.4844 -0.6094 Q 21.7188 0.9062 17.8438 0.9062 Q 11.5 0.9062 7.5156 -4.1562 Q 3.5312 -9.2188 3.5312 -17.4688 Q 3.5312 -25.7188 7.5156 -30.7812 Q 11.5 -35.8438 17.8438 -35.8438 Q 21.7188 -35.8438 24.4844 -34.3281 Q 27.25 -32.8125 29.0625 -29.6875 Z M 9.4688 -17.4688 Q 9.4688 -11.125 12.0781 -7.5156 Q 14.6875 -3.9062 19.25 -3.9062 Q 23.8125 -3.9062 26.4375 -7.5156 Q 29.0625 -11.125 29.0625 -17.4688 Q 29.0625 -23.8125 26.4375 -27.4219 Q 23.8125 -31.0312 19.25 -31.0312 Q 14.6875 -31.0312 12.0781 -27.4219 Q 9.4688 -23.8125 9.4688 -17.4688 Z" /></g>
     <line id="oid-underline" x1="139.5312" y1="74" x2="227.8125" y2="74" stroke="#ff4d00" stroke-width="1.4" stroke-linecap="square" />
   </g>
-  <text x="6" y="7" text-anchor="start" textLength="32.736" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="6.6" font-weight="700" fill="#242522">Brink V2</text>
-  <rect id="channel-a-section" x="4.185" y="12" width="24.295" height="94" fill="#e3e0d1" stroke="#556d80" stroke-width="0.35" rx="1.4" />
-  <rect id="channel-b-section" x="32.48" y="12" width="24.295" height="94" fill="#e7e3d4" stroke="#556d80" stroke-width="0.35" rx="1.4" />
-  <line id="logic-divider" x1="4.185" y1="107" x2="56.775" y2="107" stroke="#556d80" stroke-width="0.35" />
-  <rect id="a-position-rail" x="14.24" y="21.16023" width="2" height="45.85297" fill="#ece8d9" stroke="#556d80" stroke-width="0.35" rx="0.8" />
-  <rect id="b-position-rail" x="44.72" y="21.16023" width="2" height="45.85297" fill="#ece8d9" stroke="#556d80" stroke-width="0.35" rx="0.8" />
-  <text x="15.24" y="16" text-anchor="middle" textLength="16.74" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="3" font-weight="700" fill="#556d80">CHANNEL A</text>
-  <text x="45.72" y="16" text-anchor="middle" textLength="16.74" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="3" font-weight="700" fill="#556d80">CHANNEL B</text>
-  <line id="normalisation-39" x1="24.3068" y1="39" x2="36.6532" y2="39" stroke="#b7693c" stroke-width="0.3" />
-  <line id="normalisation-arrow-top-39" x1="30.68" y1="38.2" x2="31.68" y2="39" stroke="#b7693c" stroke-width="0.3" />
-  <line id="normalisation-arrow-bottom-39" x1="30.68" y1="39.8" x2="31.68" y2="39" stroke="#b7693c" stroke-width="0.3" />
-  <line id="normalisation-51" x1="24.3068" y1="51" x2="36.6532" y2="51" stroke="#b7693c" stroke-width="0.3" />
-  <line id="normalisation-arrow-top-51" x1="30.68" y1="50.2" x2="31.68" y2="51" stroke="#b7693c" stroke-width="0.3" />
-  <line id="normalisation-arrow-bottom-51" x1="30.68" y1="51.8" x2="31.68" y2="51" stroke="#b7693c" stroke-width="0.3" />
-  <line id="normalisation-63" x1="24.3068" y1="63" x2="36.6532" y2="63" stroke="#b7693c" stroke-width="0.3" />
-  <line id="normalisation-arrow-top-63" x1="30.68" y1="62.2" x2="31.68" y2="63" stroke="#b7693c" stroke-width="0.3" />
-  <line id="normalisation-arrow-bottom-63" x1="30.68" y1="63.8" x2="31.68" y2="63" stroke="#b7693c" stroke-width="0.3" />
-  <text x="8.1732" y="18.7" text-anchor="middle" textLength="8.742" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">CENTER</text>
-  <text x="22.3068" y="18.7" text-anchor="middle" textLength="7.285" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">WIDTH</text>
-  <text x="22.3068" y="32.65" text-anchor="middle" textLength="2.666" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">IN</text>
-  <text x="8.1732" y="32.65" text-anchor="middle" textLength="3.999" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">POS</text>
-  <text x="22.3068" y="44.65" text-anchor="middle" textLength="11.997" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">CENTER CV</text>
-  <text x="8.1732" y="44.65" text-anchor="middle" textLength="13.33" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">CENTER AMT</text>
-  <text x="22.3068" y="56.65" text-anchor="middle" textLength="10.664" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">WIDTH CV</text>
-  <text x="8.1732" y="56.65" text-anchor="middle" textLength="11.997" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">WIDTH AMT</text>
-  <text x="8.1732" y="68.65" text-anchor="middle" textLength="7.998" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">INSIDE</text>
-  <text x="22.3068" y="68.65" text-anchor="middle" textLength="9.331" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">OUTSIDE</text>
-  <text x="8.1732" y="83" text-anchor="middle" textLength="4.092" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="700" fill="#b7693c">LOW</text>
-  <text x="22.3068" y="83" text-anchor="middle" textLength="5.456" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="700" fill="#b7693c">HIGH</text>
-  <text x="8.1732" y="95" text-anchor="middle" textLength="4.092" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="700" fill="#b7693c">LOW</text>
-  <text x="22.3068" y="95" text-anchor="middle" textLength="5.456" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="700" fill="#b7693c">HIGH</text>
-  <text x="15.24" y="83" text-anchor="middle" textLength="1.54" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="700" fill="#b7693c">↑</text>
-  <text x="15.24" y="95" text-anchor="middle" textLength="1.54" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="700" fill="#b7693c">↓</text>
-  <text x="38.6532" y="18.7" text-anchor="middle" textLength="8.742" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">CENTER</text>
-  <text x="52.7868" y="18.7" text-anchor="middle" textLength="7.285" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">WIDTH</text>
-  <text x="38.6532" y="32.65" text-anchor="middle" textLength="2.666" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">IN</text>
-  <text x="52.7868" y="32.65" text-anchor="middle" textLength="3.999" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">POS</text>
-  <text x="38.6532" y="44.65" text-anchor="middle" textLength="11.997" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">CENTER CV</text>
-  <text x="52.7868" y="44.65" text-anchor="middle" textLength="13.33" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">CENTER AMT</text>
-  <text x="38.6532" y="56.65" text-anchor="middle" textLength="10.664" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">WIDTH CV</text>
-  <text x="52.7868" y="56.65" text-anchor="middle" textLength="11.997" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">WIDTH AMT</text>
-  <text x="38.6532" y="68.65" text-anchor="middle" textLength="7.998" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">INSIDE</text>
-  <text x="52.7868" y="68.65" text-anchor="middle" textLength="9.331" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">OUTSIDE</text>
-  <text x="38.6532" y="83" text-anchor="middle" textLength="4.092" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="700" fill="#b7693c">LOW</text>
-  <text x="52.7868" y="83" text-anchor="middle" textLength="5.456" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="700" fill="#b7693c">HIGH</text>
-  <text x="38.6532" y="95" text-anchor="middle" textLength="4.092" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="700" fill="#b7693c">LOW</text>
-  <text x="52.7868" y="95" text-anchor="middle" textLength="5.456" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="700" fill="#b7693c">HIGH</text>
-  <text x="45.72" y="83" text-anchor="middle" textLength="1.54" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="700" fill="#b7693c">↑</text>
-  <text x="45.72" y="95" text-anchor="middle" textLength="1.54" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="700" fill="#b7693c">↓</text>
-  <circle cx="8.1732" cy="25" r="3.83977" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="22.3068" cy="25" r="3.83977" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="8.1732" cy="51" r="3.048" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="8.1732" cy="63" r="3.048" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="38.6532" cy="25" r="3.83977" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="52.7868" cy="25" r="3.83977" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="52.7868" cy="51" r="3.048" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="52.7868" cy="63" r="3.048" fill="#242522" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="22.3068" cy="39" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="22.3068" cy="51" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="22.3068" cy="63" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="38.6532" cy="39" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="38.6532" cy="51" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="38.6532" cy="63" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="8.1732" cy="75" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="22.3068" cy="75" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="8.1732" cy="39" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="8.1732" cy="89" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="22.3068" cy="89" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="8.1732" cy="101" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="22.3068" cy="101" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="38.6532" cy="75" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="52.7868" cy="75" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="52.7868" cy="39" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="38.6532" cy="89" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="52.7868" cy="89" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="38.6532" cy="101" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="52.7868" cy="101" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="8.1732" cy="114" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="23" cy="114" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="38" cy="114" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <circle cx="52.7868" cy="114" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
-  <text x="8.1732" y="107.65" text-anchor="middle" textLength="3.999" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="700" fill="#556d80">AND</text>
-  <text x="23" y="107.65" text-anchor="middle" textLength="2.666" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="700" fill="#556d80">OR</text>
-  <text x="38" y="107.65" text-anchor="middle" textLength="3.999" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="700" fill="#556d80">XOR</text>
-  <text x="52.7868" y="107.65" text-anchor="middle" textLength="6.665" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="700" fill="#556d80">STATE</text>
+  <text x="4.185" y="7" text-anchor="start" textLength="32.736" lengthAdjust="spacingAndGlyphs" dominant-baseline="alphabetic" font-family="DejaVu Sans" font-size="6.6" font-weight="700" fill="#242522">Brink V2</text>
+  <rect id="channel-a-section" x="4.185" y="10.3" width="34.455" height="95.7" fill="#e3e0d1" stroke="#556d80" stroke-width="0.35" rx="1.4" />
+  <rect id="channel-b-section" x="42.64" y="10.3" width="34.455" height="95.7" fill="#e7e3d4" stroke="#556d80" stroke-width="0.35" rx="1.4" />
+  <rect id="a-position-rail" x="20.4125" y="21.16023" width="2" height="45.85297" fill="#ece8d9" stroke="#556d80" stroke-width="0.35" rx="0.8" />
+  <rect id="b-position-rail" x="58.8675" y="21.16023" width="2" height="45.85297" fill="#ece8d9" stroke="#556d80" stroke-width="0.35" rx="0.8" />
+  <text x="21.4125" y="16" text-anchor="middle" textLength="16.74" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="3" font-weight="700" fill="#556d80">CHANNEL A</text>
+  <text x="59.8675" y="16" text-anchor="middle" textLength="16.74" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="3" font-weight="700" fill="#556d80">CHANNEL B</text>
+  <line id="normalisation-39" x1="33.02625" y1="39" x2="48.25375" y2="39" stroke="#b7693c" stroke-width="0.3" />
+  <line id="normalisation-arrow-top-39" x1="40.84" y1="38.2" x2="41.84" y2="39" stroke="#b7693c" stroke-width="0.3" />
+  <line id="normalisation-arrow-bottom-39" x1="40.84" y1="39.8" x2="41.84" y2="39" stroke="#b7693c" stroke-width="0.3" />
+  <line id="normalisation-51" x1="33.02625" y1="51" x2="48.25375" y2="51" stroke="#b7693c" stroke-width="0.3" />
+  <line id="normalisation-arrow-top-51" x1="40.84" y1="50.2" x2="41.84" y2="51" stroke="#b7693c" stroke-width="0.3" />
+  <line id="normalisation-arrow-bottom-51" x1="40.84" y1="51.8" x2="41.84" y2="51" stroke="#b7693c" stroke-width="0.3" />
+  <line id="normalisation-63" x1="33.02625" y1="63" x2="48.25375" y2="63" stroke="#b7693c" stroke-width="0.3" />
+  <line id="normalisation-arrow-top-63" x1="40.84" y1="62.2" x2="41.84" y2="63" stroke="#b7693c" stroke-width="0.3" />
+  <line id="normalisation-arrow-bottom-63" x1="40.84" y1="63.8" x2="41.84" y2="63" stroke="#b7693c" stroke-width="0.3" />
+  <text x="11.79875" y="19.5" text-anchor="middle" textLength="8.742" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">CENTER</text>
+  <text x="31.02625" y="19.5" text-anchor="middle" textLength="7.285" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">WIDTH</text>
+  <text x="31.02625" y="33.45" text-anchor="middle" textLength="7.998" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">SIGNAL</text>
+  <text x="11.79875" y="33.45" text-anchor="middle" textLength="10.664" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">POSITION</text>
+  <text x="31.02625" y="45.45" text-anchor="middle" textLength="7.998" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">CTR CV</text>
+  <text x="31.02625" y="57.45" text-anchor="middle" textLength="7.998" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">WID CV</text>
+  <text x="11.79875" y="69.45" text-anchor="middle" textLength="7.998" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">INSIDE</text>
+  <text x="31.02625" y="69.45" text-anchor="middle" textLength="9.331" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">OUTSIDE</text>
+  <text x="11.79875" y="83.5" text-anchor="middle" textLength="4.092" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="400" fill="#242522">LOW</text>
+  <text x="31.02625" y="83.5" text-anchor="middle" textLength="5.456" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="400" fill="#242522">HIGH</text>
+  <text x="11.79875" y="95.5" text-anchor="middle" textLength="4.092" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="400" fill="#242522">LOW</text>
+  <text x="31.02625" y="95.5" text-anchor="middle" textLength="5.456" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="400" fill="#242522">HIGH</text>
+  <text x="21.4125" y="89" text-anchor="middle" textLength="2.38" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="3.4" font-weight="700" fill="#242522">↑</text>
+  <text x="21.4125" y="101" text-anchor="middle" textLength="2.38" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="3.4" font-weight="700" fill="#242522">↓</text>
+  <text x="50.25375" y="19.5" text-anchor="middle" textLength="8.742" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">CENTER</text>
+  <text x="69.48125" y="19.5" text-anchor="middle" textLength="7.285" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.35" font-weight="400" fill="#242522">WIDTH</text>
+  <text x="50.25375" y="33.45" text-anchor="middle" textLength="7.998" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">SIGNAL</text>
+  <text x="69.48125" y="33.45" text-anchor="middle" textLength="10.664" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">POSITION</text>
+  <text x="50.25375" y="45.45" text-anchor="middle" textLength="7.998" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">CTR CV</text>
+  <text x="50.25375" y="57.45" text-anchor="middle" textLength="7.998" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">WID CV</text>
+  <text x="50.25375" y="69.45" text-anchor="middle" textLength="7.998" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">INSIDE</text>
+  <text x="69.48125" y="69.45" text-anchor="middle" textLength="9.331" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="400" fill="#242522">OUTSIDE</text>
+  <text x="50.25375" y="83.5" text-anchor="middle" textLength="4.092" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="400" fill="#242522">LOW</text>
+  <text x="69.48125" y="83.5" text-anchor="middle" textLength="5.456" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="400" fill="#242522">HIGH</text>
+  <text x="50.25375" y="95.5" text-anchor="middle" textLength="4.092" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="400" fill="#242522">LOW</text>
+  <text x="69.48125" y="95.5" text-anchor="middle" textLength="5.456" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.2" font-weight="400" fill="#242522">HIGH</text>
+  <text x="59.8675" y="89" text-anchor="middle" textLength="2.38" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="3.4" font-weight="700" fill="#242522">↑</text>
+  <text x="59.8675" y="101" text-anchor="middle" textLength="2.38" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="3.4" font-weight="700" fill="#242522">↓</text>
+  <circle cx="11.79875" cy="25" r="3.83977" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="31.02625" cy="25" r="3.83977" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="11.79875" cy="51" r="3.048" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="11.79875" cy="63" r="3.048" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="50.25375" cy="25" r="3.83977" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="69.48125" cy="25" r="3.83977" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="69.48125" cy="51" r="3.048" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="69.48125" cy="63" r="3.048" fill="#242522" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="31.02625" cy="39" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="31.02625" cy="51" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="31.02625" cy="63" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="50.25375" cy="39" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="50.25375" cy="51" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="50.25375" cy="63" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="11.79875" cy="75" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="31.02625" cy="75" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="11.79875" cy="39" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="11.79875" cy="89" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="31.02625" cy="89" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="11.79875" cy="101" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="31.02625" cy="101" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="50.25375" cy="75" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="69.48125" cy="75" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="69.48125" cy="39" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="50.25375" cy="89" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="69.48125" cy="89" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="50.25375" cy="101" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="69.48125" cy="101" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="11.79875" cy="114" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="31.02625" cy="114" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="50.25375" cy="114" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <circle cx="69.48125" cy="114" r="4.0132" fill="#ece8d9" stroke="#556d80" stroke-width="0.3" />
+  <text x="11.79875" y="108.45" text-anchor="middle" textLength="3.999" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="700" fill="#556d80">AND</text>
+  <text x="31.02625" y="108.45" text-anchor="middle" textLength="2.666" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="700" fill="#556d80">OR</text>
+  <text x="50.25375" y="108.45" text-anchor="middle" textLength="3.999" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="700" fill="#556d80">XOR</text>
+  <text x="69.48125" y="108.45" text-anchor="middle" textLength="7.998" lengthAdjust="spacingAndGlyphs" dominant-baseline="middle" font-family="DejaVu Sans" font-size="2.15" font-weight="700" fill="#556d80">TOGGLE</text>
 </svg>

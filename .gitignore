@@ -20,3 +20,9 @@ dep/
 tests/test_brink_dsp
 tests/test_polyphony
 tests/test_ui_geometry
+tests/test_four_v2_model
+tests/test_four_v2_routing
+tests/test_four_v2_dsp
+tests/test_four_v2_engine
+tests/test_vortex_v2_dsp
+tests/test_vortex_v2_runtime

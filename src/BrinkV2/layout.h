@@ -4,36 +4,37 @@
 
 namespace brink_v2_layout {
 
-constexpr int PANEL_HP = 12;
-constexpr float PANEL_WIDTH = 60.96f;
+constexpr int PANEL_HP = 16;
+constexpr float PANEL_WIDTH = 81.28f;
 constexpr float PANEL_HEIGHT = 128.5f;
-constexpr float TITLE_X = 6.0f;
+constexpr float TITLE_X = 4.185f;
 constexpr float TITLE_Y = 7.0f;
 constexpr float TITLE_FONT_SIZE = 6.6f;
-constexpr float LOGO_TARGET_X = 42.96f;
+constexpr float LOGO_TARGET_X = 63.4675f;
 constexpr float LOGO_TARGET_Y = 1.8f;
 constexpr float LOGO_SCALE = 0.06f;
+constexpr float V2_GROUP_LEFT_X = 4.185f;
+constexpr float V2_GROUP_RIGHT_X = 77.095f;
+constexpr float V2_GROUP_TOP_Y = 10.3f;
 constexpr float MINIMUM_EDGE_CLEARANCE_MM = 4.0f;
 constexpr float MINIMUM_LABEL_CLEARANCE_MM = 0.25f;
 
-// Alternating SEM channel fields and shared logic divider.
+// Alternating SEM channel fields.
 constexpr float CHANNEL_A_SECTION_X = 4.185f;
-constexpr float CHANNEL_A_SECTION_Y = 12.0f;
-constexpr float CHANNEL_A_SECTION_WIDTH = 24.295f;
-constexpr float CHANNEL_A_SECTION_HEIGHT = 94.0f;
-constexpr float CHANNEL_B_SECTION_X = 32.48f;
-constexpr float CHANNEL_B_SECTION_Y = 12.0f;
-constexpr float CHANNEL_B_SECTION_WIDTH = 24.295f;
-constexpr float CHANNEL_B_SECTION_HEIGHT = 94.0f;
-constexpr float LOGIC_DIVIDER_X = 4.185f;
-constexpr float LOGIC_DIVIDER_Y = 107.0f;
-constexpr float LOGIC_DIVIDER_WIDTH = 52.59f;
-constexpr float KNOB_LABEL_OFFSET = 6.3f;
-constexpr float PORT_LABEL_OFFSET = 6.35f;
-constexpr float EVENT_LABEL_OFFSET = 6.0f;
+constexpr float CHANNEL_A_SECTION_Y = 10.3f;
+constexpr float CHANNEL_A_SECTION_WIDTH = 34.455f;
+constexpr float CHANNEL_A_SECTION_HEIGHT = 95.7f;
+constexpr float CHANNEL_B_SECTION_X = 42.64f;
+constexpr float CHANNEL_B_SECTION_Y = 10.3f;
+constexpr float CHANNEL_B_SECTION_WIDTH = 34.455f;
+constexpr float CHANNEL_B_SECTION_HEIGHT = 95.7f;
+constexpr float KNOB_LABEL_OFFSET = 5.5f;
+constexpr float PORT_LABEL_OFFSET = 5.55f;
+constexpr float EVENT_LABEL_OFFSET = 5.5f;
 constexpr float CONTROL_LABEL_FONT_SIZE = 2.35f;
 constexpr float PORT_LABEL_FONT_SIZE = 2.15f;
 constexpr float EVENT_LABEL_FONT_SIZE = 2.2f;
+constexpr float EVENT_ARROW_FONT_SIZE = 3.4f;
 constexpr float CHANNEL_HEADING_FONT_SIZE = 3.0f;
 constexpr float LOGIC_LABEL_FONT_SIZE = 2.15f;
 
@@ -59,111 +60,112 @@ constexpr int CHANNEL_B_ACCENT_G = 105;
 constexpr int CHANNEL_B_ACCENT_B = 60;
 constexpr float STATUS_LIGHT_OFFSET = 6.0f;
 
-constexpr float A_CENTER_KNOB_X = 8.1732f;
+constexpr float A_CENTER_KNOB_X = 11.79875f;
 constexpr float A_CENTER_KNOB_Y = 25.0f;
-constexpr float A_WIDTH_KNOB_X = 22.3068f;
+constexpr float A_WIDTH_KNOB_X = 31.02625f;
 constexpr float A_WIDTH_KNOB_Y = 25.0f;
-constexpr float A_SIGNAL_X = 22.3068f;
+constexpr float A_SIGNAL_X = 31.02625f;
 constexpr float A_SIGNAL_Y = 39.0f;
-constexpr float A_POSITION_X = 8.1732f;
+constexpr float A_POSITION_X = 11.79875f;
 constexpr float A_POSITION_Y = 39.0f;
-constexpr float A_CENTER_CV_X = 22.3068f;
+constexpr float A_CENTER_CV_X = 31.02625f;
 constexpr float A_CENTER_CV_Y = 51.0f;
-constexpr float A_CENTER_ATTEN_X = 8.1732f;
+constexpr float A_CENTER_ATTEN_X = 11.79875f;
 constexpr float A_CENTER_ATTEN_Y = 51.0f;
-constexpr float A_WIDTH_CV_X = 22.3068f;
+constexpr float A_WIDTH_CV_X = 31.02625f;
 constexpr float A_WIDTH_CV_Y = 63.0f;
-constexpr float A_WIDTH_ATTEN_X = 8.1732f;
+constexpr float A_WIDTH_ATTEN_X = 11.79875f;
 constexpr float A_WIDTH_ATTEN_Y = 63.0f;
-constexpr float A_INSIDE_X = 8.1732f;
+constexpr float A_INSIDE_X = 11.79875f;
 constexpr float A_INSIDE_Y = 75.0f;
-constexpr float A_OUTSIDE_X = 22.3068f;
+constexpr float A_OUTSIDE_X = 31.02625f;
 constexpr float A_OUTSIDE_Y = 75.0f;
-constexpr float A_LOW_UP_X = 8.1732f;
+constexpr float A_LOW_UP_X = 11.79875f;
 constexpr float A_LOW_UP_Y = 89.0f;
-constexpr float A_HIGH_UP_X = 22.3068f;
+constexpr float A_HIGH_UP_X = 31.02625f;
 constexpr float A_HIGH_UP_Y = 89.0f;
-constexpr float A_LOW_DOWN_X = 8.1732f;
+constexpr float A_LOW_DOWN_X = 11.79875f;
 constexpr float A_LOW_DOWN_Y = 101.0f;
-constexpr float A_HIGH_DOWN_X = 22.3068f;
+constexpr float A_HIGH_DOWN_X = 31.02625f;
 constexpr float A_HIGH_DOWN_Y = 101.0f;
-constexpr float A_POSITION_RAIL_X = 15.24f;
+constexpr float A_POSITION_RAIL_X = 21.4125f;
 constexpr float A_POSITION_RAIL_Y = 44.086715f;
-constexpr float B_CENTER_KNOB_X = 38.6532f;
+constexpr float B_CENTER_KNOB_X = 50.25375f;
 constexpr float B_CENTER_KNOB_Y = 25.0f;
-constexpr float B_WIDTH_KNOB_X = 52.7868f;
+constexpr float B_WIDTH_KNOB_X = 69.48125f;
 constexpr float B_WIDTH_KNOB_Y = 25.0f;
-constexpr float B_SIGNAL_X = 38.6532f;
+constexpr float B_SIGNAL_X = 50.25375f;
 constexpr float B_SIGNAL_Y = 39.0f;
-constexpr float B_POSITION_X = 52.7868f;
+constexpr float B_POSITION_X = 69.48125f;
 constexpr float B_POSITION_Y = 39.0f;
-constexpr float B_CENTER_CV_X = 38.6532f;
+constexpr float B_CENTER_CV_X = 50.25375f;
 constexpr float B_CENTER_CV_Y = 51.0f;
-constexpr float B_CENTER_ATTEN_X = 52.7868f;
+constexpr float B_CENTER_ATTEN_X = 69.48125f;
 constexpr float B_CENTER_ATTEN_Y = 51.0f;
-constexpr float B_WIDTH_CV_X = 38.6532f;
+constexpr float B_WIDTH_CV_X = 50.25375f;
 constexpr float B_WIDTH_CV_Y = 63.0f;
-constexpr float B_WIDTH_ATTEN_X = 52.7868f;
+constexpr float B_WIDTH_ATTEN_X = 69.48125f;
 constexpr float B_WIDTH_ATTEN_Y = 63.0f;
-constexpr float B_INSIDE_X = 38.6532f;
+constexpr float B_INSIDE_X = 50.25375f;
 constexpr float B_INSIDE_Y = 75.0f;
-constexpr float B_OUTSIDE_X = 52.7868f;
+constexpr float B_OUTSIDE_X = 69.48125f;
 constexpr float B_OUTSIDE_Y = 75.0f;
-constexpr float B_LOW_UP_X = 38.6532f;
+constexpr float B_LOW_UP_X = 50.25375f;
 constexpr float B_LOW_UP_Y = 89.0f;
-constexpr float B_HIGH_UP_X = 52.7868f;
+constexpr float B_HIGH_UP_X = 69.48125f;
 constexpr float B_HIGH_UP_Y = 89.0f;
-constexpr float B_LOW_DOWN_X = 38.6532f;
+constexpr float B_LOW_DOWN_X = 50.25375f;
 constexpr float B_LOW_DOWN_Y = 101.0f;
-constexpr float B_HIGH_DOWN_X = 52.7868f;
+constexpr float B_HIGH_DOWN_X = 69.48125f;
 constexpr float B_HIGH_DOWN_Y = 101.0f;
-constexpr float B_POSITION_RAIL_X = 45.72f;
+constexpr float B_POSITION_RAIL_X = 59.8675f;
 constexpr float B_POSITION_RAIL_Y = 44.086715f;
-constexpr float AND_OUTPUT_X = 8.1732f;
+constexpr float AND_OUTPUT_X = 11.79875f;
 constexpr float AND_OUTPUT_Y = 114.0f;
-constexpr float OR_OUTPUT_X = 23.0f;
+constexpr float OR_OUTPUT_X = 31.02625f;
 constexpr float OR_OUTPUT_Y = 114.0f;
-constexpr float XOR_OUTPUT_X = 38.0f;
+constexpr float XOR_OUTPUT_X = 50.25375f;
 constexpr float XOR_OUTPUT_Y = 114.0f;
-constexpr float STATE_OUTPUT_X = 52.7868f;
+constexpr float STATE_OUTPUT_X = 69.48125f;
 constexpr float STATE_OUTPUT_Y = 114.0f;
 
 // Dedicated non-overlapping status-light centres.
-constexpr float A_INSIDE_LIGHT_X = 14.1732f;
+constexpr float A_INSIDE_LIGHT_X = 17.79875f;
 constexpr float A_INSIDE_LIGHT_Y = 75.0f;
-constexpr float A_OUTSIDE_LIGHT_X = 16.3068f;
+constexpr float A_OUTSIDE_LIGHT_X = 25.02625f;
 constexpr float A_OUTSIDE_LIGHT_Y = 75.0f;
-constexpr float A_LOW_UP_LIGHT_X = 14.1732f;
+constexpr float A_LOW_UP_LIGHT_X = 17.79875f;
 constexpr float A_LOW_UP_LIGHT_Y = 89.0f;
-constexpr float A_HIGH_UP_LIGHT_X = 16.3068f;
+constexpr float A_HIGH_UP_LIGHT_X = 25.02625f;
 constexpr float A_HIGH_UP_LIGHT_Y = 89.0f;
-constexpr float A_LOW_DOWN_LIGHT_X = 14.1732f;
+constexpr float A_LOW_DOWN_LIGHT_X = 17.79875f;
 constexpr float A_LOW_DOWN_LIGHT_Y = 101.0f;
-constexpr float A_HIGH_DOWN_LIGHT_X = 16.3068f;
+constexpr float A_HIGH_DOWN_LIGHT_X = 25.02625f;
 constexpr float A_HIGH_DOWN_LIGHT_Y = 101.0f;
-constexpr float B_INSIDE_LIGHT_X = 44.6532f;
+constexpr float B_INSIDE_LIGHT_X = 56.25375f;
 constexpr float B_INSIDE_LIGHT_Y = 75.0f;
-constexpr float B_OUTSIDE_LIGHT_X = 46.7868f;
+constexpr float B_OUTSIDE_LIGHT_X = 63.48125f;
 constexpr float B_OUTSIDE_LIGHT_Y = 75.0f;
-constexpr float B_LOW_UP_LIGHT_X = 44.6532f;
+constexpr float B_LOW_UP_LIGHT_X = 56.25375f;
 constexpr float B_LOW_UP_LIGHT_Y = 89.0f;
-constexpr float B_HIGH_UP_LIGHT_X = 46.7868f;
+constexpr float B_HIGH_UP_LIGHT_X = 63.48125f;
 constexpr float B_HIGH_UP_LIGHT_Y = 89.0f;
-constexpr float B_LOW_DOWN_LIGHT_X = 44.6532f;
+constexpr float B_LOW_DOWN_LIGHT_X = 56.25375f;
 constexpr float B_LOW_DOWN_LIGHT_Y = 101.0f;
-constexpr float B_HIGH_DOWN_LIGHT_X = 46.7868f;
+constexpr float B_HIGH_DOWN_LIGHT_X = 63.48125f;
 constexpr float B_HIGH_DOWN_LIGHT_Y = 101.0f;
-constexpr float AND_LIGHT_X = 14.1732f;
+constexpr float AND_LIGHT_X = 17.79875f;
 constexpr float AND_LIGHT_Y = 114.0f;
-constexpr float OR_LIGHT_X = 29.0f;
+constexpr float OR_LIGHT_X = 37.02625f;
 constexpr float OR_LIGHT_Y = 114.0f;
-constexpr float XOR_LIGHT_X = 44.0f;
+constexpr float XOR_LIGHT_X = 56.25375f;
 constexpr float XOR_LIGHT_Y = 114.0f;
-constexpr float STATE_LIGHT_X = 58.7868f;
+constexpr float STATE_LIGHT_X = 75.48125f;
 constexpr float STATE_LIGHT_Y = 114.0f;
 
 // Generator-owned static layer-1 label and normalisation schema.
 enum LabelAlign { LABEL_ALIGN_CENTER, LABEL_ALIGN_LEFT };
+enum LabelVerticalAlign { LABEL_VERTICAL_MIDDLE, LABEL_VERTICAL_BASELINE };
 struct LabelSpec {
     float x;
     float y;
@@ -173,48 +175,45 @@ struct LabelSpec {
     int blue;
     const char* text;
     LabelAlign align;
+    LabelVerticalAlign vertical;
     bool bold;
 };
 static const LabelSpec PANEL_LABELS[] = {
-    {6.0f, 7.0f, 6.6f, 36, 37, 34, "Brink V2", LABEL_ALIGN_LEFT, true},
-    {15.24f, 16.0f, 3.0f, 85, 109, 128, "CHANNEL A", LABEL_ALIGN_CENTER, true},
-    {45.72f, 16.0f, 3.0f, 85, 109, 128, "CHANNEL B", LABEL_ALIGN_CENTER, true},
-    {8.1732f, 18.7f, 2.35f, 36, 37, 34, "CENTER", LABEL_ALIGN_CENTER, false},
-    {22.3068f, 18.7f, 2.35f, 36, 37, 34, "WIDTH", LABEL_ALIGN_CENTER, false},
-    {22.3068f, 32.65f, 2.15f, 36, 37, 34, "IN", LABEL_ALIGN_CENTER, false},
-    {8.1732f, 32.65f, 2.15f, 36, 37, 34, "POS", LABEL_ALIGN_CENTER, false},
-    {22.3068f, 44.65f, 2.15f, 36, 37, 34, "CENTER CV", LABEL_ALIGN_CENTER, false},
-    {8.1732f, 44.65f, 2.15f, 36, 37, 34, "CENTER AMT", LABEL_ALIGN_CENTER, false},
-    {22.3068f, 56.65f, 2.15f, 36, 37, 34, "WIDTH CV", LABEL_ALIGN_CENTER, false},
-    {8.1732f, 56.65f, 2.15f, 36, 37, 34, "WIDTH AMT", LABEL_ALIGN_CENTER, false},
-    {8.1732f, 68.65f, 2.15f, 36, 37, 34, "INSIDE", LABEL_ALIGN_CENTER, false},
-    {22.3068f, 68.65f, 2.15f, 36, 37, 34, "OUTSIDE", LABEL_ALIGN_CENTER, false},
-    {8.1732f, 83.0f, 2.2f, 183, 105, 60, "LOW", LABEL_ALIGN_CENTER, true},
-    {22.3068f, 83.0f, 2.2f, 183, 105, 60, "HIGH", LABEL_ALIGN_CENTER, true},
-    {8.1732f, 95.0f, 2.2f, 183, 105, 60, "LOW", LABEL_ALIGN_CENTER, true},
-    {22.3068f, 95.0f, 2.2f, 183, 105, 60, "HIGH", LABEL_ALIGN_CENTER, true},
-    {15.24f, 83.0f, 2.2f, 183, 105, 60, "↑", LABEL_ALIGN_CENTER, true},
-    {15.24f, 95.0f, 2.2f, 183, 105, 60, "↓", LABEL_ALIGN_CENTER, true},
-    {38.6532f, 18.7f, 2.35f, 36, 37, 34, "CENTER", LABEL_ALIGN_CENTER, false},
-    {52.7868f, 18.7f, 2.35f, 36, 37, 34, "WIDTH", LABEL_ALIGN_CENTER, false},
-    {38.6532f, 32.65f, 2.15f, 36, 37, 34, "IN", LABEL_ALIGN_CENTER, false},
-    {52.7868f, 32.65f, 2.15f, 36, 37, 34, "POS", LABEL_ALIGN_CENTER, false},
-    {38.6532f, 44.65f, 2.15f, 36, 37, 34, "CENTER CV", LABEL_ALIGN_CENTER, false},
-    {52.7868f, 44.65f, 2.15f, 36, 37, 34, "CENTER AMT", LABEL_ALIGN_CENTER, false},
-    {38.6532f, 56.65f, 2.15f, 36, 37, 34, "WIDTH CV", LABEL_ALIGN_CENTER, false},
-    {52.7868f, 56.65f, 2.15f, 36, 37, 34, "WIDTH AMT", LABEL_ALIGN_CENTER, false},
-    {38.6532f, 68.65f, 2.15f, 36, 37, 34, "INSIDE", LABEL_ALIGN_CENTER, false},
-    {52.7868f, 68.65f, 2.15f, 36, 37, 34, "OUTSIDE", LABEL_ALIGN_CENTER, false},
-    {38.6532f, 83.0f, 2.2f, 183, 105, 60, "LOW", LABEL_ALIGN_CENTER, true},
-    {52.7868f, 83.0f, 2.2f, 183, 105, 60, "HIGH", LABEL_ALIGN_CENTER, true},
-    {38.6532f, 95.0f, 2.2f, 183, 105, 60, "LOW", LABEL_ALIGN_CENTER, true},
-    {52.7868f, 95.0f, 2.2f, 183, 105, 60, "HIGH", LABEL_ALIGN_CENTER, true},
-    {45.72f, 83.0f, 2.2f, 183, 105, 60, "↑", LABEL_ALIGN_CENTER, true},
-    {45.72f, 95.0f, 2.2f, 183, 105, 60, "↓", LABEL_ALIGN_CENTER, true},
-    {8.1732f, 107.65f, 2.15f, 85, 109, 128, "AND", LABEL_ALIGN_CENTER, true},
-    {23.0f, 107.65f, 2.15f, 85, 109, 128, "OR", LABEL_ALIGN_CENTER, true},
-    {38.0f, 107.65f, 2.15f, 85, 109, 128, "XOR", LABEL_ALIGN_CENTER, true},
-    {52.7868f, 107.65f, 2.15f, 85, 109, 128, "STATE", LABEL_ALIGN_CENTER, true},
+    {4.185f, 7.0f, 6.6f, 36, 37, 34, "Brink V2", LABEL_ALIGN_LEFT, LABEL_VERTICAL_BASELINE, true},
+    {21.4125f, 16.0f, 3.0f, 85, 109, 128, "CHANNEL A", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, true},
+    {59.8675f, 16.0f, 3.0f, 85, 109, 128, "CHANNEL B", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, true},
+    {11.79875f, 19.5f, 2.35f, 36, 37, 34, "CENTER", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {31.02625f, 19.5f, 2.35f, 36, 37, 34, "WIDTH", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {31.02625f, 33.45f, 2.15f, 36, 37, 34, "SIGNAL", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {11.79875f, 33.45f, 2.15f, 36, 37, 34, "POSITION", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {31.02625f, 45.45f, 2.15f, 36, 37, 34, "CTR CV", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {31.02625f, 57.45f, 2.15f, 36, 37, 34, "WID CV", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {11.79875f, 69.45f, 2.15f, 36, 37, 34, "INSIDE", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {31.02625f, 69.45f, 2.15f, 36, 37, 34, "OUTSIDE", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {11.79875f, 83.5f, 2.2f, 36, 37, 34, "LOW", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {31.02625f, 83.5f, 2.2f, 36, 37, 34, "HIGH", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {11.79875f, 95.5f, 2.2f, 36, 37, 34, "LOW", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {31.02625f, 95.5f, 2.2f, 36, 37, 34, "HIGH", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {21.4125f, 89.0f, 3.4f, 36, 37, 34, "↑", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, true},
+    {21.4125f, 101.0f, 3.4f, 36, 37, 34, "↓", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, true},
+    {50.25375f, 19.5f, 2.35f, 36, 37, 34, "CENTER", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {69.48125f, 19.5f, 2.35f, 36, 37, 34, "WIDTH", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {50.25375f, 33.45f, 2.15f, 36, 37, 34, "SIGNAL", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {69.48125f, 33.45f, 2.15f, 36, 37, 34, "POSITION", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {50.25375f, 45.45f, 2.15f, 36, 37, 34, "CTR CV", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {50.25375f, 57.45f, 2.15f, 36, 37, 34, "WID CV", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {50.25375f, 69.45f, 2.15f, 36, 37, 34, "INSIDE", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {69.48125f, 69.45f, 2.15f, 36, 37, 34, "OUTSIDE", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {50.25375f, 83.5f, 2.2f, 36, 37, 34, "LOW", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {69.48125f, 83.5f, 2.2f, 36, 37, 34, "HIGH", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {50.25375f, 95.5f, 2.2f, 36, 37, 34, "LOW", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {69.48125f, 95.5f, 2.2f, 36, 37, 34, "HIGH", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, false},
+    {59.8675f, 89.0f, 3.4f, 36, 37, 34, "↑", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, true},
+    {59.8675f, 101.0f, 3.4f, 36, 37, 34, "↓", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, true},
+    {11.79875f, 108.45f, 2.15f, 85, 109, 128, "AND", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, true},
+    {31.02625f, 108.45f, 2.15f, 85, 109, 128, "OR", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, true},
+    {50.25375f, 108.45f, 2.15f, 85, 109, 128, "XOR", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, true},
+    {69.48125f, 108.45f, 2.15f, 85, 109, 128, "TOGGLE", LABEL_ALIGN_CENTER, LABEL_VERTICAL_MIDDLE, true},
 };
 constexpr int PANEL_LABEL_COUNT =
     sizeof(PANEL_LABELS) / sizeof(PANEL_LABELS[0]);
@@ -230,15 +229,15 @@ struct LineSpec {
     int blue;
 };
 static const LineSpec PANEL_LINES[] = {
-    {24.3068f, 39.0f, 36.6532f, 39.0f, 0.3f, 183, 105, 60},
-    {30.68f, 38.2f, 31.68f, 39.0f, 0.3f, 183, 105, 60},
-    {30.68f, 39.8f, 31.68f, 39.0f, 0.3f, 183, 105, 60},
-    {24.3068f, 51.0f, 36.6532f, 51.0f, 0.3f, 183, 105, 60},
-    {30.68f, 50.2f, 31.68f, 51.0f, 0.3f, 183, 105, 60},
-    {30.68f, 51.8f, 31.68f, 51.0f, 0.3f, 183, 105, 60},
-    {24.3068f, 63.0f, 36.6532f, 63.0f, 0.3f, 183, 105, 60},
-    {30.68f, 62.2f, 31.68f, 63.0f, 0.3f, 183, 105, 60},
-    {30.68f, 63.8f, 31.68f, 63.0f, 0.3f, 183, 105, 60},
+    {33.02625f, 39.0f, 48.25375f, 39.0f, 0.3f, 183, 105, 60},
+    {40.84f, 38.2f, 41.84f, 39.0f, 0.3f, 183, 105, 60},
+    {40.84f, 39.8f, 41.84f, 39.0f, 0.3f, 183, 105, 60},
+    {33.02625f, 51.0f, 48.25375f, 51.0f, 0.3f, 183, 105, 60},
+    {40.84f, 50.2f, 41.84f, 51.0f, 0.3f, 183, 105, 60},
+    {40.84f, 51.8f, 41.84f, 51.0f, 0.3f, 183, 105, 60},
+    {33.02625f, 63.0f, 48.25375f, 63.0f, 0.3f, 183, 105, 60},
+    {40.84f, 62.2f, 41.84f, 63.0f, 0.3f, 183, 105, 60},
+    {40.84f, 63.8f, 41.84f, 63.0f, 0.3f, 183, 105, 60},
 };
 constexpr int PANEL_LINE_COUNT =
     sizeof(PANEL_LINES) / sizeof(PANEL_LINES[0]);

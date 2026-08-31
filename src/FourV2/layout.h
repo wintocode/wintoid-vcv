@@ -7,12 +7,15 @@ namespace four_v2_layout {
 constexpr int PANEL_HP = 32;
 constexpr float PANEL_WIDTH = 162.56f;
 constexpr float PANEL_HEIGHT = 128.5f;
-constexpr float TITLE_X = 6.0f;
+constexpr float TITLE_X = 4.0f;
 constexpr float TITLE_Y = 7.0f;
 constexpr float TITLE_FONT_SIZE = 6.6f;
-constexpr float LOGO_TARGET_X = 125.0f;
+constexpr float LOGO_TARGET_X = 144.933f;
 constexpr float LOGO_TARGET_Y = 1.8f;
 constexpr float LOGO_SCALE = 0.06f;
+constexpr float V2_GROUP_LEFT_X = 4.0f;
+constexpr float V2_GROUP_RIGHT_X = 158.56f;
+constexpr float V2_GROUP_TOP_Y = 10.3f;
 constexpr float MINIMUM_EDGE_CLEARANCE_MM = 4.0f;
 constexpr float MINIMUM_LABEL_CLEARANCE_MM = 0.25f;
 constexpr float ALGORITHM_LABEL_Y = 24.1f;

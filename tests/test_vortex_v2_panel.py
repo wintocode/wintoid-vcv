@@ -137,7 +137,7 @@ class VortexV2PanelTest(unittest.TestCase):
         panel = self.require_panel()
         self.assertEqual((20.0, 32.0, 44.0), panel.CONTROL_ROW_YS)
         self.assertEqual(
-            (4.0, 11.0, 52.96, 39.5),
+            (4.0, 10.3, 52.96, 40.2),
             panel.CONTROL_SECTION,
         )
         self.assertEqual(

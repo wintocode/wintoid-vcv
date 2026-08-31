@@ -23,7 +23,7 @@ SVG_PATH = ROOT / "res" / "BrinkV2.svg"
 HEADER_PATH = ROOT / "src" / "BrinkV2" / "layout.h"
 
 # SEM palette and panel dimensions.
-HP = 12
+HP = 16
 WIDTH_MM = HP * 5.08
 HEIGHT_MM = 128.5
 PANEL_IVORY = "#ece8d9"
@@ -52,25 +52,21 @@ PORT_STROKE_WIDTH = 0.30
 MINIMUM_EDGE_CLEARANCE_MM = 4.0
 MINIMUM_LABEL_CLEARANCE_MM = 0.25
 
-# Header and canonical outlined logo placement follow VortexV2.
-TITLE_X = 6.0
+# Canonical V2 branding geometry.  The title anchor follows the left edge of
+# the outer channel group, while the logo target is derived from the right
+# edge and the canonical logo path bound so panel widths cannot drift apart.
 TITLE_Y = 7.0
 TITLE_FONT_SIZE = 6.6
-LOGO_TARGET_X = WIDTH_MM - 18.0
 LOGO_TARGET_Y = 1.8
 LOGO_SCALE = 0.06
+LOGO_VIEWBOX_X = 0.6875
+LOGO_PATH_RIGHT_X = 227.8125
 
-# V1 is the starting physical layout.  The pair offset is inset by the
-# half-stroke of the socket guide (plus a small deterministic safety margin)
-# so its painted envelope clears the edge without changing port ordering or
-# any row position.
-CHANNEL_A_X = WIDTH_MM / 4.0
-CHANNEL_B_X = WIDTH_MM * 3.0 / 4.0
+# V1 is the starting physical layout.  The channel centres and pair offset are
+# derived from the V2 group boxes below so both socket columns have symmetric
+# clearance.  One shared pitch then places the four event and logic columns in
+# the requested order: A LOW, A HIGH, B LOW, B HIGH.
 PAINTED_EDGE_SAFETY_MM = 0.01
-PAIR_OFFSET = (CHANNEL_A_X - MINIMUM_EDGE_CLEARANCE_MM - PORT_RADIUS
-               - PORT_STROKE_WIDTH / 2.0 - PAINTED_EDGE_SAFETY_MM)
-LOGIC_X = (CHANNEL_A_X - PAIR_OFFSET, 23.0, 38.0,
-           WIDTH_MM - (CHANNEL_A_X - PAIR_OFFSET))
 Y_CHANNEL_HEADER = 16.0
 Y_KNOBS = 25.0
 Y_SIGNAL_POSITION = 39.0
@@ -86,7 +82,15 @@ SECTION_HORIZONTAL_INSET = (MINIMUM_EDGE_CLEARANCE_MM
                             + SECTION_STROKE_WIDTH / 2.0
                             + PAINTED_EDGE_SAFETY_MM)
 SECTION_GAP = 4.0
-SECTION_Y = 12.0
+V2_GROUP_LEFT_X = SECTION_HORIZONTAL_INSET
+V2_GROUP_RIGHT_X = WIDTH_MM - SECTION_HORIZONTAL_INSET
+V2_GROUP_TOP_Y = 10.3
+TITLE_X = V2_GROUP_LEFT_X
+LOGO_TARGET_X = (
+    V2_GROUP_RIGHT_X
+    - LOGO_SCALE * (LOGO_PATH_RIGHT_X - LOGO_VIEWBOX_X)
+)
+SECTION_Y = V2_GROUP_TOP_Y
 SECTION_BOTTOM = 106.0
 SECTION_WIDTH = (WIDTH_MM - 2.0 * SECTION_HORIZONTAL_INSET - SECTION_GAP) / 2.0
 SECTION_HEIGHT = SECTION_BOTTOM - SECTION_Y
@@ -96,12 +100,23 @@ CHANNEL_SECTION_RECTS = (
     ("channel-b-section", WIDTH_MM - SECTION_HORIZONTAL_INSET - SECTION_WIDTH,
      SECTION_Y, SECTION_WIDTH, SECTION_HEIGHT),
 )
+# Center each channel's two socket columns in its group box.  Four equal
+# pitches result when the pair offset is one quarter of the distance between
+# the channel centres.
+CHANNEL_A_X = (
+    CHANNEL_SECTION_RECTS[0][1] + CHANNEL_SECTION_RECTS[0][3] / 2.0
+)
+CHANNEL_B_X = (
+    CHANNEL_SECTION_RECTS[1][1] + CHANNEL_SECTION_RECTS[1][3] / 2.0
+)
+PAIR_OFFSET = (CHANNEL_B_X - CHANNEL_A_X) / 4.0
+LOGIC_X = (
+    CHANNEL_A_X - PAIR_OFFSET,
+    CHANNEL_A_X + PAIR_OFFSET,
+    CHANNEL_B_X - PAIR_OFFSET,
+    CHANNEL_B_X + PAIR_OFFSET,
+)
 SECTION_RADIUS = 1.4
-LOGIC_DIVIDER_X = SECTION_HORIZONTAL_INSET
-LOGIC_DIVIDER_Y = 107.0
-LOGIC_DIVIDER_WIDTH = WIDTH_MM - 2.0 * SECTION_HORIZONTAL_INSET
-LOGIC_DIVIDER_STROKE_WIDTH = SECTION_STROKE_WIDTH
-
 RAIL_WIDTH = 2.0
 POSITION_RAIL_TOP = Y_KNOBS - RACK_SMALL_KNOB_RADIUS
 POSITION_RAIL_BOTTOM = Y_WIDTH_CV + RACK_PORT_RADIUS
@@ -114,12 +129,13 @@ POSITION_RAILS = (
      RAIL_WIDTH, POSITION_RAIL_HEIGHT),
 )
 
-KNOB_LABEL_OFFSET = 6.3
-PORT_LABEL_OFFSET = 6.35
-EVENT_LABEL_OFFSET = 6.0
+KNOB_LABEL_OFFSET = 5.5
+PORT_LABEL_OFFSET = 5.55
+EVENT_LABEL_OFFSET = 5.5
 CONTROL_LABEL_FONT_SIZE = 2.35
 PORT_LABEL_FONT_SIZE = 2.15
 EVENT_LABEL_FONT_SIZE = 2.2
+EVENT_ARROW_FONT_SIZE = 3.4
 CHANNEL_HEADING_FONT_SIZE = 3.0
 LOGIC_LABEL_FONT_SIZE = 2.15
 
@@ -139,6 +155,7 @@ class PanelLabel(NamedTuple):
     fill: str
     anchor: str
     weight: str
+    vertical_align: str = "middle"
 
 
 class PanelLine(NamedTuple):
@@ -247,12 +264,10 @@ def _channel_label_specs(prefix: str) -> tuple[PanelLabel, ...]:
     labels = (
         ("CENTER_KNOB", "CENTER", KNOB_LABEL_OFFSET, CONTROL_LABEL_FONT_SIZE),
         ("WIDTH_KNOB", "WIDTH", KNOB_LABEL_OFFSET, CONTROL_LABEL_FONT_SIZE),
-        ("SIGNAL", "IN", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-        ("POSITION", "POS", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-        ("CENTER_CV", "CENTER CV", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-        ("CENTER_ATTEN", "CENTER AMT", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-        ("WIDTH_CV", "WIDTH CV", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
-        ("WIDTH_ATTEN", "WIDTH AMT", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
+        ("SIGNAL", "SIGNAL", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
+        ("POSITION", "POSITION", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
+        ("CENTER_CV", "CTR CV", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
+        ("WIDTH_CV", "WID CV", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
         ("INSIDE", "INSIDE", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
         ("OUTSIDE", "OUTSIDE", PORT_LABEL_OFFSET, PORT_LABEL_FONT_SIZE),
     )
@@ -272,19 +287,19 @@ def _channel_label_specs(prefix: str) -> tuple[PanelLabel, ...]:
         specs.append(PanelLabel(
             f"{prefix.lower()}-{suffix.lower().replace('_', '-')}-label",
             f"channel-{prefix.lower()}", x, port_y - EVENT_LABEL_OFFSET,
-            text, EVENT_LABEL_FONT_SIZE, FUNCTION_ORANGE, "middle", "700",
+            text, EVENT_LABEL_FONT_SIZE, LEGEND_CHARCOAL, "middle", "400",
         ))
     arrow_x = CHANNEL_A_X if prefix == "A" else CHANNEL_B_X
     specs.extend((
         PanelLabel(
             f"{prefix.lower()}-event-up-arrow", f"channel-{prefix.lower()}",
-            arrow_x, Y_EVENTS_UP - EVENT_LABEL_OFFSET, "↑",
-            EVENT_LABEL_FONT_SIZE, FUNCTION_ORANGE, "middle", "700",
+            arrow_x, Y_EVENTS_UP, "↑",
+            EVENT_ARROW_FONT_SIZE, LEGEND_CHARCOAL, "middle", "700",
         ),
         PanelLabel(
             f"{prefix.lower()}-event-down-arrow", f"channel-{prefix.lower()}",
-            arrow_x, Y_EVENTS_DOWN - EVENT_LABEL_OFFSET, "↓",
-            EVENT_LABEL_FONT_SIZE, FUNCTION_ORANGE, "middle", "700",
+            arrow_x, Y_EVENTS_DOWN, "↓",
+            EVENT_ARROW_FONT_SIZE, LEGEND_CHARCOAL, "middle", "700",
         ),
     ))
     return tuple(specs)
@@ -292,7 +307,7 @@ def _channel_label_specs(prefix: str) -> tuple[PanelLabel, ...]:
 
 PANEL_LABELS = (
     PanelLabel("title", "title", TITLE_X, TITLE_Y, "Brink V2",
-               TITLE_FONT_SIZE, LEGEND_CHARCOAL, "start", "700"),
+               TITLE_FONT_SIZE, LEGEND_CHARCOAL, "start", "700", "baseline"),
     PanelLabel("channel-a-heading", "headings", CHANNEL_A_X, Y_CHANNEL_HEADER,
                "CHANNEL A", CHANNEL_HEADING_FONT_SIZE, SECTION_BLUE_GREY,
                "middle", "700"),
@@ -307,7 +322,7 @@ PANEL_LABELS = (
         LOGIC_LABEL_FONT_SIZE, SECTION_BLUE_GREY, "middle", "700",
     ) for label, name in (
         ("AND", "AND_OUTPUT"), ("OR", "OR_OUTPUT"),
-        ("XOR", "XOR_OUTPUT"), ("STATE", "STATE_OUTPUT"),
+        ("XOR", "XOR_OUTPUT"), ("TOGGLE", "STATE_OUTPUT"),
     )),
 )
 
@@ -337,18 +352,16 @@ def _normalisation_lines() -> tuple[PanelLine, ...]:
 LABEL_COMPONENTS = {
     "CENTER": "A_CENTER_KNOB",
     "WIDTH": "A_WIDTH_KNOB",
-    "IN": "A_SIGNAL",
-    "POS": "A_POSITION",
-    "CENTER CV": "A_CENTER_CV",
-    "CENTER AMT": "A_CENTER_ATTEN",
-    "WIDTH CV": "A_WIDTH_CV",
-    "WIDTH AMT": "A_WIDTH_ATTEN",
+    "SIGNAL": "A_SIGNAL",
+    "POSITION": "A_POSITION",
+    "CTR CV": "A_CENTER_CV",
+    "WID CV": "A_WIDTH_CV",
     "INSIDE": "A_INSIDE",
     "OUTSIDE": "A_OUTSIDE",
     "AND": "AND_OUTPUT",
     "OR": "OR_OUTPUT",
     "XOR": "XOR_OUTPUT",
-    "STATE": "STATE_OUTPUT",
+    "TOGGLE": "STATE_OUTPUT",
 }
 
 
@@ -393,9 +406,13 @@ def _line(x1: float, y1: float, x2: float, y2: float, *, identifier: str, stroke
 
 
 def _label_element(label: PanelLabel) -> str:
+    dominant_baseline = (
+        "alphabetic" if label.vertical_align == "baseline" else "middle"
+    )
     return _text(
         label.x, label.y, label.text, size=label.size, fill=label.fill,
         anchor=label.anchor, weight=label.weight,
+        dominant_baseline=dominant_baseline,
     )
 
 
@@ -407,13 +424,15 @@ def _line_element(line: PanelLine) -> str:
     )
 
 
-def _text(x: float, y: float, value: str, *, size: float, fill: str = LEGEND_CHARCOAL, anchor: str = "middle", weight: str = "400") -> str:
+def _text(x: float, y: float, value: str, *, size: float,
+          fill: str = LEGEND_CHARCOAL, anchor: str = "middle",
+          weight: str = "400", dominant_baseline: str = "middle") -> str:
     # Explicit text length keeps layout reproducible across SVG consumers.
     text_length = max(size * 0.7, len(value) * size * 0.62)
     return (
         f'  <text x="{_fmt(x)}" y="{_fmt(y)}" text-anchor="{anchor}" '
         f'textLength="{_fmt(text_length)}" lengthAdjust="spacingAndGlyphs" '
-        f'dominant-baseline="middle" font-family="DejaVu Sans" '
+        f'dominant-baseline="{dominant_baseline}" font-family="DejaVu Sans" '
         f'font-size="{_fmt(size)}" font-weight="{weight}" fill="{fill}">'
         f"{escape(value)}</text>"
     )
@@ -484,7 +503,6 @@ def generate_svg() -> str:
     lines.extend(_label_group("title"))
     for (identifier, x, y, width, height), fill in zip(CHANNEL_SECTION_RECTS, (SECTION_FILL, SECTION_FILL_ALT)):
         lines.append(_rect(x, y, width, height, fill, SECTION_BLUE_GREY, identifier=identifier, radius=SECTION_RADIUS))
-    lines.append(_line(LOGIC_DIVIDER_X, LOGIC_DIVIDER_Y, LOGIC_DIVIDER_X + LOGIC_DIVIDER_WIDTH, LOGIC_DIVIDER_Y, identifier="logic-divider", stroke_width=LOGIC_DIVIDER_STROKE_WIDTH))
     for identifier, x, y, width, height in POSITION_RAILS:
         lines.append(_rect(x, y, width, height, PANEL_IVORY, SECTION_BLUE_GREY, identifier=identifier, radius=0.8))
     lines.extend(_label_group("headings"))
@@ -529,24 +547,25 @@ def generate_coords_header() -> str:
         _header_float("LOGO_TARGET_X", LOGO_TARGET_X),
         _header_float("LOGO_TARGET_Y", LOGO_TARGET_Y),
         _header_float("LOGO_SCALE", LOGO_SCALE),
+        _header_float("V2_GROUP_LEFT_X", V2_GROUP_LEFT_X),
+        _header_float("V2_GROUP_RIGHT_X", V2_GROUP_RIGHT_X),
+        _header_float("V2_GROUP_TOP_Y", V2_GROUP_TOP_Y),
         _header_float("MINIMUM_EDGE_CLEARANCE_MM", MINIMUM_EDGE_CLEARANCE_MM),
         _header_float("MINIMUM_LABEL_CLEARANCE_MM", MINIMUM_LABEL_CLEARANCE_MM),
         "",
-        "// Alternating SEM channel fields and shared logic divider.",
+        "// Alternating SEM channel fields.",
     ]
     for identifier, x, y, width, height in CHANNEL_SECTION_RECTS:
         prefix = identifier.replace("-", "_").upper()
         lines.extend((_header_float(f"{prefix}_X", x), _header_float(f"{prefix}_Y", y), _header_float(f"{prefix}_WIDTH", width), _header_float(f"{prefix}_HEIGHT", height)))
     lines.extend((
-        _header_float("LOGIC_DIVIDER_X", LOGIC_DIVIDER_X),
-        _header_float("LOGIC_DIVIDER_Y", LOGIC_DIVIDER_Y),
-        _header_float("LOGIC_DIVIDER_WIDTH", LOGIC_DIVIDER_WIDTH),
         _header_float("KNOB_LABEL_OFFSET", KNOB_LABEL_OFFSET),
         _header_float("PORT_LABEL_OFFSET", PORT_LABEL_OFFSET),
         _header_float("EVENT_LABEL_OFFSET", EVENT_LABEL_OFFSET),
         _header_float("CONTROL_LABEL_FONT_SIZE", CONTROL_LABEL_FONT_SIZE),
         _header_float("PORT_LABEL_FONT_SIZE", PORT_LABEL_FONT_SIZE),
         _header_float("EVENT_LABEL_FONT_SIZE", EVENT_LABEL_FONT_SIZE),
+        _header_float("EVENT_ARROW_FONT_SIZE", EVENT_ARROW_FONT_SIZE),
         _header_float("CHANNEL_HEADING_FONT_SIZE", CHANNEL_HEADING_FONT_SIZE),
         _header_float("LOGIC_LABEL_FONT_SIZE", LOGIC_LABEL_FONT_SIZE),
         "",
@@ -587,6 +606,7 @@ def generate_coords_header() -> str:
         "",
         "// Generator-owned static layer-1 label and normalisation schema.",
         "enum LabelAlign { LABEL_ALIGN_CENTER, LABEL_ALIGN_LEFT };",
+        "enum LabelVerticalAlign { LABEL_VERTICAL_MIDDLE, LABEL_VERTICAL_BASELINE };",
         "struct LabelSpec {",
         "    float x;",
         "    float y;",
@@ -596,6 +616,7 @@ def generate_coords_header() -> str:
         "    int blue;",
         "    const char* text;",
         "    LabelAlign align;",
+        "    LabelVerticalAlign vertical;",
         "    bool bold;",
         "};",
         "static const LabelSpec PANEL_LABELS[] = {",
@@ -604,12 +625,15 @@ def generate_coords_header() -> str:
         red, green, blue = _rgb(label.fill)
         align = ("LABEL_ALIGN_LEFT" if label.anchor == "start"
                  else "LABEL_ALIGN_CENTER")
+        vertical = ("LABEL_VERTICAL_BASELINE"
+                    if label.vertical_align == "baseline"
+                    else "LABEL_VERTICAL_MIDDLE")
         bold = "true" if label.weight == "700" else "false"
         text = json.dumps(label.text, ensure_ascii=False)
         lines.append(
             f"    {{{_cpp_float(label.x)}f, {_cpp_float(label.y)}f, "
             f"{_cpp_float(label.size)}f, {red}, {green}, {blue}, {text}, "
-            f"{align}, {bold}}},"
+            f"{align}, {vertical}, {bold}}},"
         )
     lines.extend((
         "};",

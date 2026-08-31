@@ -26,6 +26,7 @@ class PanelLabelTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.four = load_generator("four")
+        cls.four_v2 = load_generator("four_v2")
         cls.vortex = load_generator("vortex")
         cls.vortex_v2 = load_generator("vortex_v2")
         cls.brink_v2 = load_generator("brink_v2")
@@ -196,12 +197,18 @@ class PanelLabelTest(unittest.TestCase):
         self.assertEqual(0.06, self.brink_v2.LOGO_SCALE)
         self.assertEqual(7.0, self.brink_v2.TITLE_Y)
         self.assertEqual("Brink V2", self.brink_v2.PANEL_LABELS[0].text)
+        self.assertEqual(
+            "baseline",
+            getattr(self.brink_v2.PANEL_LABELS[0], "vertical_align", None),
+        )
 
         header = self.brink_v2.generate_coords_header()
         for contract in (
             "scripts/generate_panel_brink_v2.py",
             "constexpr float LOGO_SCALE = 0.06f;",
             "constexpr float TITLE_Y = 7.0f;",
+            "enum LabelVerticalAlign",
+            "LABEL_VERTICAL_BASELINE",
             "static const LabelSpec PANEL_LABELS[]",
             "constexpr int PANEL_LABEL_COUNT",
         ):
@@ -211,11 +218,47 @@ class PanelLabelTest(unittest.TestCase):
         for contract in (
             "brink_v2_layout::PANEL_LABELS",
             "brink_v2_layout::PANEL_LABEL_COUNT",
+            "label.vertical",
+            "NVG_ALIGN_BASELINE",
         ):
             with self.subTest(source_contract=contract):
                 self.assertIn(contract, self.brink_v2_source)
         self.assertNotIn('"wint"', self.brink_v2_source)
         self.assertNotIn('"oid"', self.brink_v2_source)
+
+    def test_v2_branding_tracks_outer_group_edges_and_shared_top(self):
+        logo_viewbox_x = 0.6875
+        logo_path_right_x = 227.8125
+        brink_left = self.brink_v2.CHANNEL_SECTION_RECTS[0]
+        brink_right = self.brink_v2.CHANNEL_SECTION_RECTS[-1]
+        panels = (
+            ("Four V2", self.four_v2, self.four_v2.ROUTING_SECTION),
+            ("Vortex V2", self.vortex_v2, self.vortex_v2.CONTROL_SECTION),
+            (
+                "Brink V2",
+                self.brink_v2,
+                (
+                    brink_left[1],
+                    brink_left[2],
+                    brink_right[1] + brink_right[3] - brink_left[1],
+                    brink_left[4],
+                ),
+            ),
+        )
+        top_edges = {round(section[1], 6) for _name, _panel, section in panels}
+        self.assertEqual({10.3}, top_edges)
+
+        for name, panel, section in panels:
+            group_left = section[0]
+            group_right = section[0] + section[2]
+            logo_right = (
+                panel.LOGO_TARGET_X
+                + panel.LOGO_SCALE * (logo_path_right_x - logo_viewbox_x)
+            )
+            with self.subTest(module=name, edge="left"):
+                self.assertAlmostEqual(group_left, panel.TITLE_X, places=6)
+            with self.subTest(module=name, edge="right"):
+                self.assertAlmostEqual(group_right, logo_right, places=6)
 
     def test_vortex_v2_emits_and_consumes_label_geometry_constants(self):
         self.assertEqual(7.0, self.vortex_v2.TITLE_Y)

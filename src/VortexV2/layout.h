@@ -7,20 +7,23 @@ namespace vortex_v2_layout {
 constexpr int PANEL_HP = 12;
 constexpr float PANEL_WIDTH = 60.96f;
 constexpr float PANEL_HEIGHT = 128.5f;
-constexpr float TITLE_X = 6.0f;
+constexpr float TITLE_X = 4.0f;
 constexpr float TITLE_Y = 7.0f;
 constexpr float TITLE_FONT_SIZE = 6.6f;
-constexpr float LOGO_TARGET_X = 42.96f;
+constexpr float LOGO_TARGET_X = 43.333f;
 constexpr float LOGO_TARGET_Y = 1.8f;
 constexpr float LOGO_SCALE = 0.06f;
+constexpr float V2_GROUP_LEFT_X = 4.0f;
+constexpr float V2_GROUP_RIGHT_X = 56.96f;
+constexpr float V2_GROUP_TOP_Y = 10.3f;
 constexpr float MINIMUM_EDGE_CLEARANCE_MM = 4.0f;
 constexpr float MINIMUM_LABEL_CLEARANCE_MM = 0.25f;
 
 // Filled FourV2-style sections
 constexpr float CONTROL_SECTION_X = 4.0f;
-constexpr float CONTROL_SECTION_Y = 11.0f;
+constexpr float CONTROL_SECTION_Y = 10.3f;
 constexpr float CONTROL_SECTION_WIDTH = 52.96f;
-constexpr float CONTROL_SECTION_HEIGHT = 39.5f;
+constexpr float CONTROL_SECTION_HEIGHT = 40.2f;
 constexpr float OUTPUT_SECTION_X = 4.0f;
 constexpr float OUTPUT_SECTION_Y = 54.0f;
 constexpr float OUTPUT_SECTION_WIDTH = 52.96f;

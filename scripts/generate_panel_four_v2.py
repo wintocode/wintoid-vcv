@@ -101,17 +101,32 @@ MINIMUM_EDGE_CLEARANCE_MM = 4.0
 MINIMUM_LABEL_CLEARANCE_MM = 0.25
 
 
-# Header and logo reservations.
-TITLE_X = 6.0
+# Canonical V2 branding geometry.  The title anchor follows the left edge of
+# the outer routing group, while the logo target is derived from the right
+# edge and the canonical logo path bound so panel widths cannot drift apart.
 TITLE_Y = 7.0
 TITLE_FONT_SIZE = 6.6
-LOGO_TARGET_X = 125.0
 LOGO_TARGET_Y = 1.8
 LOGO_SCALE = 0.06
+LOGO_VIEWBOX_X = 0.6875
+LOGO_PATH_RIGHT_X = 227.8125
+V2_GROUP_LEFT_X = MINIMUM_EDGE_CLEARANCE_MM
+V2_GROUP_RIGHT_X = WIDTH_MM - MINIMUM_EDGE_CLEARANCE_MM
+V2_GROUP_TOP_Y = 10.3
+TITLE_X = V2_GROUP_LEFT_X
+LOGO_TARGET_X = (
+    V2_GROUP_RIGHT_X
+    - LOGO_SCALE * (LOGO_PATH_RIGHT_X - LOGO_VIEWBOX_X)
+)
 
 
 # Global routing/control band.
-ROUTING_SECTION = (4.0, 10.3, WIDTH_MM - 8.0, 25.7)
+ROUTING_SECTION = (
+    V2_GROUP_LEFT_X,
+    V2_GROUP_TOP_Y,
+    WIDTH_MM - 2.0 * V2_GROUP_LEFT_X,
+    25.7,
+)
 ROUTING_DISPLAY = (17.5, 13.0, 48.0, 21.0)
 ROUTING_EDGE_STROKE_WIDTH = 0.50
 ROUTING_NODE_RADIUS = 1.50
@@ -1092,6 +1107,9 @@ def generate_coords_header() -> str:
         _header_float("LOGO_TARGET_X", LOGO_TARGET_X),
         _header_float("LOGO_TARGET_Y", LOGO_TARGET_Y),
         _header_float("LOGO_SCALE", LOGO_SCALE, 4),
+        _header_float("V2_GROUP_LEFT_X", V2_GROUP_LEFT_X),
+        _header_float("V2_GROUP_RIGHT_X", V2_GROUP_RIGHT_X),
+        _header_float("V2_GROUP_TOP_Y", V2_GROUP_TOP_Y),
         _header_float("MINIMUM_EDGE_CLEARANCE_MM", MINIMUM_EDGE_CLEARANCE_MM),
         _header_float("MINIMUM_LABEL_CLEARANCE_MM", MINIMUM_LABEL_CLEARANCE_MM),
         _header_float("ALGORITHM_LABEL_Y", ALGORITHM_LABEL_Y),

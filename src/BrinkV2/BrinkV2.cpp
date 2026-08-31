@@ -561,9 +561,12 @@ struct BrinkV2PanelLabels : Widget {
         const int horizontalAlign =
             label.align == brink_v2_layout::LABEL_ALIGN_LEFT
                 ? NVG_ALIGN_LEFT : NVG_ALIGN_CENTER;
+        const int verticalAlign =
+            label.vertical == brink_v2_layout::LABEL_VERTICAL_BASELINE
+                ? NVG_ALIGN_BASELINE : NVG_ALIGN_MIDDLE;
         nvgFontSize(args.vg, mm2px(label.size));
         nvgFillColor(args.vg, nvgRGB(label.red, label.green, label.blue));
-        nvgTextAlign(args.vg, horizontalAlign | NVG_ALIGN_MIDDLE);
+        nvgTextAlign(args.vg, horizontalAlign | verticalAlign);
         if (label.bold) {
             const float weightOffset = mm2px(0.10f);
             nvgText(args.vg, textX - weightOffset, textY, label.text, nullptr);
