@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 
 namespace vortex {
 
@@ -19,11 +20,11 @@ static const float INV_SQRT2 = 0.70710678118654752440f;
 // Flush denormals to zero (prevents FPU slowdown on ARM)
 inline float flush_denormal(float x)
 {
-    union { float f; uint32_t i; } u;
-    u.f = x;
-    if ((u.i & 0x7F800000) == 0 && (u.i & 0x007FFFFF) != 0)
-        u.f = 0.0f;
-    return u.f;
+    uint32_t bits = 0;
+    std::memcpy(&bits, &x, sizeof(bits));
+    if ((bits & 0x7F800000) == 0 && (bits & 0x007FFFFF) != 0)
+        return 0.0f;
+    return x;
 }
 
 // Soft-clip saturation: x*(27+x^2)/(27+9x^2)

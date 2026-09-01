@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <limits.h>
 
 // Reuse test macros
 static int tests_run = 0;
@@ -560,6 +561,31 @@ TEST(engine_survives_non_finite_params)
     ASSERT( fabsf( out ) > 0.001f );
 }
 
+TEST(engine_clamps_invalid_restored_selector_indices)
+{
+    four::EngineState state;
+    four::EngineParams params;
+    params.algorithm = INT_MAX;
+    params.opFreqMode[0] = INT_MIN;
+    params.opFoldType[0] = INT_MAX;
+
+    float out = four::engine_process(state, params, 1.f / 48000.f, 0.f);
+    ASSERT(isfinite(out));
+
+    params.algorithm = INT_MIN;
+    out = four::engine_process(state, params, 1.f / 48000.f, 0.f);
+    ASSERT(isfinite(out));
+}
+
+TEST(legacy_external_pm_depth_remains_polarity_selective)
+{
+    ASSERT_NEAR(four::legacy_external_pm_depth(-0.5f, 1.f), 0.f, 1e-6f);
+    ASSERT_NEAR(four::legacy_external_pm_depth(0.5f, 1.f), 0.5f, 1e-6f);
+    ASSERT_NEAR(four::legacy_external_pm_depth(2.f, 1.f), 1.f, 1e-6f);
+    ASSERT_NEAR(four::legacy_external_pm_depth(0.5f, -1.f), 0.f, 1e-6f);
+    ASSERT_NEAR(four::legacy_external_pm_depth(-0.5f, -1.f), 0.5f, 1e-6f);
+}
+
 int main()
 {
     printf("Engine tests:\n");
@@ -582,6 +608,8 @@ int main()
     run_engine_states_remain_independent_when_interleaved();
     run_engine_state_reset_restores_clean_sequence();
     run_engine_survives_non_finite_params();
+    run_engine_clamps_invalid_restored_selector_indices();
+    run_legacy_external_pm_depth_remains_polarity_selective();
 
     printf("\n%d/%d engine tests passed.\n", tests_passed, tests_run);
     return tests_passed == tests_run ? 0 : 1;

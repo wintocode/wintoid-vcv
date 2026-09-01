@@ -10,6 +10,10 @@
 namespace four {
 
 static constexpr float TWO_PI = 6.283185307179586f;
+static constexpr int OPERATOR_COUNT = 4;
+static constexpr int ALGORITHM_COUNT = 11;
+static constexpr int FREQUENCY_MODE_COUNT = 2;
+static constexpr int FOLD_TYPE_COUNT = 3;
 
 // Denormal protection: flush subnormals to zero
 inline void flush_denormal( float& x )
@@ -187,12 +191,12 @@ inline float wave_fold( float input, float amount, int type )
 
 struct Algorithm
 {
-    bool mod[4][4];     // mod[src][dst]: src modulates dst
-    bool carrier[4];    // carrier[op]: outputs to mix
+    bool mod[OPERATOR_COUNT][OPERATOR_COUNT];
+    bool carrier[OPERATOR_COUNT];
 };
 
 // 11 FM algorithms (0-indexed)
-static const Algorithm algorithms[11] = {
+static const Algorithm algorithms[ALGORITHM_COUNT] = {
     // Algo 1: 4→3→2→1, carriers: {1}
     { { {0,0,0,0}, {1,0,0,0}, {0,1,0,0}, {0,0,1,0} },
       {true, false, false, false} },
@@ -370,7 +374,7 @@ inline float coarse_fixed_from_param( float param )
 }
 
 // Algorithm display strings (matching Four)
-static const char* algorithmStrings[11] = {
+static const char* algorithmStrings[ALGORITHM_COUNT] = {
     "4 => 3 => 2 => 1",
     "(3+4) => 2 => 1",
     "4 => 2 => 1, 3 => 1",

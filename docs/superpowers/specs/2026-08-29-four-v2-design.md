@@ -136,7 +136,7 @@ The global section contains:
 - `PM DEPTH`, its CV input, and bipolar CV attenuverter;
 - `MASTER` output level;
 - V/Oct input;
-- External PM input and bipolar attenuverter;
+- External PM input and unipolar attenuator;
 - main output;
 - red `OVER` light.
 
@@ -148,9 +148,9 @@ External PM is applied directly to the phase of every carrier in the selected al
 
 The initial scaling is:
 
-`external phase cycles = input volts × attenuverter × 0.1`
+`external phase cycles = input volts × attenuator × 0.1`
 
-Thus a ±5 V input at full positive attenuation produces ±0.5 phase cycles. Negative attenuverter settings invert the modulation. The input is not rectified and is not used twice as both signal and depth. This scaling receives a listening check in VCV before release; changing the constant before release is permitted if the agreed range proves impractical.
+Thus a ±5 V input at full attenuation produces ±0.5 phase cycles. The input remains bipolar, while the attenuator has a `0–1` range and cannot invert it; patches that need inversion can invert the source signal explicitly. The input is not rectified and is not used twice as both signal and depth. This unipolar control and scaling were approved during the VCV panel review.
 
 ### Carrier mix and Master
 
@@ -179,7 +179,7 @@ The default patch is a plain sine tone:
 - Symmetric Fold Type;
 - global Tune at zero;
 - PM Depth and Master at their existing full-scale defaults;
-- External PM attenuverter at zero.
+- External PM attenuator at zero.
 
 ## Panel architecture
 
@@ -271,7 +271,7 @@ No user selection can create an invalid or cyclic graph because only the 16 comp
 - Assert Output scales every configured destination of an operator.
 - Preserve Warp landmarks and Fold Type behaviour.
 - Assert External PM affects every carrier and no non-carrier directly.
-- Assert positive, negative, and inverted External PM scaling.
+- Assert positive and negative External PM input scaling and the attenuator's `0–1` range.
 - Assert carriers are summed raw and Master is the only automatic post-mix gain stage.
 - Assert the Over threshold, any-lane polyphonic trigger, and peak hold.
 - Assert defaults produce one unmodulated sine carrier.
@@ -298,6 +298,6 @@ Before FourV2's first compatibility-bearing release:
 1. Confirm the 32 HP panel at actual size or document the approved increase.
 2. Approve the visible `FourV2` title treatment.
 3. Approve the real-size vector wintoid mark.
-4. Confirm External PM scaling after listening tests.
+4. Preserve the approved External PM scaling and unipolar `0–1` attenuator.
 5. Confirm all native and compatibility-oriented tests pass.
 6. Freeze the `FourV2` model slug and parameter ordering for subsequent patch compatibility.

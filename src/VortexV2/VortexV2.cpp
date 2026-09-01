@@ -183,6 +183,8 @@ struct VortexV2 : Module {
         const bool resonanceCvConnected =
             inputs[RESONANCE_CV_INPUT].isConnected();
         const bool driveCvConnected = inputs[DRIVE_CV_INPUT].isConnected();
+        const bool reuseFilterCoefficients =
+            !cutoffCvConnected && !resonanceCvConnected;
 
         for (int lane = 0; lane < channels; ++lane) {
             float signal = readBroadcast(inputs[AUDIO_INPUT], lane) / 5.f;
@@ -218,7 +220,8 @@ struct VortexV2 : Module {
                 const float wet = vortex_v2::process_branch(
                     voiceStates[lane].branches[output],
                     vortex_v2::OUTPUT_MODES[output], signal,
-                    args.sampleRate, cutoff, damping);
+                    args.sampleRate, cutoff, damping,
+                    reuseFilterCoefficients);
                 voiceStates[lane].branches[output].f1.z =
                     vortex::flush_denormal(
                         voiceStates[lane].branches[output].f1.z);

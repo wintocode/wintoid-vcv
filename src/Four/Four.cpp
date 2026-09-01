@@ -323,9 +323,8 @@ struct Four : Module {
                 xmParam + modCv, 0.f, 1.f);
 
             const float extPm = readBroadcast(inputs[EXT_PM_CV_INPUT], lane);
-            ep.extPmDepth = clamp(
-                extPm * extPmCvAtten,
-                0.f, 1.f);
+            ep.extPmDepth = four::legacy_external_pm_depth(
+                extPm, extPmCvAtten);
 
             for (int op = 0; op < 4; ++op) {
                 const float levelCv = readBroadcast(inputs[levelCvIds[op]], lane)

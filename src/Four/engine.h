@@ -43,6 +43,18 @@ struct EngineParams
     int opFoldType[4] = {};     // 0=sym, 1=asym, 2=soft
 };
 
+// Four V1 compatibility: the signed input and attenuverter select a polarity
+// and derive the modulation depth. FourV2 deliberately does not use this rule.
+inline float legacy_external_pm_depth(float inputVolts, float attenuverter)
+{
+    return std::max(0.f, std::min(1.f, inputVolts * attenuverter));
+}
+
+inline int clamp_selector(int value, int maximum)
+{
+    return std::max(0, std::min(maximum, value));
+}
+
 // Process one sample. Internally runs 2x oversampled.
 // sampleTime: 1.0 / sampleRate (the VCV sample period, NOT oversampled)
 // extPm: external phase modulation amount (audio rate, typically +/- 5V)
@@ -50,7 +62,8 @@ struct EngineParams
 inline float engine_process( EngineState& state, const EngineParams& params, float sampleTime, float extPm = 0.f )
 {
     const float osTime = sampleTime * 0.5f;
-    const Algorithm& algo = algorithms[params.algorithm];
+    const Algorithm& algo = algorithms[
+        clamp_selector(params.algorithm, ALGORITHM_COUNT - 1)];
     float result[2];
 
     for ( int pass = 0; pass < 2; pass++ )
@@ -62,7 +75,8 @@ inline float engine_process( EngineState& state, const EngineParams& params, flo
         {
             // Compute operator frequency
             float freq;
-            if ( params.opFreqMode[op] == 0 )
+            if ( clamp_selector(params.opFreqMode[op],
+                    FREQUENCY_MODE_COUNT - 1) == 0 )
                 freq = calc_frequency_ratio( params.baseFreq, params.opCoarse[op], params.opFine[op] );
             else
                 freq = calc_frequency_fixed( params.opCoarse[op], params.opFine[op] );
@@ -87,7 +101,8 @@ inline float engine_process( EngineState& state, const EngineParams& params, flo
             float out = wave_warp_blep( modulatedPhase, params.opWarp[op], inc );
 
             // Apply wave fold
-            out = wave_fold( out, params.opFold[op], params.opFoldType[op] );
+            out = wave_fold(out, params.opFold[op],
+                clamp_selector(params.opFoldType[op], FOLD_TYPE_COUNT - 1));
 
             // Keep a non-finite sample out of the network and feedback state
             if ( !isfinite( out ) )

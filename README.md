@@ -266,11 +266,11 @@ compatibility; BrinkV2 does not replace or reinterpret Brink patches.
 
 ## MetaModule compatibility
 
-The current sibling MetaModule package contains the original Four, Vortex, and
-Brink modules. FourV2, VortexV2, and BrinkV2 are separate VCV Rack models in
-this repository. Their shared code follows the MetaModule compatibility
-boundary, but consumer registration, PNG assets, packaging, and hardware
-validation remain future work. See
+The current sibling MetaModule package is an unreleased V1-only prototype. The
+planned MetaModule release will contain FourV2, VortexV2, and BrinkV2 only;
+those models remain separate VCV Rack modules in this repository. Their shared
+code follows the MetaModule compatibility boundary, but consumer registration,
+PNG assets, packaging, and hardware validation remain future work. See
 [docs/metamodule-compatibility.md](docs/metamodule-compatibility.md) for the
 handoff requirements.
 

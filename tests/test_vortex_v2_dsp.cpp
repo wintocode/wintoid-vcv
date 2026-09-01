@@ -180,6 +180,24 @@ TEST(branches_remain_independent_when_interleaved)
     }
 }
 
+TEST(cached_branches_follow_audio_rate_cutoff_and_resonance_changes)
+{
+    vortex_v2::BranchState actual;
+    vortex::Filter1 unused;
+    vortex::Filter2 referenceA;
+    vortex::Filter2 referenceB;
+    for (int sample = 0; sample < 512; ++sample) {
+        const float signal = sinf(0.017f * sample) * 0.7f;
+        const float cutoff = 200.f + (sample % 97) * 150.f;
+        const float damping = 0.01f + (sample % 31) * 0.02f;
+        const float expected = reference_branch(unused, referenceA, referenceB,
+            vortex_v2::NOTCH_PLUS, signal, 48000.f, cutoff, damping);
+        const float received = vortex_v2::process_branch(actual,
+            vortex_v2::NOTCH_PLUS, signal, 48000.f, cutoff, damping);
+        ASSERT_NEAR(received, expected, 1e-6f);
+    }
+}
+
 TEST(all_valid_branches_remain_finite)
 {
     vortex_v2::VoiceState voice;
@@ -236,6 +254,7 @@ int main()
     run_each_output_matches_the_equivalent_vortex_mode();
     run_voice_state_reset_clears_all_twelve_branches();
     run_branches_remain_independent_when_interleaved();
+    run_cached_branches_follow_audio_rate_cutoff_and_resonance_changes();
     run_all_valid_branches_remain_finite();
     run_branch_recovers_after_single_nan_sample();
     run_drive_saturate_preserves_v1_curve_below_the_bound();

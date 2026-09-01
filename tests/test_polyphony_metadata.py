@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 manifest = json.loads((ROOT / "plugin.json").read_text(encoding="utf-8"))
 modules = {module["name"]: module for module in manifest["modules"]}
 
-assert manifest["version"] == "2.2.1"
+assert manifest["version"] == "2.3.0"
 for name in ("Four", "Vortex", "VortexV2", "FourV2", "BrinkV2"):
     assert name in modules, f"missing {name} manifest entry"
     assert "Polyphonic" in modules[name]["tags"]

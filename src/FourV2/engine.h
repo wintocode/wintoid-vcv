@@ -155,6 +155,25 @@ inline float operator_pm_cycles(
     return finite_or(pm, 0.f);
 }
 
+// Fast path for arrays already sanitised by engine_process().
+inline float prepared_operator_pm_cycles(
+    int op,
+    const float opOut[4],
+    const float output[4],
+    const float previous[4],
+    const float feedbackAmount[4],
+    float pmDepth,
+    float externalPmCycles,
+    const Algorithm& algorithm)
+{
+    float pm = gather_modulation(
+        op, opOut, output, pmDepth, algorithm);
+    pm += calc_feedback(previous[op], feedbackAmount[op]);
+    if (algorithm.carrier[op])
+        pm += externalPmCycles;
+    return finite_or(pm, 0.f);
+}
+
 inline float engine_frequency(const EngineParams& params,
                               int op,
                               float safeBaseFreq)
@@ -203,10 +222,21 @@ inline float engine_process(EngineState& state,
     const Algorithm& algorithm = ALGORITHMS[algorithmIndex];
 
     float safeOutput[OPERATOR_COUNT] = {};
+    float safeFeedback[OPERATOR_COUNT] = {};
+    float increment[OPERATOR_COUNT] = {};
+    float warp[OPERATOR_COUNT] = {};
+    float fold[OPERATOR_COUNT] = {};
+    int foldType[OPERATOR_COUNT] = {};
     for (int op = 0; op < OPERATOR_COUNT; ++op)
     {
         const float defaultOutput = op == 0 ? 1.f : 0.f;
         safeOutput[op] = engine_unit(params.opOutput[op], defaultOutput);
+        safeFeedback[op] = engine_unit(params.opFeedback[op], 0.f);
+        increment[op] = engine_phase_increment(
+            engine_frequency(params, op, safeBaseFreq), osTime);
+        warp[op] = engine_unit(params.opWarp[op], 0.f);
+        fold[op] = engine_unit(params.opFold[op], 0.f);
+        foldType[op] = engine_fold_type(params.opFoldType[op]);
         state.ops[op].phase = wrap_phase(state.ops[op].phase);
         state.ops[op].prevOutput = engine_signal(state.ops[op].prevOutput);
     }
@@ -228,22 +258,17 @@ inline float engine_process(EngineState& state,
         // higher-numbered operators to lower-numbered destinations.
         for (int op = OPERATOR_COUNT - 1; op >= 0; --op)
         {
-            const float frequency = engine_frequency(params, op, safeBaseFreq);
-            const float increment = engine_phase_increment(frequency, osTime);
-            phase_advance(state.ops[op].phase, increment);
+            phase_advance(state.ops[op].phase, increment[op]);
 
-            const float pm = operator_pm_cycles(
-                op, opOut, safeOutput, previous, params.opFeedback,
+            const float pm = prepared_operator_pm_cycles(
+                op, opOut, safeOutput, previous, safeFeedback,
                 safePmDepth, safeExternalPm, algorithm);
             const float modulatedPhase = wrap_phase(
                 state.ops[op].phase + pm);
-            const float warp = engine_unit(params.opWarp[op], 0.f);
-            const float fold = engine_unit(params.opFold[op], 0.f);
-            const int foldType = engine_fold_type(params.opFoldType[op]);
 
             float signal = wave_warp_blep(
-                modulatedPhase, warp, increment);
-            signal = wave_fold(signal, fold, foldType);
+                modulatedPhase, warp[op], increment[op]);
+            signal = wave_fold(signal, fold[op], foldType[op]);
             signal = engine_signal(signal);
             opOut[op] = signal;
             state.ops[op].prevOutput = signal;

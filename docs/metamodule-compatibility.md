@@ -55,8 +55,18 @@ polyphony, panel, and source-level graphics checks also pass. These checks
 establish a favourable source/API boundary; they do not close the consumer's
 full link, package, or hardware gates.
 
-The current sibling package therefore remains V1-only. The V2 modules cannot
-be loaded as MetaModule modules until the consumer is refreshed.
+The current sibling package therefore remains an unreleased V1-only prototype.
+The V2 modules cannot be loaded as MetaModule modules until the consumer is
+refreshed.
+The planned consumer refresh will register only FourV2, VortexV2, and BrinkV2;
+the V1 modules are not part of the MetaModule release contract.
+
+Four V1's External PM path is intentionally a legacy compatibility behaviour:
+the signed input multiplied by its attenuverter is clamped to `0–1` to derive
+depth, then the signed input is applied again as the modulation signal. Preserve
+that behaviour for existing VCV patches, but do not copy it into FourV2 or the
+MetaModule consumer. FourV2 uses the straightforward signed input multiplied by
+its unipolar `0–1` attenuator and by `0.1` cycles per volt.
 
 ## FourV2 handoff
 
@@ -77,6 +87,9 @@ layout as a matched revision boundary:
   these are host-mappable switches. Ratio selection remains the module's deterministic
   quantisation of a continuous parameter; the consumer must not depend on
   runtime changes to Rack parameter snapping.
+- Map `EXT_PM_ATTEN_PARAM` as a unipolar `0–1` parameter. The External PM
+  signal itself remains signed, so positive and negative input voltages retain
+  their polarity; the consumer must not expose a negative attenuator value.
 - Register both `AlgorithmRoutingDisplay` and
   `OperatorFrequencyDisplay` through supported SDK display facilities. These
   displays are read-only informational graphics; no parameter write, click,
@@ -132,8 +145,7 @@ work performed by this VCV integration.
 
 ## Remaining MetaModule acceptance gates
 
-These remain open for whoever refreshes the consumer, whether the refresh
-includes only the V2 modules or the existing V1 modules as well:
+These remain open for the V2-only consumer refresh:
 
 - Confirm every packaged faceplate and FourV2 switch-frame PNG was generated
   from the same wintoid-vcv revision as its compiled C++ and generated header.

@@ -32,13 +32,6 @@ static int tests_passed = 0;
 
 #include "../src/Four/dsp.h"
 
-// --- Tests will be added here as DSP functions are implemented ---
-
-TEST(placeholder)
-{
-    ASSERT(1 + 1 == 2);
-}
-
 // --- Task 7: Phase Accumulator + Sine ---
 
 TEST(oscillator_sine_zero_phase)
@@ -560,7 +553,6 @@ int main()
 {
     printf("Four DSP tests:\n");
 
-    run_placeholder();
     run_oscillator_sine_zero_phase();
     run_oscillator_sine_quarter();
     run_oscillator_sine_half();

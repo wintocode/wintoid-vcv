@@ -36,11 +36,16 @@ struct BranchState {
     vortex::Filter1 f1;
     vortex::Filter2 f2a;
     vortex::Filter2 f2b;
+    float configuredSampleRate = 0.f;
+    float configuredCutoff = 0.f;
+    float configuredDamping = 0.f;
+    int configuredMode = -1;
 
     void reset() {
         f1.reset();
         f2a.reset();
         f2b.reset();
+        configuredMode = -1;
     }
 };
 
@@ -53,62 +58,123 @@ struct VoiceState {
     }
 };
 
+inline void configure_filter2_branch(BranchState& branch,
+                                     float sampleRate,
+                                     float cutoff,
+                                     float damping,
+                                     vortex::Filter2Type type,
+                                     bool cascade)
+{
+    vortex::filter2_configure(
+        branch.f2a, sampleRate, cutoff, damping, type);
+    if (cascade)
+        vortex::filter2_configure(
+            branch.f2b, sampleRate, cutoff, damping, type);
+}
+
+inline bool configure_branch(BranchState& branch,
+                             OutputMode mode,
+                             float sampleRate,
+                             float cutoff,
+                             float damping)
+{
+    switch (mode) {
+    case LP6:
+        vortex::filter1_configure_lp(branch.f1, sampleRate, cutoff);
+        break;
+    case HP6:
+        vortex::filter1_configure_hp(branch.f1, sampleRate, cutoff);
+        break;
+    case LP12:
+    case LP24:
+        configure_filter2_branch(branch, sampleRate, cutoff, damping,
+            vortex::F2_LP, mode == LP24);
+        break;
+    case HP12:
+    case HP24:
+        configure_filter2_branch(branch, sampleRate, cutoff, damping,
+            vortex::F2_HP, mode == HP24);
+        break;
+    case BP:
+    case BP_PLUS:
+        configure_filter2_branch(branch, sampleRate, cutoff, damping,
+            vortex::F2_BP, mode == BP_PLUS);
+        break;
+    case NOTCH:
+    case NOTCH_PLUS:
+        configure_filter2_branch(branch, sampleRate, cutoff, damping,
+            vortex::F2_NOTCH, mode == NOTCH_PLUS);
+        break;
+    case AP:
+    case AP_PLUS:
+        configure_filter2_branch(branch, sampleRate, cutoff, damping,
+            vortex::F2_AP, mode == AP_PLUS);
+        break;
+    default:
+        return false;
+    }
+
+    return true;
+}
+
 inline float process_branch(BranchState& branch,
                             OutputMode mode,
                             float signal,
                             float sampleRate,
                             float cutoff,
-                            float damping)
+                            float damping,
+                            bool reuseCoefficients = true)
 {
+    const bool coefficientsMatch =
+        reuseCoefficients && branch.configuredMode == (int)mode &&
+        branch.configuredSampleRate == sampleRate &&
+        branch.configuredCutoff == cutoff &&
+        branch.configuredDamping == damping;
+    if (!coefficientsMatch) {
+        if (!configure_branch(
+                branch, mode, sampleRate, cutoff, damping))
+            return 0.f;
+        if (cutoff > 0.f && std::isfinite(sampleRate) &&
+            ((mode == LP6 || mode == HP6) || std::isfinite(damping))) {
+            branch.configuredSampleRate = sampleRate;
+            branch.configuredCutoff = cutoff;
+            branch.configuredDamping = damping;
+            branch.configuredMode = (int)mode;
+        }
+    }
+
     switch (mode) {
     case LP6:
-        vortex::filter1_configure_lp(branch.f1, sampleRate, cutoff);
         return branch.f1.process_lp(signal);
     case LP12:
-        vortex::filter2_configure(branch.f2a, sampleRate, cutoff, damping, vortex::F2_LP);
         return vortex::filter2_process(branch.f2a, signal, vortex::F2_LP);
     case LP24:
-        vortex::filter2_configure(branch.f2a, sampleRate, cutoff, damping, vortex::F2_LP);
-        vortex::filter2_configure(branch.f2b, sampleRate, cutoff, damping, vortex::F2_LP);
         return vortex::filter2_process(branch.f2b,
                vortex::filter2_process(branch.f2a, signal, vortex::F2_LP),
                vortex::F2_LP);
     case HP6:
-        vortex::filter1_configure_hp(branch.f1, sampleRate, cutoff);
         return branch.f1.process_hp(signal);
     case HP12:
-        vortex::filter2_configure(branch.f2a, sampleRate, cutoff, damping, vortex::F2_HP);
         return vortex::filter2_process(branch.f2a, signal, vortex::F2_HP);
     case HP24:
-        vortex::filter2_configure(branch.f2a, sampleRate, cutoff, damping, vortex::F2_HP);
-        vortex::filter2_configure(branch.f2b, sampleRate, cutoff, damping, vortex::F2_HP);
         return vortex::filter2_process(branch.f2b,
                vortex::filter2_process(branch.f2a, signal, vortex::F2_HP),
                vortex::F2_HP);
     case BP:
-        vortex::filter2_configure(branch.f2a, sampleRate, cutoff, damping, vortex::F2_BP);
         return vortex::filter2_process(branch.f2a, signal, vortex::F2_BP);
     case BP_PLUS:
-        vortex::filter2_configure(branch.f2a, sampleRate, cutoff, damping, vortex::F2_BP);
-        vortex::filter2_configure(branch.f2b, sampleRate, cutoff, damping, vortex::F2_BP);
         return vortex::filter2_process(branch.f2b,
                vortex::filter2_process(branch.f2a, signal, vortex::F2_BP),
                vortex::F2_BP);
     case NOTCH:
-        vortex::filter2_configure(branch.f2a, sampleRate, cutoff, damping, vortex::F2_NOTCH);
         return vortex::filter2_process(branch.f2a, signal, vortex::F2_NOTCH);
     case NOTCH_PLUS:
-        vortex::filter2_configure(branch.f2a, sampleRate, cutoff, damping, vortex::F2_NOTCH);
-        vortex::filter2_configure(branch.f2b, sampleRate, cutoff, damping, vortex::F2_NOTCH);
         return vortex::filter2_process(branch.f2b,
                vortex::filter2_process(branch.f2a, signal, vortex::F2_NOTCH),
                vortex::F2_NOTCH);
     case AP:
-        vortex::filter2_configure(branch.f2a, sampleRate, cutoff, damping, vortex::F2_AP);
         return vortex::filter2_process(branch.f2a, signal, vortex::F2_AP);
     case AP_PLUS:
-        vortex::filter2_configure(branch.f2a, sampleRate, cutoff, damping, vortex::F2_AP);
-        vortex::filter2_configure(branch.f2b, sampleRate, cutoff, damping, vortex::F2_AP);
         return vortex::filter2_process(branch.f2b,
                vortex::filter2_process(branch.f2a, signal, vortex::F2_AP),
                vortex::F2_AP);
