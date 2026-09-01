@@ -118,6 +118,7 @@ Independent twelve-output multi-mode filter (12HP)
 - **Outputs**: LP 6/12/24dB, HP 6/12/24dB, BP, BP+, Notch, Notch+, AP, AP+ — in that order
 - **Simultaneous outputs** — all twelve outputs can be used at the same time
 - **Disconnected outputs** — reset and skip their individual filter branch
+- **Drive stage** — soft-clip saturation before the filters, bounded at ±3 (V1's curve is intentionally unbounded)
 - **16-channel polyphony** — voice count follows **AUDIO IN**; mono and shorter polyphonic CV inputs broadcast lane 0
 
 ### Brink

@@ -534,6 +534,32 @@ TEST(engine_state_reset_restores_clean_sequence)
     }
 }
 
+TEST(engine_survives_non_finite_params)
+{
+    // A NaN in any CV-derived parameter must not latch in the phase
+    // accumulators or the feedback state
+    four::EngineState state;
+    four::EngineParams poisoned;
+    poisoned.modMaster = 0.f;
+    poisoned.opWarp[0] = NAN;
+    poisoned.opLevel[2] = NAN;
+    poisoned.baseFreq = NAN;
+    const float sampleTime = 1.f / 48000.f;
+
+    float out = 0.f;
+    for ( int i = 0; i < 50; i++ )
+        out = four::engine_process( state, poisoned, sampleTime, 0.f );
+    ASSERT( isfinite( out ) );
+
+    // Params recover -> the same engine keeps producing finite audio
+    four::EngineParams clean;
+    clean.modMaster = 0.f;
+    for ( int i = 0; i < 100; i++ )
+        out = four::engine_process( state, clean, sampleTime, 0.f );
+    ASSERT( isfinite( out ) );
+    ASSERT( fabsf( out ) > 0.001f );
+}
+
 int main()
 {
     printf("Engine tests:\n");
@@ -555,6 +581,7 @@ int main()
     run_output_bounded();
     run_engine_states_remain_independent_when_interleaved();
     run_engine_state_reset_restores_clean_sequence();
+    run_engine_survives_non_finite_params();
 
     printf("\n%d/%d engine tests passed.\n", tests_passed, tests_run);
     return tests_passed == tests_run ? 0 : 1;

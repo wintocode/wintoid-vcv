@@ -1,5 +1,6 @@
 #include "../plugin.hpp"
 #include "../polyphony.h"
+#include "../finite.h"
 #include "../ui_geometry.h"
 #include "dsp.h"
 #include "layout.h"
@@ -85,7 +86,10 @@ struct VortexV2 : Module {
     {
         return vortex_v2::runtime::read_broadcast(
             lane, input.getChannels(),
-            [&](int sourceLane) { return input.getVoltage(sourceLane); });
+            [&](int sourceLane) {
+                return wintoid::finite_or(
+                    input.getVoltage(sourceLane), 0.f);
+            });
     }
 
     void prepareLanes(int channels)
@@ -206,7 +210,7 @@ struct VortexV2 : Module {
                 drive = clamp(drive + driveCv, 0.f, 1.f);
             }
             if (drive > 0.f)
-                signal = vortex::soft_clip(signal * (1.f + drive * 9.f));
+                signal = vortex_v2::drive_saturate(signal * (1.f + drive * 9.f));
 
             for (int output = 0; output < vortex_v2::OUTPUT_COUNT; ++output) {
                 if (!activeOutputs[output])

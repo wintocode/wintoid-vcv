@@ -390,6 +390,66 @@ TEST(voice_states_remain_independent_when_interleaved)
     ASSERT_NEAR(actualB, expectedB, 1e-6f);
 }
 
+TEST(soft_clip_legacy_unbounded_tail)
+{
+    // V1 character is intentionally unbounded: beyond |x| ~ 3 the curve
+    // grows linearly toward its x/9 asymptote (documented in dsp.h).
+    ASSERT_NEAR(vortex::soft_clip(100.f), 100.f / 9.f, 0.1f);
+    ASSERT_NEAR(vortex::soft_clip(-100.f), -100.f / 9.f, 0.1f);
+    ASSERT(vortex::soft_clip(100.f) > 10.f);
+}
+
+// --- Non-finite recovery: a NaN from an upstream module must not latch ---
+
+TEST(filter1_recovers_after_single_nan_sample)
+{
+    vortex::Filter1 f;
+    vortex::filter1_configure_lp(f, 48000.f, 1000.f);
+    for (int i = 0; i < 100; ++i)
+        (void)f.process_lp(0.5f);
+    (void)f.process_lp(NAN);
+    float y = 0.f;
+    for (int i = 0; i < 10; ++i)
+        y = f.process_lp(0.5f);
+    ASSERT(isfinite(y));
+}
+
+TEST(filter2_recovers_after_single_nan_sample)
+{
+    vortex::Filter2 f;
+    vortex::filter2_configure(f, 48000.f, 1000.f, 0.707f, vortex::F2_LP);
+    for (int i = 0; i < 100; ++i)
+        (void)vortex::filter2_process(f, 0.5f, vortex::F2_LP);
+    (void)vortex::filter2_process(f, NAN, vortex::F2_LP);
+    float y = 0.f;
+    for (int i = 0; i < 10; ++i)
+        y = vortex::filter2_process(f, 0.5f, vortex::F2_LP);
+    ASSERT(isfinite(y));
+}
+
+TEST(filter_recovers_from_poisoned_state)
+{
+    // Simulates state poisoned before the non-finite guards existed
+    vortex::Filter2 f;
+    vortex::filter2_configure(f, 48000.f, 1000.f, 0.707f, vortex::F2_LP);
+    f.z0 = NAN;
+    f.z1 = NAN;
+    const float y = vortex::filter2_process(f, 0.5f, vortex::F2_LP);
+    ASSERT(isfinite(y));
+    ASSERT(isfinite(f.z0) && isfinite(f.z1));
+}
+
+TEST(filter_configure_nan_arguments_keep_last_good_coefficients)
+{
+    vortex::Filter2 f;
+    vortex::filter2_configure(f, 48000.f, 1000.f, 0.707f, vortex::F2_LP);
+    const float b0 = f.b0, b1 = f.b1, b2 = f.b2, b3 = f.b3;
+    vortex::filter2_configure(f, 48000.f, NAN, 0.707f, vortex::F2_LP);
+    vortex::filter2_configure(f, 48000.f, 1000.f, NAN, vortex::F2_LP);
+    vortex::filter2_configure(f, 48000.f, 0.f, 0.707f, vortex::F2_LP);
+    ASSERT(f.b0 == b0 && f.b1 == b1 && f.b2 == b2 && f.b3 == b3);
+}
+
 int main()
 {
     printf("Vortex DSP Tests\n");
@@ -400,6 +460,7 @@ int main()
     run_soft_clip_unity();
     run_soft_clip_symmetry();
     run_soft_clip_saturation();
+    run_soft_clip_legacy_unbounded_tail();
     run_midi_note_to_freq_a4();
     run_midi_note_to_freq_c4();
     run_voct_to_freq_0v();
@@ -433,6 +494,12 @@ int main()
     run_filter2_reset();
     run_voice_state_reset_clears_all_filter_history();
     run_voice_states_remain_independent_when_interleaved();
+
+    printf("\nNon-finite recovery:\n");
+    run_filter1_recovers_after_single_nan_sample();
+    run_filter2_recovers_after_single_nan_sample();
+    run_filter_recovers_from_poisoned_state();
+    run_filter_configure_nan_arguments_keep_last_good_coefficients();
 
     printf("\n%d/%d tests passed\n", tests_passed, tests_run);
     return (tests_passed == tests_run) ? 0 : 1;

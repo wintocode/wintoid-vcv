@@ -1,4 +1,5 @@
 #include "../plugin.hpp"
+#include "../finite.h"
 #include "dsp.h"
 #include "layout.h"
 #include "../ui_geometry.h"
@@ -151,7 +152,8 @@ struct Brink : Module {
         int channels = mutableInput.getChannels();
         if (channels <= 0) return 0.f;
         int sourceLane = brink::broadcast_lane(lane, channels);
-        return mutableInput.getVoltage(sourceLane);
+        return wintoid::finite_or(
+            mutableInput.getVoltage(sourceLane), 0.f);
     }
 
     static void resetWindowLane(brink::WindowState& state, bool& inside)

@@ -27,7 +27,9 @@ inline float flush_denormal(float x)
 }
 
 // Soft-clip saturation: x*(27+x^2)/(27+9x^2)
-// Smooth saturator approaching +/-1/3 at extremes
+// Tracks a tanh curve up to about |x| = 3 (where it reaches +/-1), then
+// continues linearly as x/9 — unbounded. Intentional legacy V1 behaviour;
+// VortexV2's drive stage wraps this with a +/-3 bound (drive_saturate).
 inline float soft_clip(float x)
 {
     float x2 = x * x;
@@ -85,6 +87,10 @@ struct Filter1
     // Low-pass output: theta*b1 + z
     float process_lp(float x)
     {
+        // A non-finite sample would latch in the recursive state forever;
+        // drop it and self-heal any already-poisoned state
+        if (!std::isfinite(x)) x = 0.0f;
+        if (!std::isfinite(z)) z = 0.0f;
         float theta = (x - z) * b0;
         float y = theta * b1 + z;
         z += theta;
@@ -94,6 +100,8 @@ struct Filter1
     // High-pass output: theta*b1
     float process_hp(float x)
     {
+        if (!std::isfinite(x)) x = 0.0f;
+        if (!std::isfinite(z)) z = 0.0f;
         float theta = (x - z) * b0;
         float y = theta * b1;
         z += theta;
@@ -105,6 +113,9 @@ struct Filter1
 // Uses Sigma frequency warping for audio-rate modulation quality
 inline void filter1_configure_lp(Filter1& f, float sample_rate, float cutoff_hz)
 {
+    // Keep last good coefficients on non-finite or non-positive arguments
+    if (!(cutoff_hz > 0.0f) || !std::isfinite(sample_rate))
+        return;
     float w = sample_rate / (2.0f * PI * cutoff_hz);
     float sigma = INV_PI;
     if (w > INV_PI)
@@ -117,6 +128,8 @@ inline void filter1_configure_lp(Filter1& f, float sample_rate, float cutoff_hz)
 // Configure first-order high-pass coefficients
 inline void filter1_configure_hp(Filter1& f, float sample_rate, float cutoff_hz)
 {
+    if (!(cutoff_hz > 0.0f) || !std::isfinite(sample_rate))
+        return;
     float w = sample_rate / (2.0f * PI * cutoff_hz);
     float sigma = INV_PI;
     if (w > INV_PI)
@@ -153,6 +166,10 @@ struct Filter2
     // Process for LP, Notch, AllPass (output includes z0 term)
     float process_lna(float x)
     {
+        // Non-finite guard, as in Filter1::process_lp
+        if (!std::isfinite(x)) x = 0.0f;
+        if (!std::isfinite(z0)) z0 = 0.0f;
+        if (!std::isfinite(z1)) z1 = 0.0f;
         float theta = (x - z0 - z1 * b1) * b0;
         float y = theta * b3 + z1 * b2 + z0;
         z0 += theta;
@@ -163,6 +180,9 @@ struct Filter2
     // Process for HP, BP (output excludes z0 term)
     float process_hb(float x)
     {
+        if (!std::isfinite(x)) x = 0.0f;
+        if (!std::isfinite(z0)) z0 = 0.0f;
+        if (!std::isfinite(z1)) z1 = 0.0f;
         float theta = (x - z0 - z1 * b1) * b0;
         float y = theta * b3 + z1 * b2;
         z0 += theta;
@@ -191,6 +211,10 @@ struct VoiceState
 inline void filter2_configure(Filter2& f, float sample_rate, float cutoff_hz,
                                float damping, Filter2Type type)
 {
+    // Keep last good coefficients on non-finite or non-positive arguments
+    if (!(cutoff_hz > 0.0f) || !std::isfinite(damping) ||
+        !std::isfinite(sample_rate))
+        return;
     float w = sample_rate / (SQRT2 * PI * cutoff_hz);
     float sigma = SQRT2 * INV_PI;
     if (w > INV_PI * SQRT2)

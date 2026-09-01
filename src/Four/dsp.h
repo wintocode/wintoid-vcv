@@ -47,6 +47,9 @@ inline float oscillator_sine( float phase )
 // Advance phase by increment, wrap to [0, 1)
 inline void phase_advance( float& phase, float increment )
 {
+    // A non-finite phase or increment would latch forever
+    if ( !isfinite( phase ) ) phase = 0.f;
+    if ( !isfinite( increment ) ) return;
     phase += increment;
     phase -= floorf( phase );
 }

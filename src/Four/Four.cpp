@@ -1,5 +1,6 @@
 #include "../plugin.hpp"
 #include "../polyphony.h"
+#include "../finite.h"
 #include "engine.h"
 
 struct CoarseParamQuantity : ParamQuantity {
@@ -104,8 +105,10 @@ struct Four : Module {
     {
         const int channels = input.getChannels();
         if (channels <= 0) return 0.f;
-        return input.getVoltage(
-            wintoid::polyphony::broadcast_lane(lane, channels));
+        return wintoid::finite_or(
+            input.getVoltage(
+                wintoid::polyphony::broadcast_lane(lane, channels)),
+            0.f);
     }
 
     void prepareLanes(int channels)

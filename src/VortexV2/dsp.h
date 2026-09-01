@@ -19,6 +19,19 @@ static const OutputMode OUTPUT_MODES[OUTPUT_COUNT] = {
     BP, BP_PLUS, NOTCH, NOTCH_PLUS, AP, AP_PLUS
 };
 
+// Drive-stage saturation for VortexV2. vortex::soft_clip tracks a tanh curve
+// up to about |x| = 3, then continues linearly as x/9 without bound, so hot
+// inputs (and feedback builds) pass through nearly at gain. Bound the output
+// at +/-3 while keeping the curve identical to V1 below that point.
+inline float drive_saturate(float x)
+{
+    const float y = vortex::soft_clip(x);
+    // A non-finite y must fall back to silence, not a latched DC value
+    if (!std::isfinite(y))
+        return 0.f;
+    return fminf(3.f, fmaxf(-3.f, y));
+}
+
 struct BranchState {
     vortex::Filter1 f1;
     vortex::Filter2 f2a;

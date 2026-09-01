@@ -89,6 +89,10 @@ inline float engine_process( EngineState& state, const EngineParams& params, flo
             // Apply wave fold
             out = wave_fold( out, params.opFold[op], params.opFoldType[op] );
 
+            // Keep a non-finite sample out of the network and feedback state
+            if ( !isfinite( out ) )
+                out = 0.f;
+
             opOut[op] = out;
             state.ops[op].prevOutput = out;
         }

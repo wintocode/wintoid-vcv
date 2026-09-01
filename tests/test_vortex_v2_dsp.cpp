@@ -195,12 +195,51 @@ TEST(all_valid_branches_remain_finite)
     }
 }
 
+TEST(branch_recovers_after_single_nan_sample)
+{
+    vortex_v2::BranchState branch;
+    const float sampleRate = 48000.f, cutoff = 1000.f, damping = 0.35f;
+    float y = 0.f;
+    for (int i = 0; i < 100; ++i)
+        y = vortex_v2::process_branch(
+            branch, vortex_v2::LP12, 0.5f, sampleRate, cutoff, damping);
+    (void)vortex_v2::process_branch(
+        branch, vortex_v2::LP12, NAN, sampleRate, cutoff, damping);
+    for (int i = 0; i < 10; ++i)
+        y = vortex_v2::process_branch(
+            branch, vortex_v2::LP12, 0.5f, sampleRate, cutoff, damping);
+    ASSERT(isfinite(y));
+}
+
+TEST(drive_saturate_preserves_v1_curve_below_the_bound)
+{
+    // Identical to vortex::soft_clip across the musical range
+    static const float points[] = { 0.f, 0.5f, 1.f, 3.f, 10.f, 20.f };
+    for (int i = 0; i < 6; ++i)
+        ASSERT_NEAR(
+            vortex_v2::drive_saturate(points[i]),
+            vortex::soft_clip(points[i]), 1e-6f);
+}
+
+TEST(drive_saturate_is_bounded)
+{
+    ASSERT_NEAR(vortex_v2::drive_saturate(100.f), 3.f, 1e-6f);
+    ASSERT_NEAR(vortex_v2::drive_saturate(-100.f), -3.f, 1e-6f);
+    ASSERT_NEAR(vortex_v2::drive_saturate(1e6f), 3.f, 1e-6f);
+    ASSERT_NEAR(vortex_v2::drive_saturate(-1e6f), -3.f, 1e-6f);
+    // Non-finite input maps to silence, not a latched DC value
+    ASSERT(vortex_v2::drive_saturate(NAN) == 0.f);
+}
+
 int main()
 {
     run_each_output_matches_the_equivalent_vortex_mode();
     run_voice_state_reset_clears_all_twelve_branches();
     run_branches_remain_independent_when_interleaved();
     run_all_valid_branches_remain_finite();
+    run_branch_recovers_after_single_nan_sample();
+    run_drive_saturate_preserves_v1_curve_below_the_bound();
+    run_drive_saturate_is_bounded();
     printf("%d/%d tests passed\n", tests_passed, tests_run);
     return tests_passed == tests_run ? 0 : 1;
 }

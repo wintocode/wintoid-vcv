@@ -1,5 +1,6 @@
 #include "../plugin.hpp"
 #include "../polyphony.h"
+#include "../finite.h"
 #include "../ui_geometry.h"
 #include "engine.h"
 #include "layout.h"
@@ -158,8 +159,10 @@ struct FourV2 : Module {
         const int channels = input.getChannels();
         if (channels <= 0)
             return 0.f;
-        return input.getVoltage(
-            wintoid::polyphony::broadcast_lane(lane, channels));
+        return wintoid::finite_or(
+            input.getVoltage(
+                wintoid::polyphony::broadcast_lane(lane, channels)),
+            0.f);
     }
 
     void prepareLanes(int channels)
