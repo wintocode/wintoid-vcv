@@ -8,11 +8,16 @@ ROOT = Path(__file__).resolve().parents[1]
 manifest = json.loads((ROOT / "plugin.json").read_text(encoding="utf-8"))
 modules = {module["name"]: module for module in manifest["modules"]}
 
-assert manifest["version"] == "2.3.0"
 for name in ("Four", "Vortex", "VortexV2", "FourV2", "BrinkV2"):
     assert name in modules, f"missing {name} manifest entry"
     assert "Polyphonic" in modules[name]["tags"]
     assert "16-channel polyphonic" in modules[name]["description"].lower()
+
+for name in ("Four", "Vortex", "Brink"):
+    assert modules[name].get("hidden") is True, f"legacy {name} must be hidden"
+for name in ("FourV2", "VortexV2", "BrinkV2"):
+    assert modules[name].get("hidden", False) is False, f"{name} must remain visible"
+assert manifest["version"] == "2.3.1"
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
 assert "voice count follows the **V/OCT** input" in readme

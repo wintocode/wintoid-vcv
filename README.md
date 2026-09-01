@@ -7,6 +7,10 @@ VCV Rack plugin — synthesizer, filter, and CV/logic utilities.
 ### Four
 4-operator FM/PM synthesizer (26HP)
 
+> **Legacy compatibility module.** Four is hidden from the Module Browser for
+> new patches but remains bundled and registered so existing patches continue
+> to load. Use FourV2 for new patches.
+
 - **11 algorithms** — classic 4-op routing from serial chain to full parallel
 - **Per-operator controls**: Coarse (ratio or fixed Hz), Fine, Level, Warp, Fold, Feedback — each with CV input and attenuverter
 - **Warp** — continuous waveshape morph: sine → triangle → saw → pulse (PolyBLEP anti-aliased)
@@ -104,6 +108,10 @@ Four; FourV2 is an independent model and does not replace or reinterpret them.
 ### Vortex
 12-mode multi-mode filter (6HP)
 
+> **Legacy compatibility module.** Vortex is hidden from the Module Browser for
+> new patches but remains bundled and registered so existing patches continue
+> to load. Use VortexV2 for new patches.
+
 - **Controls**: Cutoff (20 Hz – 20 kHz), Resonance, Drive — each with CV input and attenuverter
 - **16-channel polyphony** — voice count follows **AUDIO IN**; mono and shorter polyphonic CV inputs broadcast lane 0
 - **Filter modes**: LP 6/12/24dB, HP 6/12/24dB, BP, BP+, Notch, Notch+, AP, AP+
@@ -123,6 +131,10 @@ Independent twelve-output multi-mode filter (12HP)
 
 ### Brink
 Dual voltage-window processor (12HP)
+
+> **Legacy compatibility module.** Brink is hidden from the Module Browser for
+> new patches but remains bundled and registered so existing patches continue
+> to load. Use BrinkV2 for new patches.
 
 Brink compares two signals with independently movable voltage windows. Each
 channel reports whether its signal is inside or outside its window, produces a
