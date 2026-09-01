@@ -28,6 +28,7 @@ assert "### BrinkV2" in readme
 brink_v2_readme = readme[
     readme.index("### BrinkV2"):readme.index("## Building")
 ]
+assert "V2 SEM panel (16HP)" in brink_v2_readme
 assert "16-channel" in brink_v2_readme
 assert "up to 16 lanes" in brink_v2_readme
 assert "broadcast lane 0" in brink_v2_readme

@@ -58,6 +58,22 @@ class MetaModuleGraphicsTest(unittest.TestCase):
         self.assertIn("does not render `res/*.svg`", self.compatibility)
         self.assertIn("SvgToPng.py", self.compatibility)
 
+    def test_compatibility_doc_records_the_current_v2_boundary(self):
+        compatibility = " ".join(self.compatibility.split())
+        for contract in (
+            "## Current V2 status",
+            "V2 modules cannot be loaded",
+            "## VortexV2 handoff",
+            "src/VortexV2/layout.h",
+            "VortexV2.png",
+            "no filter-mode parameter",
+            "C++11-compatible",
+            "C++20 consumer build",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, compatibility)
+        self.assertNotIn("Missing Brink in the stale wrapper", self.compatibility)
+
     def test_custom_widgets_keep_drawing_on_layer_one_and_use_geometry_helpers(self):
         widgets = (
             ("Four", "struct AlgoDisplay"),

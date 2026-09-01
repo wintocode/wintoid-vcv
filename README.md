@@ -251,7 +251,7 @@ activity on any lane.
   begin to differ.
 
 ### BrinkV2
-Behaviour-identical dual voltage-window processor with a V2 SEM panel (12HP)
+Behaviour-identical dual voltage-window processor with a V2 SEM panel (16HP)
 
 BrinkV2 is a separate model with the same controls, A-to-B normalisation,
 inside/outside gates, bipolar position output, directional boundary events,
@@ -262,6 +262,16 @@ broadcast lane 0 to additional signal lanes.
 The V2 SEM faceplate uses uniform socket treatment: every input and output has
 the same jack styling. Brink remains the original V1 model for existing patch
 compatibility; BrinkV2 does not replace or reinterpret Brink patches.
+
+## MetaModule compatibility
+
+The current sibling MetaModule package contains the original Four, Vortex, and
+Brink modules. FourV2, VortexV2, and BrinkV2 are separate VCV Rack models in
+this repository. Their shared code follows the MetaModule compatibility
+boundary, but consumer registration, PNG assets, packaging, and hardware
+validation remain future work. See
+[docs/metamodule-compatibility.md](docs/metamodule-compatibility.md) for the
+handoff requirements.
 
 ## Building
 
