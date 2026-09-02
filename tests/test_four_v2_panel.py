@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 import importlib.util
+import hashlib
 import json
-import math
 import pathlib
-import re
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -26,129 +25,6 @@ RACK_SMALL_KNOB_RADIUS_MM = 22.67581 / (2.0 * RACK_PIXELS_PER_MM)
 RACK_PORT_RADIUS_MM = 23.7 / (2.0 * RACK_PIXELS_PER_MM)
 MINIMUM_EDGE_CLEARANCE_MM = 4.0
 MINIMUM_LABEL_CLEARANCE_MM = 0.25
-
-_FLOAT_TOKEN = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
-_PATH_TOKEN_RE = re.compile(rf"[A-Za-z]|{_FLOAT_TOKEN}")
-def _quadratic_x_values(start, control, end):
-    values = [start, end]
-    denominator = start - 2.0 * control + end
-    if denominator:
-        t = (start - control) / denominator
-        if 0.0 < t < 1.0:
-            values.append(
-                (1.0 - t) ** 2 * start
-                + 2.0 * (1.0 - t) * t * control
-                + t ** 2 * end
-            )
-    return values
-
-
-def _cubic_value(start, control_one, control_two, end, t):
-    inverse = 1.0 - t
-    return (
-        inverse ** 3 * start
-        + 3.0 * inverse ** 2 * t * control_one
-        + 3.0 * inverse * t ** 2 * control_two
-        + t ** 3 * end
-    )
-
-
-def _cubic_x_values(start, control_one, control_two, end):
-    values = [start, end]
-    a = -start + 3.0 * control_one - 3.0 * control_two + end
-    b = 2.0 * (start - 2.0 * control_one + control_two)
-    c = control_one - start
-    if abs(a) < 1e-12:
-        roots = [-c / b] if abs(b) >= 1e-12 else []
-    else:
-        discriminant = b * b - 4.0 * a * c
-        if discriminant < 0.0:
-            roots = []
-        else:
-            root = math.sqrt(discriminant)
-            roots = [
-                (-b + root) / (2.0 * a),
-                (-b - root) / (2.0 * a),
-            ]
-    for t in roots:
-        if 0.0 < t < 1.0:
-            values.append(_cubic_value(start, control_one, control_two, end, t))
-    return values
-
-
-def _path_x_bounds(path_data):
-    """Measure absolute/relative M/L/Q/C/Z SVG path geometry locally."""
-    tokens = _PATH_TOKEN_RE.findall(path_data)
-    remainder = _PATH_TOKEN_RE.sub("", path_data).replace(",", "")
-    if remainder.strip():
-        raise ValueError(f"unsupported SVG path syntax: {remainder!r}")
-
-    arities = {"M": 2, "L": 2, "Q": 4, "C": 6}
-    cursor = 0
-    command = None
-    current = (0.0, 0.0)
-    contour_start = None
-    xs = []
-    while cursor < len(tokens):
-        token = tokens[cursor]
-        if token.isalpha():
-            command = token
-            cursor += 1
-            if command.upper() == "Z":
-                if contour_start is None:
-                    raise ValueError("closed SVG path has no contour start")
-                xs.extend((current[0], contour_start[0]))
-                current = contour_start
-                contour_start = None
-                command = None
-            continue
-        if command is None or command.upper() == "Z":
-            raise ValueError("SVG path numbers are missing a command")
-        operation = command.upper()
-        if operation not in arities:
-            raise ValueError(f"unsupported SVG path command: {command}")
-        arity = arities[operation]
-        if cursor + arity > len(tokens):
-            raise ValueError(f"incomplete SVG path command: {command}")
-        arguments = tokens[cursor:cursor + arity]
-        if any(argument.isalpha() for argument in arguments):
-            raise ValueError(f"incomplete SVG path command: {command}")
-        values = [float(argument) for argument in arguments]
-        relative = command.islower()
-
-        def point(x, y):
-            if relative:
-                return current[0] + x, current[1] + y
-            return x, y
-
-        if operation == "M":
-            current = point(values[0], values[1])
-            contour_start = current
-            xs.append(current[0])
-            command = "l" if relative else "L"
-        elif operation == "L":
-            current = point(values[0], values[1])
-            xs.append(current[0])
-        elif operation == "Q":
-            control = point(values[0], values[1])
-            end = point(values[2], values[3])
-            xs.extend(_quadratic_x_values(current[0], control[0], end[0]))
-            current = end
-        elif operation == "C":
-            control_one = point(values[0], values[1])
-            control_two = point(values[2], values[3])
-            end = point(values[4], values[5])
-            xs.extend(
-                _cubic_x_values(
-                    current[0], control_one[0], control_two[0], end[0]
-                )
-            )
-            current = end
-        cursor += arity
-    if not xs:
-        raise ValueError("SVG path has no geometry")
-    return min(xs), max(xs)
-
 
 def _extract_struct_body(source, marker):
     start = source.index(marker)
@@ -198,8 +74,8 @@ class FourV2PanelTest(unittest.TestCase):
         self.assertEqual("#242522", panel.LEGEND_CHARCOAL)
         self.assertEqual("#556d80", panel.SECTION_BLUE_GREY)
         self.assertEqual("#b7693c", panel.FUNCTION_ORANGE)
-        self.assertEqual("#1a1a2e", panel.LOGO_BLUE)
-        self.assertEqual("#ff4d00", panel.LOGO_ORANGE)
+        self.assertEqual("#155f91", panel.LOGO_BLUE)
+        self.assertEqual("#ed5b22", panel.LOGO_ORANGE)
 
     def test_four_operator_sections_are_framed(self):
         panel = self.require_panel()
@@ -210,31 +86,108 @@ class FourV2PanelTest(unittest.TestCase):
             tuple(panel.PATCHBAY_ROWS),
         )
 
-    def test_logo_is_outlined_and_split_only_between_glyph_groups(self):
+    def test_logo_is_the_approved_w6_vector_mark(self):
         self.assertTrue(LOGO_SCRIPT.exists(), "logo generator is missing")
         self.assertTrue(LOGO_SVG.exists(), "canonical logo SVG is missing")
-        logo = ET.parse(LOGO_SVG).getroot()
-        self.assertEqual([], [node for node in logo.iter()
+        root = ET.parse(LOGO_SVG).getroot()
+        self.assertEqual([], [node for node in root.iter()
                               if node.tag.endswith("text")])
-        self.assertEqual([], [node for node in logo.iter()
+        self.assertEqual([], [node for node in root.iter()
                               if node.tag.endswith("use")])
-        ids = {node.attrib.get("id") for node in logo.iter()}
+        ids = {node.attrib.get("id") for node in root.iter()}
         self.assertTrue({"wint-glyphs", "oid-glyphs",
                          "wint-underline", "oid-underline"}.issubset(ids))
-        self.assertEqual(7, len([node for node in logo.iter()
-                                 if node.tag.endswith("path") and
-                                 node.attrib.get("data-glyph")]))
-        colours = {node.attrib.get("fill") for node in logo.iter()
-                   if node.tag.endswith("path")}
-        self.assertEqual({"#1a1a2e", "#ff4d00"}, colours)
+        self.assertEqual(
+            (-4.75, -44.75, 189.5, 57.5),
+            tuple(float(value) for value in root.attrib["viewBox"].split()),
+        )
 
-    def test_panel_logo_is_rendered_at_half_size(self):
+        expected_group_style = {
+            "wint-glyphs": "#155f91",
+            "oid-glyphs": "#ed5b22",
+        }
+        expected_paths = {
+            "wint-glyphs": (
+                "M 0 -30 C 5 -30 5 0 10 0 C 15 0 15 -30 20 -30 "
+                "C 25 -30 25 0 30 0 C 35 0 35 -30 40 -30",
+                "M 48 0 L 48 -30",
+                "M 60 0 L 60 -30 M 60 -20 C 60 -28 64 -30 68 -30 "
+                "C 73 -30 76 -26.5 76 -20 L 76 0",
+                "M 94 0 L 94 -34 M 87 -22 L 101 -22",
+            ),
+            "oid-glyphs": (
+                "M 143 0 L 143 -30",
+                "M 179.5 0 L 179.5 -40",
+            ),
+        }
+        for group_id, colour in expected_group_style.items():
+            group = next(node for node in root.iter()
+                         if node.attrib.get("id") == group_id)
+            for attribute, value in {
+                "fill": "none",
+                "stroke": colour,
+                "stroke-width": "5.5",
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round",
+            }.items():
+                with self.subTest(group=group_id, attribute=attribute):
+                    self.assertEqual(value, group.attrib.get(attribute))
+            paths = tuple(node.attrib["d"] for node in group
+                          if node.tag.endswith("path"))
+            self.assertEqual(expected_paths[group_id], paths)
+
+        circles = {
+            node.attrib["data-mark"]: node
+            for node in root.iter()
+            if node.tag.endswith("circle")
+        }
+        expected_circles = {
+            "wint-i-dot": (48.0, -39.0, 3.75, "#155f91", "none"),
+            "oid-o": (118.0, -15.0, 15.0, "none", "#ed5b22"),
+            "oid-i-dot": (143.0, -39.0, 3.75, "#ed5b22", "none"),
+            "oid-d": (164.5, -15.0, 15.0, "none", "#ed5b22"),
+        }
+        self.assertEqual(set(expected_circles), set(circles))
+        for mark, (cx, cy, radius, fill, stroke) in expected_circles.items():
+            circle = circles[mark]
+            with self.subTest(circle=mark):
+                self.assertAlmostEqual(cx, float(circle.attrib["cx"]))
+                self.assertAlmostEqual(cy, float(circle.attrib["cy"]))
+                self.assertAlmostEqual(radius, float(circle.attrib["r"]))
+                if fill == "none":
+                    self.assertEqual("none", circle.attrib.get("fill"))
+                else:
+                    self.assertEqual(fill, circle.attrib.get("fill"))
+                if stroke == "none":
+                    self.assertEqual("none", circle.attrib.get("stroke"))
+                else:
+                    self.assertEqual(stroke, circle.attrib.get("stroke"))
+
+        expected_lines = {
+            "wint-underline": (0.0, 102.0, "#155f91"),
+            "oid-underline": (102.0, 180.0, "#ed5b22"),
+        }
+        for line_id, (x1, x2, colour) in expected_lines.items():
+            line = next(node for node in root.iter()
+                        if node.attrib.get("id") == line_id)
+            with self.subTest(line=line_id):
+                self.assertAlmostEqual(x1, float(line.attrib["x1"]))
+                self.assertAlmostEqual(x2, float(line.attrib["x2"]))
+                self.assertAlmostEqual(8.0, float(line.attrib["y1"]))
+                self.assertAlmostEqual(8.0, float(line.attrib["y2"]))
+                self.assertEqual(colour, line.attrib.get("stroke"))
+                self.assertEqual("5.5", line.attrib.get("stroke-width"))
+                self.assertEqual("butt", line.attrib.get("stroke-linecap"))
+
+    def test_panel_logo_uses_the_approved_scale_and_path_bound(self):
         panel = self.require_panel()
-        self.assertAlmostEqual(0.06, panel.LOGO_SCALE)
+        self.assertAlmostEqual(0.0757, panel.LOGO_SCALE)
+        self.assertEqual(-4.75, panel.LOGO_VIEWBOX_X)
+        self.assertEqual(180.0, panel.LOGO_PATH_RIGHT_X)
         root = ET.fromstring(panel.generate_svg())
         logo = next(node for node in root.iter()
                     if node.attrib.get("id") == "wintoid-logo")
-        self.assertRegex(logo.attrib["transform"], r"scale\(0\.06\)")
+        self.assertRegex(logo.attrib["transform"], r"scale\(0\.0757\)")
 
     def test_all_physical_components_clear_panel_edges(self):
         panel = self.require_panel()
@@ -1067,72 +1020,49 @@ class FourV2PanelTest(unittest.TestCase):
         self.assertNotIn("WintoidLogo.svg", svg)
         self.assertNotIn("<image", svg)
 
-    def test_logo_underlines_match_measured_group_bounds(self):
+    def test_logo_underlines_use_the_approved_geometry_and_stroke(self):
         self.assertTrue(LOGO_SVG.exists(), "canonical logo SVG is missing")
         root = ET.parse(LOGO_SVG).getroot()
-        for group_id, line_id in (("wint-glyphs", "wint-underline"),
-                                  ("oid-glyphs", "oid-underline")):
-            group = next(node for node in root.iter()
-                         if node.attrib.get("id") == group_id)
+        for line_id, x1, x2, colour in (
+            ("wint-underline", 0.0, 102.0, "#155f91"),
+            ("oid-underline", 102.0, 180.0, "#ed5b22"),
+        ):
             line = next(node for node in root.iter()
                         if node.attrib.get("id") == line_id)
-            glyph_paths = [node for node in group.iter()
-                           if node.tag.endswith("path") and
-                           node.attrib.get("data-glyph")]
-            self.assertTrue(glyph_paths)
-            xs = []
-            for path in glyph_paths:
-                transform = path.attrib["transform"]
-                match = re.fullmatch(
-                    rf"translate\(({_FLOAT_TOKEN}) ({_FLOAT_TOKEN})\)",
-                    transform,
-                )
-                self.assertIsNotNone(match)
-                path_min_x, path_max_x = _path_x_bounds(path.attrib["d"])
-                metadata_min_x, _metadata_min_y, metadata_max_x, _metadata_max_y = map(
-                    float, path.attrib["data-bbox"].split(",")
-                )
-                tx = float(match.group(1))
-                self.assertAlmostEqual(path_min_x, metadata_min_x, delta=0.01)
-                self.assertAlmostEqual(path_max_x, metadata_max_x, delta=0.01)
-                xs.extend((tx + path_min_x, tx + path_max_x))
-            expected_min = min(xs)
-            expected_max = max(xs)
-            self.assertAlmostEqual(expected_min, float(line.attrib["x1"]),
-                                   delta=0.01)
-            self.assertAlmostEqual(expected_max, float(line.attrib["x2"]),
-                                   delta=0.01)
+            with self.subTest(line=line_id):
+                self.assertAlmostEqual(x1, float(line.attrib["x1"]))
+                self.assertAlmostEqual(x2, float(line.attrib["x2"]))
+                self.assertAlmostEqual(8.0, float(line.attrib["y1"]))
+                self.assertAlmostEqual(8.0, float(line.attrib["y2"]))
+                self.assertEqual(colour, line.attrib["stroke"])
+                self.assertEqual("5.5", line.attrib["stroke-width"])
+                self.assertEqual("butt", line.attrib["stroke-linecap"])
 
-    def test_logo_source_font_digest_matches_checked_in_glyph_data(self):
-        self.assertTrue(GLYPH_DATA.exists(), "shaped glyph data is missing")
+    def test_logo_content_digest_matches_checked_in_metadata(self):
+        self.assertTrue(GLYPH_DATA.exists(), "logo metadata is missing")
         data = json.loads(GLYPH_DATA.read_text(encoding="utf-8"))
-        digest = data.get("source_font_sha256")
+        digest = data.get("canonical_svg_sha256")
         self.assertIsInstance(digest, str)
         self.assertRegex(digest, r"[0-9a-f]{64}")
-        logo_root = ET.parse(LOGO_SVG).getroot()
-        self.assertEqual(digest, logo_root.attrib.get("data-source-font-sha256"))
+        actual = hashlib.sha256(LOGO_SVG.read_bytes()).hexdigest()
+        self.assertEqual(digest, actual)
+        self.assertNotIn("source_font_sha256", data)
 
-    def test_panel_generator_rejects_logo_source_font_digest_mismatch(self):
+    def test_panel_generator_rejects_logo_content_digest_mismatch(self):
         panel = self.require_panel()
-        original_logo_path = panel.LOGO_PATH
+        original_data_path = panel.GLYPH_DATA_PATH
         with tempfile.TemporaryDirectory() as directory:
-            temporary_logo = pathlib.Path(directory) / "WintoidLogo.svg"
-            source = LOGO_SVG.read_text(encoding="utf-8")
-            digest = json.loads(GLYPH_DATA.read_text(encoding="utf-8"))["source_font_sha256"]
-            temporary_logo.write_text(
-                source.replace(
-                    f'data-source-font-sha256="{digest}"',
-                    f'data-source-font-sha256="{"0" * 64}"',
-                    1,
-                ),
+            temporary_data = pathlib.Path(directory) / "wintoid_logo.json"
+            temporary_data.write_text(
+                json.dumps({"canonical_svg_sha256": "0" * 64}),
                 encoding="utf-8",
             )
-            panel.LOGO_PATH = temporary_logo
+            panel.GLYPH_DATA_PATH = temporary_data
             try:
-                with self.assertRaisesRegex(RuntimeError, "source-font digest"):
+                with self.assertRaisesRegex(RuntimeError, "content digest"):
                     panel._logo_elements()
             finally:
-                panel.LOGO_PATH = original_logo_path
+                panel.GLYPH_DATA_PATH = original_data_path
 
 
 if __name__ == "__main__":

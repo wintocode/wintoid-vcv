@@ -576,6 +576,24 @@ class BrinkV2PanelTest(unittest.TestCase):
         ids = {node.attrib.get("id") for node in root.iter()}
         self.assertTrue({"wintoid-logo", "wint-glyphs", "oid-glyphs",
                          "wint-underline", "oid-underline"}.issubset(ids))
+        for group_id, colour in (
+            ("wint-glyphs", "#155f91"),
+            ("oid-glyphs", "#ed5b22"),
+        ):
+            group = next(node for node in root.iter()
+                         if node.attrib.get("id") == group_id)
+            self.assertEqual("none", group.attrib["fill"])
+            self.assertEqual(colour, group.attrib["stroke"])
+            self.assertEqual("5.5", group.attrib["stroke-width"])
+        for line_id, colour in (
+            ("wint-underline", "#155f91"),
+            ("oid-underline", "#ed5b22"),
+        ):
+            line = next(node for node in root.iter()
+                        if node.attrib.get("id") == line_id)
+            self.assertEqual(colour, line.attrib["stroke"])
+            self.assertEqual("5.5", line.attrib["stroke-width"])
+            self.assertEqual("butt", line.attrib["stroke-linecap"])
         self.assertIn("Brink V2", {node.text for node in root.iter()
                                     if node.tag.endswith("text")})
 

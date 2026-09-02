@@ -31,6 +31,27 @@ static int tests_passed = 0;
 
 #include "../src/VortexV2/dsp.h"
 
+TEST(cutoff_knob_travels_exponentially_across_the_audio_range)
+{
+    ASSERT_NEAR(vortex_v2::cutoff_param_to_hz(0.0f), 20.0f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_param_to_hz(0.5f), 632.4555f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_param_to_hz(1.0f), 20000.0f, 0.1f);
+}
+
+TEST(one_khz_sits_at_the_correct_logarithmic_knob_position)
+{
+    ASSERT_NEAR(vortex_v2::cutoff_hz_to_param(1000.0f), 0.5663233f, 0.000001f);
+}
+
+TEST(cutoff_voct_shifts_frequency_by_octaves_and_clamps)
+{
+    ASSERT_NEAR(vortex_v2::cutoff_with_voct(1000.0f, 0.0f), 1000.0f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_with_voct(1000.0f, 1.0f), 2000.0f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_with_voct(1000.0f, -1.0f), 500.0f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_with_voct(19000.0f, 1.0f), 20000.0f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_with_voct(30.0f, -1.0f), 20.0f, 0.01f);
+}
+
 static float reference_branch(vortex::Filter1& f1,
                               vortex::Filter2& f2a,
                               vortex::Filter2& f2b,
@@ -251,6 +272,9 @@ TEST(drive_saturate_is_bounded)
 
 int main()
 {
+    run_cutoff_knob_travels_exponentially_across_the_audio_range();
+    run_one_khz_sits_at_the_correct_logarithmic_knob_position();
+    run_cutoff_voct_shifts_frequency_by_octaves_and_clamps();
     run_each_output_matches_the_equivalent_vortex_mode();
     run_voice_state_reset_clears_all_twelve_branches();
     run_branches_remain_independent_when_interleaved();

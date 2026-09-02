@@ -7,13 +7,14 @@ Run from the project root or from any other working directory with::
 
 All geometry in this file is millimetres.  Rack widget code consumes the
 generated coordinates through ``mm2px()``.  The SVG follows the FourV2 panel
-system: it owns the static hierarchy, labels, and canonical outlined logo;
+    system: it owns the static hierarchy, labels, and canonical W6 logo;
 the Rack overlay redraws the labels for hosts that do not render SVG text.
 """
 
 from __future__ import annotations
 
 from html import escape
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -34,8 +35,8 @@ PANEL_IVORY = "#ece8d9"
 LEGEND_CHARCOAL = "#242522"
 SECTION_BLUE_GREY = "#556d80"
 FUNCTION_ORANGE = "#b7693c"
-LOGO_BLUE = "#1a1a2e"
-LOGO_ORANGE = "#ff4d00"
+LOGO_BLUE = "#155f91"
+LOGO_ORANGE = "#ed5b22"
 SECTION_FILL = "#e3e0d1"
 SECTION_FILL_ALT = "#e7e3d4"
 
@@ -60,9 +61,9 @@ MINIMUM_LABEL_CLEARANCE_MM = 0.25
 TITLE_Y = 7.0
 TITLE_FONT_SIZE = 6.6
 LOGO_TARGET_Y = 1.8
-LOGO_SCALE = 0.06
-LOGO_VIEWBOX_X = 0.6875
-LOGO_PATH_RIGHT_X = 227.8125
+LOGO_SCALE = 0.0757
+LOGO_VIEWBOX_X = -4.75
+LOGO_PATH_RIGHT_X = 180.0
 V2_GROUP_LEFT_X = MINIMUM_EDGE_CLEARANCE_MM
 V2_GROUP_RIGHT_X = WIDTH_MM - MINIMUM_EDGE_CLEARANCE_MM
 V2_GROUP_TOP_Y = 10.3
@@ -105,6 +106,18 @@ AUDIO_IN_X = 12.0
 AUDIO_IN_Y = 20.0
 AUDIO_IN_LABEL_Y = AUDIO_IN_Y - CONTROL_LABEL_OFFSET
 AUDIO_IN_LABEL_FONT_SIZE = 2.25
+
+VOCT_INPUT_X = AUDIO_IN_X
+VOCT_INPUT_Y = 32.0
+VOCT_ATTEN_X = 20.5
+VOCT_ATTEN_Y = VOCT_INPUT_Y
+VOCT_LABEL_Y = VOCT_INPUT_Y - CONTROL_LABEL_OFFSET
+VOCT_LABEL_FONT_SIZE = 2.25
+VOCT_GROUP = (
+    "voct",
+    (VOCT_INPUT_X, VOCT_INPUT_Y),
+    (VOCT_ATTEN_X, VOCT_ATTEN_Y),
+)
 
 OUTPUT_COLUMN_XS = (12.0, 30.48, 48.96)
 OUTPUT_ROW_YS = (67.0, 82.0, 97.0, 112.0)
@@ -150,6 +163,13 @@ PAIR_GROUP_RECTS = tuple(
         _pair_group_rect(cv[0], atten[0], cv[1]),
     )
     for name, _knob, cv, atten in CONTROL_GROUPS
+) + (
+    (
+        "voct-group",
+        _pair_group_rect(
+            VOCT_GROUP[1][0], VOCT_GROUP[2][0], VOCT_GROUP[1][1],
+        ),
+    ),
 )
 PAIR_GROUP_RECT_BY_ID = dict(PAIR_GROUP_RECTS)
 
@@ -166,7 +186,11 @@ COMPONENTS = (
         (f"{name}_atten", atten[0], atten[1])
         for name, _knob, _cv, atten in CONTROL_GROUPS
     )
-    + (("audio_in", AUDIO_IN_X, AUDIO_IN_Y),)
+    + (
+        ("audio_in", AUDIO_IN_X, AUDIO_IN_Y),
+        ("voct_input", VOCT_INPUT_X, VOCT_INPUT_Y),
+        ("voct_atten", VOCT_ATTEN_X, VOCT_ATTEN_Y),
+    )
     + OUTPUT_COMPONENTS
 )
 COMPONENT_RADII = {
@@ -177,6 +201,8 @@ COMPONENT_RADII = {
     **{f"{name}_atten": RACK_SMALL_KNOB_RADIUS
        for name, _knob, _cv, _atten in CONTROL_GROUPS},
     "audio_in": RACK_PORT_RADIUS,
+    "voct_input": RACK_PORT_RADIUS,
+    "voct_atten": RACK_SMALL_KNOB_RADIUS,
     **{label: RACK_PORT_RADIUS for label in OUTPUT_LABELS},
 }
 
@@ -189,9 +215,9 @@ def _fmt(value: float, digits: int = 3) -> str:
     return text if text and text != "-0" else "0"
 
 
-def _cpp_float(value: float) -> str:
+def _cpp_float(value: float, digits: int = 3) -> str:
     """Format a valid C++11 float literal without changing SVG formatting."""
-    text = _fmt(value)
+    text = _fmt(value, digits)
     return text if "." in text else f"{text}.0"
 
 
@@ -276,25 +302,25 @@ LABEL_CLEARANCES = {
 
 
 def _logo_elements() -> list[str]:
-    """Return canonical logo groups/underlines with XML namespaces removed."""
+    """Return canonical W6 groups/underlines with XML namespaces removed."""
     if not LOGO_PATH.exists():
         raise RuntimeError(f"missing canonical logo asset: {LOGO_PATH}")
     root = ET.parse(LOGO_PATH).getroot()
     try:
         glyph_data = json.loads(GLYPH_DATA_PATH.read_text(encoding="utf-8"))
     except FileNotFoundError as error:
-        raise RuntimeError(f"missing checked-in glyph data: {GLYPH_DATA_PATH}") from error
-    expected_digest = glyph_data.get("source_font_sha256")
+        raise RuntimeError(f"missing checked-in logo metadata: {GLYPH_DATA_PATH}") from error
+    expected_digest = glyph_data.get("canonical_svg_sha256")
     if (
         not isinstance(expected_digest, str)
         or len(expected_digest) != 64
         or any(character not in "0123456789abcdef" for character in expected_digest)
     ):
-        raise RuntimeError("glyph data has no valid source-font SHA-256")
-    actual_digest = root.attrib.get("data-source-font-sha256")
+        raise RuntimeError("logo metadata has no valid canonical SVG SHA-256")
+    actual_digest = hashlib.sha256(LOGO_PATH.read_bytes()).hexdigest()
     if actual_digest != expected_digest:
         raise RuntimeError(
-            "canonical logo source-font digest mismatch: "
+            "canonical logo content digest mismatch: "
             f"expected {expected_digest}, got {actual_digest}"
         )
     wanted = []
@@ -381,6 +407,11 @@ def generate_svg() -> str:
         AUDIO_IN_X, AUDIO_IN_LABEL_Y, "IN", size=AUDIO_IN_LABEL_FONT_SIZE,
     ))
     lines.append(_control_guide("audio_in", AUDIO_IN_X, AUDIO_IN_Y))
+    lines.append(_text(
+        VOCT_INPUT_X, VOCT_LABEL_Y, "V/OCT", size=VOCT_LABEL_FONT_SIZE,
+    ))
+    lines.append(_control_guide("voct_input", VOCT_INPUT_X, VOCT_INPUT_Y))
+    lines.append(_control_guide("voct_atten", VOCT_ATTEN_X, VOCT_ATTEN_Y))
 
     for label, x, y in OUTPUT_COMPONENTS:
         lines.append(_text(
@@ -396,8 +427,8 @@ def generate_svg() -> str:
     return "\n".join(lines) + "\n"
 
 
-def _header_float(name: str, value: float) -> str:
-    return f"constexpr float {name} = {_cpp_float(value)}f;"
+def _header_float(name: str, value: float, digits: int = 3) -> str:
+    return f"constexpr float {name} = {_cpp_float(value, digits)}f;"
 
 
 def generate_coords_header() -> str:
@@ -417,7 +448,7 @@ def generate_coords_header() -> str:
         _header_float("TITLE_FONT_SIZE", TITLE_FONT_SIZE),
         _header_float("LOGO_TARGET_X", LOGO_TARGET_X),
         _header_float("LOGO_TARGET_Y", LOGO_TARGET_Y),
-        _header_float("LOGO_SCALE", LOGO_SCALE),
+        _header_float("LOGO_SCALE", LOGO_SCALE, 4),
         _header_float("V2_GROUP_LEFT_X", V2_GROUP_LEFT_X),
         _header_float("V2_GROUP_RIGHT_X", V2_GROUP_RIGHT_X),
         _header_float("V2_GROUP_TOP_Y", V2_GROUP_TOP_Y),
@@ -458,6 +489,14 @@ def generate_coords_header() -> str:
         _header_float("AUDIO_IN_Y", AUDIO_IN_Y),
         _header_float("AUDIO_IN_LABEL_Y", AUDIO_IN_LABEL_Y),
         _header_float("AUDIO_IN_LABEL_FONT_SIZE", AUDIO_IN_LABEL_FONT_SIZE),
+        "",
+        "// V/Oct input and attenuverter",
+        _header_float("VOCT_INPUT_X", VOCT_INPUT_X),
+        _header_float("VOCT_INPUT_Y", VOCT_INPUT_Y),
+        _header_float("VOCT_ATTEN_X", VOCT_ATTEN_X),
+        _header_float("VOCT_ATTEN_Y", VOCT_ATTEN_Y),
+        _header_float("VOCT_LABEL_Y", VOCT_LABEL_Y),
+        _header_float("VOCT_LABEL_FONT_SIZE", VOCT_LABEL_FONT_SIZE),
         "",
         "// Output matrix",
         "constexpr float OUTPUT_COLUMN_XS[3] = {"

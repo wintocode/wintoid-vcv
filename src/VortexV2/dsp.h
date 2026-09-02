@@ -5,6 +5,39 @@
 namespace vortex_v2 {
 
 static const int OUTPUT_COUNT = 12;
+static const float MIN_CUTOFF_HZ = 20.0f;
+static const float MAX_CUTOFF_HZ = 20000.0f;
+
+// Normalized Cutoff knob position to frequency. The logarithmic response
+// gives each octave the same amount of knob travel.
+inline float cutoff_param_to_hz(float param)
+{
+    if (!std::isfinite(param))
+        param = 0.0f;
+    param = fminf(1.0f, fmaxf(0.0f, param));
+    return MIN_CUTOFF_HZ * powf(MAX_CUTOFF_HZ / MIN_CUTOFF_HZ, param);
+}
+
+inline float cutoff_hz_to_param(float hz)
+{
+    if (!std::isfinite(hz))
+        hz = MIN_CUTOFF_HZ;
+    hz = fminf(MAX_CUTOFF_HZ, fmaxf(MIN_CUTOFF_HZ, hz));
+    return logf(hz / MIN_CUTOFF_HZ)
+        / logf(MAX_CUTOFF_HZ / MIN_CUTOFF_HZ);
+}
+
+inline float cutoff_with_voct(float cutoff, float voltage)
+{
+    if (!std::isfinite(cutoff))
+        cutoff = MIN_CUTOFF_HZ;
+    if (!std::isfinite(voltage))
+        voltage = 0.0f;
+    const float shifted = cutoff * vortex::voct_to_mult(voltage);
+    if (!std::isfinite(shifted))
+        return voltage < 0.0f ? MIN_CUTOFF_HZ : MAX_CUTOFF_HZ;
+    return fminf(MAX_CUTOFF_HZ, fmaxf(MIN_CUTOFF_HZ, shifted));
+}
 
 enum OutputMode {
     LP6 = 0, LP12, LP24,

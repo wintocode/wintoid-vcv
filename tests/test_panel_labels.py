@@ -187,14 +187,14 @@ class PanelLabelTest(unittest.TestCase):
         self.assertNotIn("nvgFontSize(args.vg, 10)", self.vortex_source)
 
     def test_vortex_v2_uses_the_canonical_logo_scale(self):
-        self.assertEqual(0.06, self.vortex_v2.LOGO_SCALE)
-        self.assertIn("constexpr float LOGO_SCALE = 0.06f;",
+        self.assertEqual(0.0757, self.vortex_v2.LOGO_SCALE)
+        self.assertIn("constexpr float LOGO_SCALE = 0.0757f;",
                       self.vortex_v2.generate_coords_header())
         self.assertNotIn('"wint"', self.vortex_v2_source)
         self.assertNotIn('"oid"', self.vortex_v2_source)
 
     def test_brink_v2_uses_the_canonical_logo_and_generated_label_schema(self):
-        self.assertEqual(0.06, self.brink_v2.LOGO_SCALE)
+        self.assertEqual(0.0757, self.brink_v2.LOGO_SCALE)
         self.assertEqual(7.0, self.brink_v2.TITLE_Y)
         self.assertEqual("Brink V2", self.brink_v2.PANEL_LABELS[0].text)
         self.assertEqual(
@@ -205,7 +205,7 @@ class PanelLabelTest(unittest.TestCase):
         header = self.brink_v2.generate_coords_header()
         for contract in (
             "scripts/generate_panel_brink_v2.py",
-            "constexpr float LOGO_SCALE = 0.06f;",
+            "constexpr float LOGO_SCALE = 0.0757f;",
             "constexpr float TITLE_Y = 7.0f;",
             "enum LabelVerticalAlign",
             "LABEL_VERTICAL_BASELINE",
@@ -227,8 +227,9 @@ class PanelLabelTest(unittest.TestCase):
         self.assertNotIn('"oid"', self.brink_v2_source)
 
     def test_v2_branding_tracks_outer_group_edges_and_shared_top(self):
-        logo_viewbox_x = 0.6875
-        logo_path_right_x = 227.8125
+        logo_viewbox_x = -4.75
+        logo_path_right_x = 180.0
+        self.assertEqual(0.0757, self.four_v2.LOGO_SCALE)
         brink_left = self.brink_v2.CHANNEL_SECTION_RECTS[0]
         brink_right = self.brink_v2.CHANNEL_SECTION_RECTS[-1]
         panels = (

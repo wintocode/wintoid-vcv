@@ -13,13 +13,14 @@ Outputs:
 
 All geometry in this file is millimetres.  The SVG is intentionally a quiet
 structural guide: Rack supplies the live controls and displays, while the
-static labels, framed hierarchy, and canonical outlined wintoid mark remain
+    static labels, framed hierarchy, and canonical W6 wintoid mark remain
 visible in the checked-in panel asset.
 """
 
 from __future__ import annotations
 
 from html import escape
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -67,8 +68,8 @@ PANEL_IVORY = "#ece8d9"
 LEGEND_CHARCOAL = "#242522"
 SECTION_BLUE_GREY = "#556d80"
 FUNCTION_ORANGE = "#b7693c"
-LOGO_BLUE = "#1a1a2e"
-LOGO_ORANGE = "#ff4d00"
+LOGO_BLUE = "#155f91"
+LOGO_ORANGE = "#ed5b22"
 DISPLAY_CHARCOAL = "#242522"
 DISPLAY_TEXT = PANEL_IVORY
 SECTION_FILL = "#e3e0d1"
@@ -107,9 +108,9 @@ MINIMUM_LABEL_CLEARANCE_MM = 0.25
 TITLE_Y = 7.0
 TITLE_FONT_SIZE = 6.6
 LOGO_TARGET_Y = 1.8
-LOGO_SCALE = 0.06
-LOGO_VIEWBOX_X = 0.6875
-LOGO_PATH_RIGHT_X = 227.8125
+LOGO_SCALE = 0.0757
+LOGO_VIEWBOX_X = -4.75
+LOGO_PATH_RIGHT_X = 180.0
 V2_GROUP_LEFT_X = MINIMUM_EDGE_CLEARANCE_MM
 V2_GROUP_RIGHT_X = WIDTH_MM - MINIMUM_EDGE_CLEARANCE_MM
 V2_GROUP_TOP_Y = 10.3
@@ -712,25 +713,25 @@ LABEL_CLEARANCES = {
 
 
 def _logo_elements() -> list[str]:
-    """Return canonical logo groups/underlines with XML namespaces removed."""
+    """Return canonical W6 groups/underlines with XML namespaces removed."""
     if not LOGO_PATH.exists():
         raise RuntimeError(f"missing canonical logo asset: {LOGO_PATH}")
     root = ET.parse(LOGO_PATH).getroot()
     try:
         glyph_data = json.loads(GLYPH_DATA_PATH.read_text(encoding="utf-8"))
     except FileNotFoundError as error:
-        raise RuntimeError(f"missing checked-in glyph data: {GLYPH_DATA_PATH}") from error
-    expected_digest = glyph_data.get("source_font_sha256")
+        raise RuntimeError(f"missing checked-in logo metadata: {GLYPH_DATA_PATH}") from error
+    expected_digest = glyph_data.get("canonical_svg_sha256")
     if (
         not isinstance(expected_digest, str)
         or len(expected_digest) != 64
         or any(character not in "0123456789abcdef" for character in expected_digest)
     ):
-        raise RuntimeError("glyph data has no valid source-font SHA-256")
-    actual_digest = root.attrib.get("data-source-font-sha256")
+        raise RuntimeError("logo metadata has no valid canonical SVG SHA-256")
+    actual_digest = hashlib.sha256(LOGO_PATH.read_bytes()).hexdigest()
     if actual_digest != expected_digest:
         raise RuntimeError(
-            "canonical logo source-font digest mismatch: "
+            "canonical logo content digest mismatch: "
             f"expected {expected_digest}, got {actual_digest}"
         )
     wanted = []

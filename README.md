@@ -122,7 +122,7 @@ Four; FourV2 is an independent model and does not replace or reinterpret them.
 ### VortexV2
 Independent twelve-output multi-mode filter (12HP)
 
-- **Controls**: Cutoff (20 Hz – 20 kHz), Resonance, Drive — each with CV input and attenuverter
+- **Controls**: Cutoff (20 Hz – 20 kHz, logarithmic), Resonance, Drive — each with CV input and attenuverter; V/Oct filter tracking with a bipolar attenuverter
 - **Outputs**: LP 6/12/24dB, HP 6/12/24dB, BP, BP+, Notch, Notch+, AP, AP+ — in that order
 - **Simultaneous outputs** — all twelve outputs can be used at the same time
 - **Disconnected outputs** — reset and skip their individual filter branch

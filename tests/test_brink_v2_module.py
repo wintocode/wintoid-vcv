@@ -592,9 +592,13 @@ class BrinkV2ModuleContractTest(unittest.TestCase):
         ]
         self.assertEqual(1, len(title_nodes), "panel title must be exactly Brink V2")
 
+        logo = next(element for element in root.iter()
+                    if element.attrib.get("id") == "wintoid-logo")
+        logo_element_ids = {id(element) for element in logo.iter()}
         socket_guides = [
             element for element in root.iter()
             if element.tag.rsplit("}", 1)[-1] == "circle"
+            and id(element) not in logo_element_ids
             and float(element.attrib["r"]) >= RACK_PORT_RADIUS - SOCKET_RADIUS_TOLERANCE
         ]
         self.assertEqual(

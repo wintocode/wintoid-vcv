@@ -17,11 +17,11 @@ README_PATH = ROOT / "README.md"
 PARAM_IDS = [
     "CUTOFF_PARAM", "RESONANCE_PARAM", "DRIVE_PARAM",
     "CUTOFF_CV_ATTEN_PARAM", "RESONANCE_CV_ATTEN_PARAM",
-    "DRIVE_CV_ATTEN_PARAM",
+    "DRIVE_CV_ATTEN_PARAM", "VOCT_ATTEN_PARAM",
 ]
 INPUT_IDS = [
     "AUDIO_INPUT", "CUTOFF_CV_INPUT", "RESONANCE_CV_INPUT",
-    "DRIVE_CV_INPUT",
+    "DRIVE_CV_INPUT", "VOCT_INPUT",
 ]
 OUTPUT_IDS = [
     "LP6_OUTPUT", "LP12_OUTPUT", "LP24_OUTPUT",
@@ -159,6 +159,31 @@ class VortexV2ModuleContractTest(unittest.TestCase):
         self.assertIn("struct VortexV2CutoffParamQuantity : ParamQuantity", source)
         self.assertIn("configParam<VortexV2CutoffParamQuantity>", source)
         self.assertNotIn("struct CutoffParamQuantity : ParamQuantity", source)
+
+    def test_voct_input_and_attenuverter_track_cutoff_per_lane(self):
+        source = self.require_source()
+        for marker in (
+            'configInput(VOCT_INPUT, "V/Oct")',
+            'configParam(VOCT_ATTEN_PARAM, -1.f, 1.f, 1.f',
+            'readBroadcast(inputs[VOCT_INPUT], lane)',
+            'params[VOCT_ATTEN_PARAM].getValue()',
+            'vortex_v2::cutoff_param_to_hz(cutoffKnob)',
+            'vortex_v2::cutoff_with_voct(cutoff, voct)',
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, source)
+
+    def test_cutoff_quantity_migrates_legacy_hz_patch_values(self):
+        source = self.require_source()
+        for marker in (
+            "json_t* toJson() override",
+            "void fromJson(json_t* rootJ) override",
+            'json_object_get(rootJ, "value")',
+            "cutoff_hz_to_param",
+            "json_real(getDisplayValue())",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, source)
 
     def test_disconnected_branches_are_reset_and_connected_states_flush(self):
         """Removing a cable must reset only its branch; active branches flush.

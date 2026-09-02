@@ -111,10 +111,11 @@ MetaModule consumer must compile `src/VortexV2/VortexV2.cpp` with the
 convert that revision's `res/VortexV2.svg` to a matched 240 px `VortexV2.png`
 faceplate. The SVG and generated header must not be mixed across revisions.
 
-The Cutoff, Resonance, Drive, and CV controls are ordinary parameters and the
-twelve outputs are ordinary ports in their fixed panel order: LP 6/12/24dB,
+The logarithmic Cutoff, Resonance, Drive, and V/Oct/CV controls are ordinary
+parameters and ports, and the twelve outputs are ordinary ports in their fixed panel order: LP 6/12/24dB,
 HP 6/12/24dB, BP, BP+, NOTCH, NOTCH+, AP, AP+. There are no V2 switch-frame
-assets. `VortexV2PanelLabels` is read-only layer-1 drawing using the supported
+assets. The V/Oct input tracks Cutoff at one octave per volt, with its bipolar
+attenuverter defaulting to unity. `VortexV2PanelLabels` is read-only layer-1 drawing using the supported
 DejaVu Sans font and bounded geometry helpers; the consumer must preserve or
 replace it with an equivalent supported display treatment.
 

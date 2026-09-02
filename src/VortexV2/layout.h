@@ -10,9 +10,9 @@ constexpr float PANEL_HEIGHT = 128.5f;
 constexpr float TITLE_X = 4.0f;
 constexpr float TITLE_Y = 7.0f;
 constexpr float TITLE_FONT_SIZE = 6.6f;
-constexpr float LOGO_TARGET_X = 43.333f;
+constexpr float LOGO_TARGET_X = 42.974f;
 constexpr float LOGO_TARGET_Y = 1.8f;
-constexpr float LOGO_SCALE = 0.06f;
+constexpr float LOGO_SCALE = 0.0757f;
 constexpr float V2_GROUP_LEFT_X = 4.0f;
 constexpr float V2_GROUP_RIGHT_X = 56.96f;
 constexpr float V2_GROUP_TOP_Y = 10.3f;
@@ -63,6 +63,14 @@ constexpr float AUDIO_IN_Y = 20.0f;
 constexpr float AUDIO_IN_LABEL_Y = 14.9f;
 constexpr float AUDIO_IN_LABEL_FONT_SIZE = 2.25f;
 
+// V/Oct input and attenuverter
+constexpr float VOCT_INPUT_X = 12.0f;
+constexpr float VOCT_INPUT_Y = 32.0f;
+constexpr float VOCT_ATTEN_X = 20.5f;
+constexpr float VOCT_ATTEN_Y = 32.0f;
+constexpr float VOCT_LABEL_Y = 26.9f;
+constexpr float VOCT_LABEL_FONT_SIZE = 2.25f;
+
 // Output matrix
 constexpr float OUTPUT_COLUMN_XS[3] = {12.0f, 30.48f, 48.96f};
 constexpr float OUTPUT_ROW_YS[4] = {67.0f, 82.0f, 97.0f, 112.0f};
@@ -84,5 +92,9 @@ constexpr float DRIVE_CV_GROUP_X = 35.697f;
 constexpr float DRIVE_CV_GROUP_Y = 39.637f;
 constexpr float DRIVE_CV_GROUP_WIDTH = 18.353f;
 constexpr float DRIVE_CV_GROUP_HEIGHT = 9.126f;
+constexpr float VOCT_GROUP_X = 6.737f;
+constexpr float VOCT_GROUP_Y = 27.637f;
+constexpr float VOCT_GROUP_WIDTH = 18.853f;
+constexpr float VOCT_GROUP_HEIGHT = 9.126f;
 
 } // namespace vortex_v2_layout

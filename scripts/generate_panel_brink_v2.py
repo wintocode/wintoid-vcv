@@ -9,9 +9,11 @@ uses the same values to make the checked-in static faceplate.
 from __future__ import annotations
 
 from html import escape
+import hashlib
 import json
 import math
 from pathlib import Path
+import re
 from typing import NamedTuple
 import xml.etree.ElementTree as ET
 
@@ -30,8 +32,8 @@ PANEL_IVORY = "#ece8d9"
 LEGEND_CHARCOAL = "#242522"
 SECTION_BLUE_GREY = "#556d80"
 FUNCTION_ORANGE = "#b7693c"
-LOGO_BLUE = "#1a1a2e"
-LOGO_ORANGE = "#ff4d00"
+LOGO_BLUE = "#155f91"
+LOGO_ORANGE = "#ed5b22"
 SECTION_FILL = "#e3e0d1"
 SECTION_FILL_ALT = "#e7e3d4"
 CONTROL_FILL = "#242522"
@@ -58,9 +60,9 @@ MINIMUM_LABEL_CLEARANCE_MM = 0.25
 TITLE_Y = 7.0
 TITLE_FONT_SIZE = 6.6
 LOGO_TARGET_Y = 1.8
-LOGO_SCALE = 0.06
-LOGO_VIEWBOX_X = 0.6875
-LOGO_PATH_RIGHT_X = 227.8125
+LOGO_SCALE = 0.0757
+LOGO_VIEWBOX_X = -4.75
+LOGO_PATH_RIGHT_X = 180.0
 
 # V1 is the starting physical layout.  The channel centres and pair offset are
 # derived from the V2 group boxes below so both socket columns have symmetric
@@ -376,8 +378,8 @@ def _fmt(value: float, digits: int = 6) -> str:
 PANEL_LINES = _normalisation_lines()
 
 
-def _cpp_float(value: float) -> str:
-    text = _fmt(value)
+def _cpp_float(value: float, digits: int = 6) -> str:
+    text = _fmt(value, digits)
     return text if "." in text else f"{text}.0"
 
 
@@ -449,15 +451,20 @@ def _control_guide(name: str, x: float, y: float) -> str:
 
 
 def _logo_elements() -> list[str]:
-    """Copy the verified canonical outlined logo geometry without namespaces."""
+    """Copy the verified canonical W6 geometry without namespaces."""
     if not LOGO_PATH.exists():
         raise RuntimeError(f"missing canonical logo asset: {LOGO_PATH}")
     root = ET.parse(LOGO_PATH).getroot()
     glyph_data = json.loads(GLYPH_DATA_PATH.read_text(encoding="utf-8"))
-    expected_digest = glyph_data.get("source_font_sha256")
-    actual_digest = root.attrib.get("data-source-font-sha256")
+    expected_digest = glyph_data.get("canonical_svg_sha256")
+    if (
+        not isinstance(expected_digest, str)
+        or not re.fullmatch(r"[0-9a-f]{64}", expected_digest)
+    ):
+        raise RuntimeError("logo metadata has no valid canonical SVG SHA-256")
+    actual_digest = hashlib.sha256(LOGO_PATH.read_bytes()).hexdigest()
     if actual_digest != expected_digest:
-        raise RuntimeError("canonical logo source-font digest mismatch")
+        raise RuntimeError("canonical logo content digest mismatch")
     elements = []
     for identifier in ("wint-glyphs", "wint-underline", "oid-glyphs", "oid-underline"):
         match = next((element for element in root.iter() if element.attrib.get("id") == identifier), None)
@@ -518,8 +525,8 @@ def generate_svg() -> str:
     return "\n".join(lines) + "\n"
 
 
-def _header_float(name: str, value: float) -> str:
-    return f"constexpr float {name} = {_cpp_float(value)}f;"
+def _header_float(name: str, value: float, digits: int = 6) -> str:
+    return f"constexpr float {name} = {_cpp_float(value, digits)}f;"
 
 
 def _rgb(hex_color: str) -> tuple[int, int, int]:
@@ -546,7 +553,7 @@ def generate_coords_header() -> str:
         _header_float("TITLE_FONT_SIZE", TITLE_FONT_SIZE),
         _header_float("LOGO_TARGET_X", LOGO_TARGET_X),
         _header_float("LOGO_TARGET_Y", LOGO_TARGET_Y),
-        _header_float("LOGO_SCALE", LOGO_SCALE),
+        _header_float("LOGO_SCALE", LOGO_SCALE, 4),
         _header_float("V2_GROUP_LEFT_X", V2_GROUP_LEFT_X),
         _header_float("V2_GROUP_RIGHT_X", V2_GROUP_RIGHT_X),
         _header_float("V2_GROUP_TOP_Y", V2_GROUP_TOP_Y),

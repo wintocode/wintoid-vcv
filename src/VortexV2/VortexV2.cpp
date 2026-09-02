@@ -7,11 +7,35 @@
 #include "runtime.h"
 
 struct VortexV2CutoffParamQuantity : ParamQuantity {
+    float getDisplayValue() override {
+        return vortex_v2::cutoff_param_to_hz(getValue());
+    }
+
+    void setDisplayValue(float hz) override {
+        setValue(vortex_v2::cutoff_hz_to_param(hz));
+    }
+
     std::string getDisplayValueString() override {
-        const float hz = getValue();
+        const float hz = getDisplayValue();
         if (hz >= 1000.f)
             return string::f("%.2f kHz", hz / 1000.f);
         return string::f("%.1f Hz", hz);
+    }
+
+    json_t* toJson() override {
+        json_t* rootJ = ParamQuantity::toJson();
+        json_object_set_new(rootJ, "value", json_real(getDisplayValue()));
+        return rootJ;
+    }
+
+    void fromJson(json_t* rootJ) override {
+        json_t* valueJ = json_object_get(rootJ, "value");
+        if (valueJ && json_number_value(valueJ) > 1.0) {
+            setValue(vortex_v2::cutoff_hz_to_param(
+                static_cast<float>(json_number_value(valueJ))));
+            return;
+        }
+        ParamQuantity::fromJson(rootJ);
     }
 };
 
@@ -23,6 +47,7 @@ struct VortexV2 : Module {
         CUTOFF_CV_ATTEN_PARAM,
         RESONANCE_CV_ATTEN_PARAM,
         DRIVE_CV_ATTEN_PARAM,
+        VOCT_ATTEN_PARAM,
         PARAMS_LEN
     };
     enum InputId {
@@ -30,6 +55,7 @@ struct VortexV2 : Module {
         CUTOFF_CV_INPUT,
         RESONANCE_CV_INPUT,
         DRIVE_CV_INPUT,
+        VOCT_INPUT,
         INPUTS_LEN
     };
     enum OutputId {
@@ -105,7 +131,8 @@ struct VortexV2 : Module {
         config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 
         auto* cutoff = configParam<VortexV2CutoffParamQuantity>(
-            CUTOFF_PARAM, 20.f, 20000.f, 1000.f, "Cutoff");
+            CUTOFF_PARAM, 0.f, 1.f,
+            vortex_v2::cutoff_hz_to_param(1000.f), "Cutoff");
         (void) cutoff;
         configParam(RESONANCE_PARAM, 0.f, 1.f, 0.f,
                     "Resonance", "%", 0.f, 100.f);
@@ -117,12 +144,15 @@ struct VortexV2 : Module {
                     "Resonance CV", "%", 0.f, 100.f);
         configParam(DRIVE_CV_ATTEN_PARAM, -1.f, 1.f, 0.f,
                     "Drive CV", "%", 0.f, 100.f);
+        configParam(VOCT_ATTEN_PARAM, -1.f, 1.f, 1.f,
+                    "V/Oct", "%", 0.f, 100.f);
 
         configInput(AUDIO_INPUT,
                     "Audio (polyphonic voice count, 1 to 16 channels)");
         configInput(CUTOFF_CV_INPUT, "Cutoff CV");
         configInput(RESONANCE_CV_INPUT, "Resonance CV");
         configInput(DRIVE_CV_INPUT, "Drive CV");
+        configInput(VOCT_INPUT, "V/Oct");
 
         configOutput(LP6_OUTPUT, "LP 6dB");
         configOutput(LP12_OUTPUT, "LP 12dB");
@@ -179,23 +209,29 @@ struct VortexV2 : Module {
         const float resonanceCvAtten =
             params[RESONANCE_CV_ATTEN_PARAM].getValue();
         const float driveCvAtten = params[DRIVE_CV_ATTEN_PARAM].getValue();
+        const float voctAtten = params[VOCT_ATTEN_PARAM].getValue();
         const bool cutoffCvConnected = inputs[CUTOFF_CV_INPUT].isConnected();
         const bool resonanceCvConnected =
             inputs[RESONANCE_CV_INPUT].isConnected();
         const bool driveCvConnected = inputs[DRIVE_CV_INPUT].isConnected();
+        const bool voctConnected = inputs[VOCT_INPUT].isConnected();
         const bool reuseFilterCoefficients =
-            !cutoffCvConnected && !resonanceCvConnected;
+            !cutoffCvConnected && !resonanceCvConnected && !voctConnected;
 
         for (int lane = 0; lane < channels; ++lane) {
             float signal = readBroadcast(inputs[AUDIO_INPUT], lane) / 5.f;
 
-            float cutoff = cutoffKnob;
+            float cutoff = vortex_v2::cutoff_param_to_hz(cutoffKnob);
+            const float voct = readBroadcast(inputs[VOCT_INPUT], lane)
+                * voctAtten;
+            cutoff = vortex_v2::cutoff_with_voct(cutoff, voct);
             if (cutoffCvConnected) {
                 const float cutoffCv = readBroadcast(
                     inputs[CUTOFF_CV_INPUT], lane) * cutoffCvAtten;
                 cutoff *= vortex::voct_to_mult(cutoffCv);
             }
-            cutoff = clamp(cutoff, 20.f, 20000.f);
+            cutoff = clamp(cutoff, vortex_v2::MIN_CUTOFF_HZ,
+                           vortex_v2::MAX_CUTOFF_HZ);
 
             float damping = baseDamping;
             if (resonanceCvConnected) {
@@ -320,6 +356,8 @@ struct VortexV2PanelLabels : Widget {
              centerBaseline, 36, 37, 34, "DRIVE", false},
             {AUDIO_IN_X, AUDIO_IN_LABEL_Y, AUDIO_IN_LABEL_FONT_SIZE,
              centerBaseline, 36, 37, 34, "IN", false},
+            {VOCT_INPUT_X, VOCT_LABEL_Y, VOCT_LABEL_FONT_SIZE,
+             centerBaseline, 36, 37, 34, "V/OCT", false},
         };
         for (const Label& label : labels)
             drawLabel(args, label);
@@ -388,6 +426,12 @@ struct VortexV2Widget : ModuleWidget {
         addInput(createInputCentered<PJ301MPort>(
             mm2px(Vec(AUDIO_IN_X, AUDIO_IN_Y)), module,
             VortexV2::AUDIO_INPUT));
+        addInput(createInputCentered<PJ301MPort>(
+            mm2px(Vec(VOCT_INPUT_X, VOCT_INPUT_Y)), module,
+            VortexV2::VOCT_INPUT));
+        addParam(createParamCentered<Trimpot>(
+            mm2px(Vec(VOCT_ATTEN_X, VOCT_ATTEN_Y)), module,
+            VortexV2::VOCT_ATTEN_PARAM));
 
         const int outputIds[] = {
             VortexV2::LP6_OUTPUT, VortexV2::LP12_OUTPUT,

@@ -95,6 +95,10 @@ class VortexV2PanelTest(unittest.TestCase):
     def test_audio_input_is_top_left_of_the_shifted_control_block(self):
         panel = self.require_panel()
         self.assertEqual((12.0, 20.0), (panel.AUDIO_IN_X, panel.AUDIO_IN_Y))
+        self.assertEqual((12.0, 32.0),
+                         (panel.VOCT_INPUT_X, panel.VOCT_INPUT_Y))
+        self.assertEqual((20.5, 32.0),
+                         (panel.VOCT_ATTEN_X, panel.VOCT_ATTEN_Y))
         self.assertEqual(30.48, panel.CONTROL_KNOB_X)
         self.assertEqual(40.96, panel.CONTROL_CV_X)
         self.assertEqual(48.96, panel.CONTROL_ATTEN_X)
@@ -102,6 +106,8 @@ class VortexV2PanelTest(unittest.TestCase):
         self.assertEqual(panel.OUTPUT_COLUMN_XS[1], panel.CONTROL_KNOB_X)
         self.assertLess(panel.AUDIO_IN_X, panel.CONTROL_KNOB_X)
         self.assertLess(panel.AUDIO_IN_Y, panel.CONTROL_ROW_YS[1])
+        self.assertEqual(panel.VOCT_INPUT_X, panel.AUDIO_IN_X)
+        self.assertGreater(panel.VOCT_INPUT_Y, panel.AUDIO_IN_Y)
 
     def test_outputs_are_the_twelve_modes_in_row_major_order(self):
         panel = self.require_panel()
@@ -221,12 +227,13 @@ class VortexV2PanelTest(unittest.TestCase):
             "cutoff-cv-group": panel.CONTROL_GROUPS[0],
             "resonance-cv-group": panel.CONTROL_GROUPS[1],
             "drive-cv-group": panel.CONTROL_GROUPS[2],
+            "voct-group": panel.VOCT_GROUP,
         }
         self.assertEqual(
             set(expected_ids),
             set(panel.PAIR_GROUP_RECT_BY_ID),
         )
-        for identifier, (_name, _knob, cv, atten) in expected_ids.items():
+        for identifier, group in expected_ids.items():
             group = element_by_id(svg, identifier)
             self.assertEqual("rect", group.tag.rsplit("}", 1)[-1])
             self.assertEqual("none", group.attrib["fill"])
@@ -236,14 +243,19 @@ class VortexV2PanelTest(unittest.TestCase):
             y = float(group.attrib["y"])
             width = float(group.attrib["width"])
             height = float(group.attrib["height"])
-            cv_x, cv_y = cv
-            atten_x, atten_y = atten
-            self.assertLessEqual(x, cv_x - panel.RACK_PORT_RADIUS)
+            if identifier == "voct-group":
+                input_x, input_y = panel.VOCT_INPUT_X, panel.VOCT_INPUT_Y
+                atten_x, atten_y = panel.VOCT_ATTEN_X, panel.VOCT_ATTEN_Y
+            else:
+                _name, _knob, cv, atten = expected_ids[identifier]
+                input_x, input_y = cv
+                atten_x, atten_y = atten
+            self.assertLessEqual(x, input_x - panel.RACK_PORT_RADIUS)
             self.assertGreaterEqual(
                 x + width,
                 atten_x + panel.RACK_SMALL_KNOB_RADIUS,
             )
-            self.assertLessEqual(y, cv_y - panel.RACK_PORT_RADIUS)
+            self.assertLessEqual(y, input_y - panel.RACK_PORT_RADIUS)
             self.assertGreaterEqual(
                 y + height,
                 atten_y + panel.RACK_SMALL_KNOB_RADIUS,
@@ -258,7 +270,7 @@ class VortexV2PanelTest(unittest.TestCase):
         label_text = {node.text for node in labels if node.text}
         self.assertNotIn("GLOBAL CONTROLS", label_text)
         self.assertNotIn("FILTER OUTPUTS", label_text)
-        for expected in ("Vortex V2", "CUTOFF", "RESO", "DRIVE", "IN",
+        for expected in ("Vortex V2", "CUTOFF", "RESO", "DRIVE", "IN", "V/OCT",
                           *panel.OUTPUT_LABELS):
             with self.subTest(label=expected):
                 self.assertIn(expected, label_text)
@@ -273,11 +285,29 @@ class VortexV2PanelTest(unittest.TestCase):
     def test_svg_embeds_the_canonical_four_v2_logo(self):
         panel = self.require_panel()
         svg = panel.generate_svg()
-        self.assertIn('id="wintoid-logo"', svg)
-        self.assertIn('id="wint-glyphs"', svg)
-        self.assertIn('id="oid-glyphs"', svg)
-        self.assertIn('id="wint-underline"', svg)
-        self.assertIn('id="oid-underline"', svg)
+        root = ET.fromstring(svg)
+        self.assertIn(
+            "wintoid-logo",
+            {node.attrib.get("id") for node in root.iter()},
+        )
+        for group_id, colour in (
+            ("wint-glyphs", "#155f91"),
+            ("oid-glyphs", "#ed5b22"),
+        ):
+            group = next(node for node in root.iter()
+                         if node.attrib.get("id") == group_id)
+            self.assertEqual("none", group.attrib["fill"])
+            self.assertEqual(colour, group.attrib["stroke"])
+            self.assertEqual("5.5", group.attrib["stroke-width"])
+        for line_id, colour in (
+            ("wint-underline", "#155f91"),
+            ("oid-underline", "#ed5b22"),
+        ):
+            line = next(node for node in root.iter()
+                        if node.attrib.get("id") == line_id)
+            self.assertEqual(colour, line.attrib["stroke"])
+            self.assertEqual("5.5", line.attrib["stroke-width"])
+            self.assertEqual("butt", line.attrib["stroke-linecap"])
         self.assertNotIn("WintoidLogo.svg", svg)
         self.assertNotIn("<image", svg)
 
