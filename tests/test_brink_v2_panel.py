@@ -556,7 +556,7 @@ class BrinkV2PanelTest(unittest.TestCase):
                         f"by output socket ({output_x}, {output_y})"
                     )
 
-    def test_svg_has_sem_sections_title_and_canonical_logo(self):
+    def test_svg_has_sem_sections_title_and_approved_d1_logo(self):
         panel = self.require_panel()
         svg = panel.generate_svg()
         root = ET.fromstring(svg)
@@ -574,26 +574,21 @@ class BrinkV2PanelTest(unittest.TestCase):
                 self.assertEqual(fill, section.attrib["fill"])
                 self.assertEqual("#556d80", section.attrib["stroke"])
         ids = {node.attrib.get("id") for node in root.iter()}
-        self.assertTrue({"wintoid-logo", "wint-glyphs", "oid-glyphs",
-                         "wint-underline", "oid-underline"}.issubset(ids))
-        for group_id, colour in (
-            ("wint-glyphs", "#155f91"),
-            ("oid-glyphs", "#ed5b22"),
-        ):
-            group = next(node for node in root.iter()
-                         if node.attrib.get("id") == group_id)
-            self.assertEqual("none", group.attrib["fill"])
-            self.assertEqual(colour, group.attrib["stroke"])
-            self.assertEqual("5.5", group.attrib["stroke-width"])
-        for line_id, colour in (
-            ("wint-underline", "#155f91"),
-            ("oid-underline", "#ed5b22"),
-        ):
-            line = next(node for node in root.iter()
-                        if node.attrib.get("id") == line_id)
-            self.assertEqual(colour, line.attrib["stroke"])
-            self.assertEqual("5.5", line.attrib["stroke-width"])
-            self.assertEqual("butt", line.attrib["stroke-linecap"])
+        self.assertTrue({"wintoid-logo", "wintoid-dots"}.issubset(ids))
+        dots = next(node for node in root.iter()
+                    if node.attrib.get("id") == "wintoid-dots")
+        self.assertEqual("#242522", dots.attrib["fill"])
+        circles = list(dots)
+        self.assertEqual(77, len(circles))
+        self.assertTrue(all(circle.tag.endswith("circle") for circle in circles))
+        self.assertTrue(all(circle.attrib["fill"] == "#242522"
+                            and circle.attrib["r"] == "0.38"
+                            for circle in circles))
+        self.assertNotIn("wint-glyphs", svg)
+        self.assertNotIn("oid-glyphs", svg)
+        self.assertNotIn("underline", svg)
+        self.assertNotIn("#155f91", svg)
+        self.assertNotIn("#ed5b22", svg)
         self.assertIn("Brink V2", {node.text for node in root.iter()
                                     if node.tag.endswith("text")})
 

@@ -1,20 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="189.5" height="57.5" viewBox="-4.75 -44.75 189.5 57.5">
-  <title>lowercase wintoid W6 wordmark</title>
-  <g id="wint-glyphs" fill="none" stroke="#155f91" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
-    <path data-mark="w" d="M 0 -30 C 5 -30 5 0 10 0 C 15 0 15 -30 20 -30 C 25 -30 25 0 30 0 C 35 0 35 -30 40 -30" />
-    <path data-mark="i" d="M 48 0 L 48 -30" />
-    <path data-mark="n" d="M 60 0 L 60 -30 M 60 -20 C 60 -28 64 -30 68 -30 C 73 -30 76 -26.5 76 -20 L 76 0" />
-    <path data-mark="t" d="M 94 0 L 94 -34 M 87 -22 L 101 -22" />
-    <circle data-mark="wint-i-dot" cx="48" cy="-39" r="3.75" fill="#155f91" stroke="none" />
+<svg xmlns="http://www.w3.org/2000/svg" width="33" height="7" viewBox="0 0 33 7">
+  <title>lowercase wintoid D1 round-dot wordmark</title>
+  <g id="wintoid-dots" fill="#242522">
+    <circle cx="0.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="4.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="0.5" cy="3.5" r="0.38" fill="#242522" />
+    <circle cx="2.5" cy="3.5" r="0.38" fill="#242522" />
+    <circle cx="4.5" cy="3.5" r="0.38" fill="#242522" />
+    <circle cx="0.5" cy="4.5" r="0.38" fill="#242522" />
+    <circle cx="2.5" cy="4.5" r="0.38" fill="#242522" />
+    <circle cx="4.5" cy="4.5" r="0.38" fill="#242522" />
+    <circle cx="0.5" cy="5.5" r="0.38" fill="#242522" />
+    <circle cx="2.5" cy="5.5" r="0.38" fill="#242522" />
+    <circle cx="4.5" cy="5.5" r="0.38" fill="#242522" />
+    <circle cx="1.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="3.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="6.5" cy="0.5" r="0.38" fill="#242522" />
+    <circle cx="6.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="6.5" cy="3.5" r="0.38" fill="#242522" />
+    <circle cx="6.5" cy="4.5" r="0.38" fill="#242522" />
+    <circle cx="6.5" cy="5.5" r="0.38" fill="#242522" />
+    <circle cx="6.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="8.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="9.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="10.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="11.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="12.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="8.5" cy="3.5" r="0.38" fill="#242522" />
+    <circle cx="12.5" cy="3.5" r="0.38" fill="#242522" />
+    <circle cx="8.5" cy="4.5" r="0.38" fill="#242522" />
+    <circle cx="12.5" cy="4.5" r="0.38" fill="#242522" />
+    <circle cx="8.5" cy="5.5" r="0.38" fill="#242522" />
+    <circle cx="12.5" cy="5.5" r="0.38" fill="#242522" />
+    <circle cx="8.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="12.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="16.5" cy="0.5" r="0.38" fill="#242522" />
+    <circle cx="16.5" cy="1.5" r="0.38" fill="#242522" />
+    <circle cx="14.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="15.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="16.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="17.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="18.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="16.5" cy="3.5" r="0.38" fill="#242522" />
+    <circle cx="16.5" cy="4.5" r="0.38" fill="#242522" />
+    <circle cx="16.5" cy="5.5" r="0.38" fill="#242522" />
+    <circle cx="17.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="21.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="22.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="23.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="20.5" cy="3.5" r="0.38" fill="#242522" />
+    <circle cx="24.5" cy="3.5" r="0.38" fill="#242522" />
+    <circle cx="20.5" cy="4.5" r="0.38" fill="#242522" />
+    <circle cx="24.5" cy="4.5" r="0.38" fill="#242522" />
+    <circle cx="20.5" cy="5.5" r="0.38" fill="#242522" />
+    <circle cx="24.5" cy="5.5" r="0.38" fill="#242522" />
+    <circle cx="21.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="22.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="23.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="26.5" cy="0.5" r="0.38" fill="#242522" />
+    <circle cx="26.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="26.5" cy="3.5" r="0.38" fill="#242522" />
+    <circle cx="26.5" cy="4.5" r="0.38" fill="#242522" />
+    <circle cx="26.5" cy="5.5" r="0.38" fill="#242522" />
+    <circle cx="26.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="32.5" cy="0.5" r="0.38" fill="#242522" />
+    <circle cx="32.5" cy="1.5" r="0.38" fill="#242522" />
+    <circle cx="29.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="30.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="31.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="32.5" cy="2.5" r="0.38" fill="#242522" />
+    <circle cx="28.5" cy="3.5" r="0.38" fill="#242522" />
+    <circle cx="32.5" cy="3.5" r="0.38" fill="#242522" />
+    <circle cx="28.5" cy="4.5" r="0.38" fill="#242522" />
+    <circle cx="32.5" cy="4.5" r="0.38" fill="#242522" />
+    <circle cx="28.5" cy="5.5" r="0.38" fill="#242522" />
+    <circle cx="32.5" cy="5.5" r="0.38" fill="#242522" />
+    <circle cx="29.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="30.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="31.5" cy="6.5" r="0.38" fill="#242522" />
+    <circle cx="32.5" cy="6.5" r="0.38" fill="#242522" />
   </g>
-  <line id="wint-underline" x1="0" y1="8" x2="102" y2="8" stroke="#155f91" stroke-width="5.5" stroke-linecap="butt" />
-  <g id="oid-glyphs" fill="none" stroke="#ed5b22" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
-    <circle data-mark="oid-o" cx="118" cy="-15" r="15" fill="none" stroke="#ed5b22" />
-    <path data-mark="i" d="M 143 0 L 143 -30" />
-    <circle data-mark="oid-i-dot" cx="143" cy="-39" r="3.75" fill="#ed5b22" stroke="none" />
-    <circle data-mark="oid-d" cx="164.5" cy="-15" r="15" fill="none" stroke="#ed5b22" />
-    <path data-mark="d-stem" d="M 179.5 0 L 179.5 -40" />
-  </g>
-  <line id="oid-underline" x1="102" y1="8" x2="180" y2="8" stroke="#ed5b22" stroke-width="5.5" stroke-linecap="butt" />
 </svg>

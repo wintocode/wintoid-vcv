@@ -13,7 +13,7 @@ Outputs:
 
 All geometry in this file is millimetres.  The SVG is intentionally a quiet
 structural guide: Rack supplies the live controls and displays, while the
-    static labels, framed hierarchy, and canonical W6 wintoid mark remain
+    static labels, framed hierarchy, and canonical D1 wintoid mark remain
 visible in the checked-in panel asset.
 """
 
@@ -68,8 +68,7 @@ PANEL_IVORY = "#ece8d9"
 LEGEND_CHARCOAL = "#242522"
 SECTION_BLUE_GREY = "#556d80"
 FUNCTION_ORANGE = "#b7693c"
-LOGO_BLUE = "#155f91"
-LOGO_ORANGE = "#ed5b22"
+LOGO_INK = "#242522"
 DISPLAY_CHARCOAL = "#242522"
 DISPLAY_TEXT = PANEL_IVORY
 SECTION_FILL = "#e3e0d1"
@@ -108,9 +107,9 @@ MINIMUM_LABEL_CLEARANCE_MM = 0.25
 TITLE_Y = 7.0
 TITLE_FONT_SIZE = 6.6
 LOGO_TARGET_Y = 1.8
-LOGO_SCALE = 0.0757
-LOGO_VIEWBOX_X = -4.75
-LOGO_PATH_RIGHT_X = 180.0
+LOGO_SCALE = 0.4142
+LOGO_VIEWBOX_X = 0.0
+LOGO_PATH_RIGHT_X = 33.0
 V2_GROUP_LEFT_X = MINIMUM_EDGE_CLEARANCE_MM
 V2_GROUP_RIGHT_X = WIDTH_MM - MINIMUM_EDGE_CLEARANCE_MM
 V2_GROUP_TOP_Y = 10.3
@@ -713,7 +712,7 @@ LABEL_CLEARANCES = {
 
 
 def _logo_elements() -> list[str]:
-    """Return canonical W6 groups/underlines with XML namespaces removed."""
+    """Return the canonical D1 dot group with XML namespaces removed."""
     if not LOGO_PATH.exists():
         raise RuntimeError(f"missing canonical logo asset: {LOGO_PATH}")
     root = ET.parse(LOGO_PATH).getroot()
@@ -735,13 +734,15 @@ def _logo_elements() -> list[str]:
             f"expected {expected_digest}, got {actual_digest}"
         )
     wanted = []
-    for identifier in ("wint-glyphs", "wint-underline", "oid-glyphs", "oid-underline"):
+    for identifier in ("wintoid-dots",):
         match = next(
             (element for element in root.iter() if element.attrib.get("id") == identifier),
             None,
         )
         if match is None:
             raise RuntimeError(f"canonical logo is missing {identifier}")
+        if match.attrib.get("fill") != LOGO_INK:
+            raise RuntimeError("canonical logo has unexpected ink colour")
         clone = ET.fromstring(ET.tostring(match, encoding="unicode"))
         for element in clone.iter():
             if "}" in element.tag:

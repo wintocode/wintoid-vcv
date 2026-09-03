@@ -26,6 +26,17 @@ RACK_PORT_RADIUS_MM = 23.7 / (2.0 * RACK_PIXELS_PER_MM)
 MINIMUM_EDGE_CLEARANCE_MM = 4.0
 MINIMUM_LABEL_CLEARANCE_MM = 0.25
 
+EXPECTED_LOGO_GLYPHS = {
+    "w": ("00000", "00000", "10001", "10101", "10101", "10101", "01010"),
+    "i": ("1", "0", "1", "1", "1", "1", "1"),
+    "n": ("00000", "00000", "11111", "10001", "10001", "10001", "10001"),
+    "t": ("00100", "00100", "11111", "00100", "00100", "00100", "00010"),
+    "o": ("00000", "00000", "01110", "10001", "10001", "10001", "01110"),
+    "d": ("00001", "00001", "01111", "10001", "10001", "10001", "01111"),
+}
+EXPECTED_LOGO_ORDER = ("w", "i", "n", "t", "o", "i", "d")
+EXPECTED_LOGO_STARTS = (0, 6, 8, 14, 20, 26, 28)
+
 def _extract_struct_body(source, marker):
     start = source.index(marker)
     brace = source.index("{", start)
@@ -74,8 +85,9 @@ class FourV2PanelTest(unittest.TestCase):
         self.assertEqual("#242522", panel.LEGEND_CHARCOAL)
         self.assertEqual("#556d80", panel.SECTION_BLUE_GREY)
         self.assertEqual("#b7693c", panel.FUNCTION_ORANGE)
-        self.assertEqual("#155f91", panel.LOGO_BLUE)
-        self.assertEqual("#ed5b22", panel.LOGO_ORANGE)
+        self.assertEqual("#242522", panel.LOGO_INK)
+        self.assertFalse(hasattr(panel, "LOGO_BLUE"))
+        self.assertFalse(hasattr(panel, "LOGO_ORANGE"))
 
     def test_four_operator_sections_are_framed(self):
         panel = self.require_panel()
@@ -86,108 +98,61 @@ class FourV2PanelTest(unittest.TestCase):
             tuple(panel.PATCHBAY_ROWS),
         )
 
-    def test_logo_is_the_approved_w6_vector_mark(self):
+    def test_logo_is_the_approved_d1_round_dot_mark(self):
         self.assertTrue(LOGO_SCRIPT.exists(), "logo generator is missing")
         self.assertTrue(LOGO_SVG.exists(), "canonical logo SVG is missing")
         root = ET.parse(LOGO_SVG).getroot()
+        self.assertEqual((0.0, 0.0, 33.0, 7.0),
+                         tuple(float(value) for value in root.attrib["viewBox"].split()))
         self.assertEqual([], [node for node in root.iter()
-                              if node.tag.endswith("text")])
-        self.assertEqual([], [node for node in root.iter()
-                              if node.tag.endswith("use")])
+                              if node.tag.endswith(("text", "use", "path", "line"))])
         ids = {node.attrib.get("id") for node in root.iter()}
-        self.assertTrue({"wint-glyphs", "oid-glyphs",
-                         "wint-underline", "oid-underline"}.issubset(ids))
-        self.assertEqual(
-            (-4.75, -44.75, 189.5, 57.5),
-            tuple(float(value) for value in root.attrib["viewBox"].split()),
-        )
+        self.assertEqual({None, "wintoid-dots"}, ids)
+        group = next(node for node in root.iter()
+                     if node.attrib.get("id") == "wintoid-dots")
+        self.assertEqual("#242522", group.attrib["fill"])
+        circles = [node for node in group if node.tag.endswith("circle")]
+        self.assertEqual(77, len(circles))
 
-        expected_group_style = {
-            "wint-glyphs": "#155f91",
-            "oid-glyphs": "#ed5b22",
-        }
-        expected_paths = {
-            "wint-glyphs": (
-                "M 0 -30 C 5 -30 5 0 10 0 C 15 0 15 -30 20 -30 "
-                "C 25 -30 25 0 30 0 C 35 0 35 -30 40 -30",
-                "M 48 0 L 48 -30",
-                "M 60 0 L 60 -30 M 60 -20 C 60 -28 64 -30 68 -30 "
-                "C 73 -30 76 -26.5 76 -20 L 76 0",
-                "M 94 0 L 94 -34 M 87 -22 L 101 -22",
-            ),
-            "oid-glyphs": (
-                "M 143 0 L 143 -30",
-                "M 179.5 0 L 179.5 -40",
-            ),
-        }
-        for group_id, colour in expected_group_style.items():
-            group = next(node for node in root.iter()
-                         if node.attrib.get("id") == group_id)
-            for attribute, value in {
-                "fill": "none",
-                "stroke": colour,
-                "stroke-width": "5.5",
-                "stroke-linecap": "round",
-                "stroke-linejoin": "round",
-            }.items():
-                with self.subTest(group=group_id, attribute=attribute):
-                    self.assertEqual(value, group.attrib.get(attribute))
-            paths = tuple(node.attrib["d"] for node in group
-                          if node.tag.endswith("path"))
-            self.assertEqual(expected_paths[group_id], paths)
+        expected_points = []
+        for start, character in zip(EXPECTED_LOGO_STARTS, EXPECTED_LOGO_ORDER):
+            for row, bitmap_row in enumerate(EXPECTED_LOGO_GLYPHS[character]):
+                for column, value in enumerate(bitmap_row):
+                    if value == "1":
+                        expected_points.append((start + column + 0.5, row + 0.5))
+        self.assertEqual(77, len(expected_points))
+        actual_points = []
+        for circle in circles:
+            self.assertEqual("#242522", circle.attrib["fill"])
+            self.assertAlmostEqual(0.38, float(circle.attrib["r"]))
+            actual_points.append((float(circle.attrib["cx"]),
+                                  float(circle.attrib["cy"])))
+        self.assertEqual(expected_points, actual_points)
 
-        circles = {
-            node.attrib["data-mark"]: node
-            for node in root.iter()
-            if node.tag.endswith("circle")
-        }
-        expected_circles = {
-            "wint-i-dot": (48.0, -39.0, 3.75, "#155f91", "none"),
-            "oid-o": (118.0, -15.0, 15.0, "none", "#ed5b22"),
-            "oid-i-dot": (143.0, -39.0, 3.75, "#ed5b22", "none"),
-            "oid-d": (164.5, -15.0, 15.0, "none", "#ed5b22"),
-        }
-        self.assertEqual(set(expected_circles), set(circles))
-        for mark, (cx, cy, radius, fill, stroke) in expected_circles.items():
-            circle = circles[mark]
-            with self.subTest(circle=mark):
-                self.assertAlmostEqual(cx, float(circle.attrib["cx"]))
-                self.assertAlmostEqual(cy, float(circle.attrib["cy"]))
-                self.assertAlmostEqual(radius, float(circle.attrib["r"]))
-                if fill == "none":
-                    self.assertEqual("none", circle.attrib.get("fill"))
-                else:
-                    self.assertEqual(fill, circle.attrib.get("fill"))
-                if stroke == "none":
-                    self.assertEqual("none", circle.attrib.get("stroke"))
-                else:
-                    self.assertEqual(stroke, circle.attrib.get("stroke"))
-
-        expected_lines = {
-            "wint-underline": (0.0, 102.0, "#155f91"),
-            "oid-underline": (102.0, 180.0, "#ed5b22"),
-        }
-        for line_id, (x1, x2, colour) in expected_lines.items():
-            line = next(node for node in root.iter()
-                        if node.attrib.get("id") == line_id)
-            with self.subTest(line=line_id):
-                self.assertAlmostEqual(x1, float(line.attrib["x1"]))
-                self.assertAlmostEqual(x2, float(line.attrib["x2"]))
-                self.assertAlmostEqual(8.0, float(line.attrib["y1"]))
-                self.assertAlmostEqual(8.0, float(line.attrib["y2"]))
-                self.assertEqual(colour, line.attrib.get("stroke"))
-                self.assertEqual("5.5", line.attrib.get("stroke-width"))
-                self.assertEqual("butt", line.attrib.get("stroke-linecap"))
+        data = json.loads(GLYPH_DATA.read_text(encoding="utf-8"))
+        self.assertEqual(3, data["schema_version"])
+        self.assertEqual("D1", data["mark"])
+        self.assertEqual("#242522", data["grid"]["ink"])
+        self.assertEqual(33, data["grid"]["columns"])
+        self.assertEqual(7, data["grid"]["rows"])
+        self.assertEqual(0.38, data["grid"]["dot_radius"])
+        self.assertEqual(EXPECTED_LOGO_GLYPHS,
+                         {key: tuple(value) for key, value in data["glyphs"].items()})
+        self.assertEqual(list(EXPECTED_LOGO_ORDER), data["layout"]["order"])
+        self.assertEqual(list(EXPECTED_LOGO_STARTS), data["layout"]["starts"])
+        self.assertNotIn("source_font_sha256", data)
 
     def test_panel_logo_uses_the_approved_scale_and_path_bound(self):
         panel = self.require_panel()
-        self.assertAlmostEqual(0.0757, panel.LOGO_SCALE)
-        self.assertEqual(-4.75, panel.LOGO_VIEWBOX_X)
-        self.assertEqual(180.0, panel.LOGO_PATH_RIGHT_X)
+        self.assertAlmostEqual(0.4142, panel.LOGO_SCALE)
+        self.assertEqual(0.0, panel.LOGO_VIEWBOX_X)
+        self.assertEqual(33.0, panel.LOGO_PATH_RIGHT_X)
         root = ET.fromstring(panel.generate_svg())
         logo = next(node for node in root.iter()
                     if node.attrib.get("id") == "wintoid-logo")
-        self.assertRegex(logo.attrib["transform"], r"scale\(0\.0757\)")
+        self.assertRegex(logo.attrib["transform"], r"scale\(0\.4142\)")
+        self.assertLess(panel.LOGO_TARGET_Y + 7.0 * panel.LOGO_SCALE,
+                        panel.TITLE_Y)
 
     def test_all_physical_components_clear_panel_edges(self):
         panel = self.require_panel()
@@ -1015,28 +980,25 @@ class FourV2PanelTest(unittest.TestCase):
     def test_panel_embeds_logo_groups_without_external_reference(self):
         panel = self.require_panel()
         svg = panel.generate_svg()
-        self.assertIn('id="wint-glyphs"', svg)
-        self.assertIn('id="oid-glyphs"', svg)
+        self.assertIn('id="wintoid-dots"', svg)
+        self.assertNotIn('id="wint-glyphs"', svg)
+        self.assertNotIn('id="oid-glyphs"', svg)
+        self.assertNotIn("underline", svg)
+        self.assertNotIn("#155f91", svg)
+        self.assertNotIn("#ed5b22", svg)
         self.assertNotIn("WintoidLogo.svg", svg)
         self.assertNotIn("<image", svg)
 
-    def test_logo_underlines_use_the_approved_geometry_and_stroke(self):
-        self.assertTrue(LOGO_SVG.exists(), "canonical logo SVG is missing")
+    def test_logo_uses_round_dots_without_underlines(self):
         root = ET.parse(LOGO_SVG).getroot()
-        for line_id, x1, x2, colour in (
-            ("wint-underline", 0.0, 102.0, "#155f91"),
-            ("oid-underline", 102.0, 180.0, "#ed5b22"),
-        ):
-            line = next(node for node in root.iter()
-                        if node.attrib.get("id") == line_id)
-            with self.subTest(line=line_id):
-                self.assertAlmostEqual(x1, float(line.attrib["x1"]))
-                self.assertAlmostEqual(x2, float(line.attrib["x2"]))
-                self.assertAlmostEqual(8.0, float(line.attrib["y1"]))
-                self.assertAlmostEqual(8.0, float(line.attrib["y2"]))
-                self.assertEqual(colour, line.attrib["stroke"])
-                self.assertEqual("5.5", line.attrib["stroke-width"])
-                self.assertEqual("butt", line.attrib["stroke-linecap"])
+        self.assertEqual([], [node for node in root.iter()
+                              if node.tag.endswith("line")])
+        self.assertEqual([], [node for node in root.iter()
+                              if node.tag.endswith("path")])
+        dots = next(node for node in root.iter()
+                    if node.attrib.get("id") == "wintoid-dots")
+        self.assertEqual(77, len(list(dots)))
+        self.assertTrue(all(node.tag.endswith("circle") for node in dots))
 
     def test_logo_content_digest_matches_checked_in_metadata(self):
         self.assertTrue(GLYPH_DATA.exists(), "logo metadata is missing")
@@ -1047,6 +1009,7 @@ class FourV2PanelTest(unittest.TestCase):
         actual = hashlib.sha256(LOGO_SVG.read_bytes()).hexdigest()
         self.assertEqual(digest, actual)
         self.assertNotIn("source_font_sha256", data)
+        self.assertEqual("D1", data["mark"])
 
     def test_panel_generator_rejects_logo_content_digest_mismatch(self):
         panel = self.require_panel()

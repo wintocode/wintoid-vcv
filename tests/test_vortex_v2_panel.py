@@ -282,7 +282,7 @@ class VortexV2PanelTest(unittest.TestCase):
         self.assertNotIn("CV", label_text)
         self.assertNotIn(">CV<", svg)
 
-    def test_svg_embeds_the_canonical_four_v2_logo(self):
+    def test_svg_embeds_the_approved_d1_round_dot_logo(self):
         panel = self.require_panel()
         svg = panel.generate_svg()
         root = ET.fromstring(svg)
@@ -290,24 +290,20 @@ class VortexV2PanelTest(unittest.TestCase):
             "wintoid-logo",
             {node.attrib.get("id") for node in root.iter()},
         )
-        for group_id, colour in (
-            ("wint-glyphs", "#155f91"),
-            ("oid-glyphs", "#ed5b22"),
-        ):
-            group = next(node for node in root.iter()
-                         if node.attrib.get("id") == group_id)
-            self.assertEqual("none", group.attrib["fill"])
-            self.assertEqual(colour, group.attrib["stroke"])
-            self.assertEqual("5.5", group.attrib["stroke-width"])
-        for line_id, colour in (
-            ("wint-underline", "#155f91"),
-            ("oid-underline", "#ed5b22"),
-        ):
-            line = next(node for node in root.iter()
-                        if node.attrib.get("id") == line_id)
-            self.assertEqual(colour, line.attrib["stroke"])
-            self.assertEqual("5.5", line.attrib["stroke-width"])
-            self.assertEqual("butt", line.attrib["stroke-linecap"])
+        dots = next(node for node in root.iter()
+                    if node.attrib.get("id") == "wintoid-dots")
+        self.assertEqual("#242522", dots.attrib["fill"])
+        circles = list(dots)
+        self.assertEqual(77, len(circles))
+        self.assertTrue(all(circle.tag.endswith("circle") for circle in circles))
+        self.assertTrue(all(circle.attrib["fill"] == "#242522"
+                            and circle.attrib["r"] == "0.38"
+                            for circle in circles))
+        self.assertNotIn("wint-glyphs", svg)
+        self.assertNotIn("oid-glyphs", svg)
+        self.assertNotIn("underline", svg)
+        self.assertNotIn("#155f91", svg)
+        self.assertNotIn("#ed5b22", svg)
         self.assertNotIn("WintoidLogo.svg", svg)
         self.assertNotIn("<image", svg)
 
