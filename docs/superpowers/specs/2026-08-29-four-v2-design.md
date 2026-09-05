@@ -127,6 +127,8 @@ The patchbay is a matrix with operator columns 1–4 and parameter rows:
 
 Every matrix cell contains a bipolar attenuverter and its CV input. This preserves Four V1's per-operator modulation facilities while confining cable density to one region. The parameter rows align with the operator sections so both operator-by-operator and parameter-by-parameter scanning remain possible.
 
+For Output, Warp, Fold, Feedback, and global PM Depth, a connected CV input uses static excursion normalization rather than an instantaneous hard clamp. VCV inputs do not expose whether their source is bipolar or unipolar, so every connected input is conservatively treated as potentially spanning `-10 V…+10 V`. For base value `b` and bipolar attenuverter `a`, FourV2 maps the instantaneous raw value `b + clamp(CV / 10, -1, 1) × a` through the fixed interval `min(0, b - |a|)…max(1, b + |a|)` into `0…1`. The interval depends only on the base, attenuverter, and connection state, never on instantaneous CV, so LFO and envelope shapes remain affine without clipped plateaus. A disconnected input has zero effective attenuation and returns the exact bounded base value even if its attenuverter is not centred.
+
 ## Global controls and signal flow
 
 The global section contains:
@@ -140,11 +142,11 @@ The global section contains:
 - main output;
 - red `OVER` light.
 
-`PM DEPTH` replaces the cryptic `XMod` label. It scales all internal operator-to-operator phase-modulation paths after each source operator's Output level.
+`PM DEPTH` replaces the cryptic `XMod` label. It scales all internally generated phase modulation after each source operator's Output level. Routed inter-operator PM and operator self-feedback are combined first, then multiplied once by PM Depth. PM Depth does not scale carrier audio or External PM.
 
 ### External PM
 
-External PM is applied directly to the phase of every carrier in the selected algorithm. It is added with internal PM and self-feedback before waveform generation, Warp, and Fold. It is not applied by reconstructing phase from the final mixed waveform.
+External PM is applied directly to the phase of every carrier in the selected algorithm. It is added after the combined routed PM and self-feedback have been scaled by PM Depth, and before waveform generation, Warp, and Fold. It is not applied by reconstructing phase from the final mixed waveform and is not scaled by PM Depth.
 
 The initial scaling is:
 
@@ -253,7 +255,7 @@ At the DSP boundary:
 
 - clamp algorithm and Fold Type indices before table access;
 - map all finite coarse values deterministically in either frequency mode;
-- clamp bounded levels and shaping controls to their documented ranges;
+- statically normalize connected PM Depth, Output, Warp, Fold, and Feedback CV over a conservative bipolar `-10 V…+10 V` excursion, then defensively clamp bounded engine inputs to their documented ranges;
 - treat non-finite restored/control values as their safe defaults;
 - maintain independent engine state for every active polyphonic lane;
 - reset changed lanes consistently with the existing polyphony utilities.

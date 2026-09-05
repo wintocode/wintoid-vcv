@@ -13,6 +13,32 @@ namespace four_v2 {
 
 static constexpr float TWO_PI = 6.283185307179586f;
 
+// Normalize a bounded parameter's complete conservative CV excursion into
+// [0, 1]. VCV inputs do not expose source polarity, so a connected input is
+// treated as potentially bipolar across the full -10V...+10V Rack range.
+inline float normalize_modulated_unit_value(
+    float base,
+    float cvVolts,
+    float attenuverter,
+    bool connected)
+{
+    base = fmaxf(0.f, fminf(1.f, finite_or(base, 0.f)));
+    if (!connected)
+        return base;
+
+    cvVolts = finite_or(cvVolts, 0.f);
+    attenuverter = fmaxf(
+        -1.f, fminf(1.f, finite_or(attenuverter, 0.f)));
+    const float normalizedCv = fmaxf(-1.f, fminf(1.f, cvVolts / 10.f));
+    const float excursion = fabsf(attenuverter);
+    const float normalizationLow = fminf(0.f, base - excursion);
+    const float normalizationHigh = fmaxf(1.f, base + excursion);
+    const float raw = base + normalizedCv * attenuverter;
+    const float result = (raw - normalizationLow)
+        / (normalizationHigh - normalizationLow);
+    return fmaxf(0.f, fminf(1.f, finite_or(result, base)));
+}
+
 // Denormal protection: flush subnormals to zero.
 inline void flush_denormal(float& x)
 {

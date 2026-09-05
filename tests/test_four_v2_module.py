@@ -272,13 +272,27 @@ class FourV2ModuleContractTest(unittest.TestCase):
         ):
             with self.subTest(contract=contract):
                 self.assertIn(contract, source)
-        self.assertIn(
-            "const float pm_cv_voltage = four_v2::finite_or(",
-            source,
+        self.assertEqual(
+            5,
+            source.count("four_v2::normalize_modulated_unit_value("),
         )
-        self.assertIn("pm_cv_atten / 10.f", source)
-        self.assertIn("clamp(pm_depth + pm_cv, 0.f, 1.f)", source)
-        self.assertIn("clamp(knob + cv * atten / 10.f, 0.f, 1.f)", source)
+        for connection_contract in (
+            "inputs[PM_DEPTH_CV_INPUT].isConnected()",
+            "inputs[output_cv_input_ids[op]].isConnected()",
+            "inputs[warp_cv_input_ids[op]].isConnected()",
+            "inputs[fold_cv_input_ids[op]].isConnected()",
+            "inputs[feedback_cv_input_ids[op]].isConnected()",
+        ):
+            with self.subTest(connection_contract=connection_contract):
+                self.assertIn(connection_contract, source)
+        for obsolete_expression in (
+            "clamp(pm_depth + pm_cv, 0.f, 1.f)",
+            "clamp(knob + cv * atten / 10.f, 0.f, 1.f)",
+            "pm_cv_atten / 10.f",
+            "patch_value(",
+        ):
+            with self.subTest(obsolete_expression=obsolete_expression):
+                self.assertNotIn(obsolete_expression, source)
         for contract in (
             "four_v2::algorithm_index",
             "four_v2::clamp_mode",

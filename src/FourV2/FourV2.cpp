@@ -11,14 +11,6 @@
 
 namespace {
 
-inline float patch_value(float knob, float cv, float atten)
-{
-    knob = four_v2::finite_or(knob, 0.f);
-    cv = four_v2::finite_or(cv, 0.f);
-    atten = four_v2::finite_or(atten, 0.f);
-    return clamp(knob + cv * atten / 10.f, 0.f, 1.f);
-}
-
 inline float unit_param(float value, float fallback)
 {
     return clamp(four_v2::finite_or(value, fallback), 0.f, 1.f);
@@ -429,9 +421,9 @@ struct FourV2 : Module {
 
             const float pm_cv_voltage = four_v2::finite_or(
                 readBroadcast(inputs[PM_DEPTH_CV_INPUT], lane), 0.f);
-            const float pm_cv = four_v2::finite_or(
-                pm_cv_voltage * pm_cv_atten / 10.f, 0.f);
-            ep.pmDepth = clamp(pm_depth + pm_cv, 0.f, 1.f);
+            ep.pmDepth = four_v2::normalize_modulated_unit_value(
+                pm_depth, pm_cv_voltage, pm_cv_atten,
+                inputs[PM_DEPTH_CV_INPUT].isConnected());
 
             const float external_pm_volts = four_v2::finite_or(
                 readBroadcast(inputs[EXT_PM_INPUT], lane), 0.f);
@@ -446,8 +438,9 @@ struct FourV2 : Module {
                     inputs[output_cv_input_ids[op]], lane), 0.f);
                 const float output_atten = bipolar_param(
                     params[output_cv_atten_ids[op]].getValue());
-                ep.opOutput[op] = patch_value(
-                    output_knob, output_cv, output_atten);
+                ep.opOutput[op] = four_v2::normalize_modulated_unit_value(
+                    output_knob, output_cv, output_atten,
+                    inputs[output_cv_input_ids[op]].isConnected());
 
                 const float warp_knob = four_v2::finite_or(
                     params[warp_ids[op]].getValue(), 0.f);
@@ -455,8 +448,9 @@ struct FourV2 : Module {
                     inputs[warp_cv_input_ids[op]], lane), 0.f);
                 const float warp_atten = bipolar_param(
                     params[warp_cv_atten_ids[op]].getValue());
-                ep.opWarp[op] = patch_value(
-                    warp_knob, warp_cv, warp_atten);
+                ep.opWarp[op] = four_v2::normalize_modulated_unit_value(
+                    warp_knob, warp_cv, warp_atten,
+                    inputs[warp_cv_input_ids[op]].isConnected());
 
                 const float fold_knob = four_v2::finite_or(
                     params[fold_ids[op]].getValue(), 0.f);
@@ -464,8 +458,9 @@ struct FourV2 : Module {
                     inputs[fold_cv_input_ids[op]], lane), 0.f);
                 const float fold_atten = bipolar_param(
                     params[fold_cv_atten_ids[op]].getValue());
-                ep.opFold[op] = patch_value(
-                    fold_knob, fold_cv, fold_atten);
+                ep.opFold[op] = four_v2::normalize_modulated_unit_value(
+                    fold_knob, fold_cv, fold_atten,
+                    inputs[fold_cv_input_ids[op]].isConnected());
 
                 const float feedback_knob = four_v2::finite_or(
                     params[feedback_ids[op]].getValue(), 0.f);
@@ -473,8 +468,9 @@ struct FourV2 : Module {
                     inputs[feedback_cv_input_ids[op]], lane), 0.f);
                 const float feedback_atten = bipolar_param(
                     params[feedback_cv_atten_ids[op]].getValue());
-                ep.opFeedback[op] = patch_value(
-                    feedback_knob, feedback_cv, feedback_atten);
+                ep.opFeedback[op] = four_v2::normalize_modulated_unit_value(
+                    feedback_knob, feedback_cv, feedback_atten,
+                    inputs[feedback_cv_input_ids[op]].isConnected());
             }
 
             const float out = four_v2::engine_process(

@@ -93,6 +93,66 @@ TEST(all_carriers_receive_the_same_external_pm)
             -0.5f, 1e-6f);
 }
 
+TEST(pm_depth_scales_routed_inter_operator_pm_after_source_output)
+{
+    const four_v2::Algorithm& algorithm = four_v2::ALGORITHMS[0];
+    float opOut[4] = {0.f, 0.8f, 0.f, 0.f};
+    float output[4] = {1.f, 0.5f, 0.f, 0.f};
+    float previous[4] = {};
+    float feedbackAmount[4] = {};
+    ASSERT_NEAR(four_v2::operator_pm_cycles(
+        0, opOut, output, previous, feedbackAmount,
+        0.25f, 0.f, algorithm), 0.1f, 1e-6f);
+}
+
+TEST(pm_depth_scales_self_feedback)
+{
+    const four_v2::Algorithm& algorithm = four_v2::ALGORITHMS[6];
+    float opOut[4] = {};
+    float output[4] = {1.f, 1.f, 1.f, 1.f};
+    float previous[4] = {0.8f, 0.f, 0.f, 0.f};
+    float feedbackAmount[4] = {0.5f, 0.f, 0.f, 0.f};
+    ASSERT_NEAR(four_v2::operator_pm_cycles(
+        0, opOut, output, previous, feedbackAmount,
+        0.25f, 0.f, algorithm), 0.0954993f, 1e-6f);
+    ASSERT_NEAR(four_v2::operator_pm_cycles(
+        0, opOut, output, previous, feedbackAmount,
+        0.f, 0.f, algorithm), 0.f, 1e-6f);
+}
+
+TEST(pm_depth_does_not_scale_carrier_amplitude)
+{
+    four_v2::EngineParams zeroDepth = sine_params();
+    zeroDepth.algorithm = 6;
+    zeroDepth.baseFreq = 0.f;
+    zeroDepth.pmDepth = 0.f;
+
+    four_v2::EngineParams reducedDepth = zeroDepth;
+    reducedDepth.pmDepth = 0.25f;
+
+    four_v2::EngineState zeroState;
+    four_v2::EngineState reducedState;
+    zeroState.ops[0].phase = 0.25f;
+    reducedState.ops[0].phase = 0.25f;
+    ASSERT_NEAR(four_v2::engine_process(zeroState, zeroDepth, 0.f), 1.f, 1e-5f);
+    ASSERT_NEAR(four_v2::engine_process(reducedState, reducedDepth, 0.f), 1.f, 1e-5f);
+}
+
+TEST(pm_depth_does_not_scale_external_pm)
+{
+    const four_v2::Algorithm& algorithm = four_v2::ALGORITHMS[6];
+    float opOut[4] = {};
+    float output[4] = {1.f, 1.f, 1.f, 1.f};
+    float previous[4] = {};
+    float feedbackAmount[4] = {};
+    ASSERT_NEAR(four_v2::operator_pm_cycles(
+        0, opOut, output, previous, feedbackAmount,
+        0.f, -0.375f, algorithm), -0.375f, 1e-6f);
+    ASSERT_NEAR(four_v2::operator_pm_cycles(
+        0, opOut, output, previous, feedbackAmount,
+        0.25f, -0.375f, algorithm), -0.375f, 1e-6f);
+}
+
 TEST(over_detector_holds_for_250_ms)
 {
     four_v2::OverDetector over;
@@ -329,6 +389,10 @@ int main()
     printf("Four V2 engine tests:\n");
     run_external_pm_is_added_only_to_carriers();
     run_all_carriers_receive_the_same_external_pm();
+    run_pm_depth_scales_routed_inter_operator_pm_after_source_output();
+    run_pm_depth_scales_self_feedback();
+    run_pm_depth_does_not_scale_carrier_amplitude();
+    run_pm_depth_does_not_scale_external_pm();
     run_over_detector_holds_for_250_ms();
     run_algorithm_seven_sums_four_aligned_carriers_raw();
     run_master_scales_raw_carrier_sum();

@@ -31,6 +31,110 @@ static int tests_passed = 0;
 
 #include "../src/FourV2/dsp.h"
 
+TEST(modulation_normalization_is_identity_when_input_is_disconnected)
+{
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.8f, 10.f, 0.5f, false), 0.8f, 0.f);
+}
+
+TEST(modulation_normalization_is_identity_when_attenuverter_is_zero)
+{
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.37f, -10.f, 0.f, true), 0.37f, 0.f);
+}
+
+TEST(modulation_normalization_is_identity_when_excursion_fits_unit_range)
+{
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.f, 10.f, 0.f, true), 0.f, 0.f);
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        1.f, -10.f, 0.f, true), 1.f, 0.f);
+}
+
+TEST(modulation_normalization_expands_the_upper_bound)
+{
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.8f, -10.f, 0.5f, true), 0.3f / 1.3f, 1e-6f);
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.8f, 0.f, 0.5f, true), 0.8f / 1.3f, 1e-6f);
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.8f, 10.f, 0.5f, true), 1.f, 1e-6f);
+}
+
+TEST(modulation_normalization_expands_the_lower_bound)
+{
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.2f, -10.f, 0.5f, true), 0.f, 1e-6f);
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.2f, 0.f, 0.5f, true), 0.5f / 1.3f, 1e-6f);
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.2f, 10.f, 0.5f, true), 1.f / 1.3f, 1e-6f);
+}
+
+TEST(modulation_normalization_expands_both_bounds)
+{
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.5f, -10.f, 1.f, true), 0.f, 1e-6f);
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.5f, 0.f, 1.f, true), 0.5f, 1e-6f);
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.5f, 10.f, 1.f, true), 1.f, 1e-6f);
+}
+
+TEST(negative_attenuverter_reverses_phase_without_changing_excursion)
+{
+    for (int volts = -10; volts <= 10; ++volts)
+    {
+        const float positive = four_v2::normalize_modulated_unit_value(
+            0.8f, (float)volts, 0.5f, true);
+        const float negative = four_v2::normalize_modulated_unit_value(
+            0.8f, (float)-volts, -0.5f, true);
+        ASSERT_NEAR(positive, negative, 1e-6f);
+    }
+}
+
+TEST(sampled_sine_remains_affine_without_clipped_plateaus)
+{
+    int lowerBoundarySamples = 0;
+    int upperBoundarySamples = 0;
+    for (int i = 0; i < 64; ++i)
+    {
+        const float sine = sinf(four_v2::TWO_PI * (float)i / 64.f);
+        const float actual = four_v2::normalize_modulated_unit_value(
+            0.8f, sine * 10.f, 0.5f, true);
+        const float expected = (0.8f + sine * 0.5f) / 1.3f;
+        ASSERT_NEAR(actual, expected, 1e-6f);
+        if (actual <= 1e-6f)
+            ++lowerBoundarySamples;
+        if (actual >= 1.f - 1e-6f)
+            ++upperBoundarySamples;
+    }
+    ASSERT(lowerBoundarySamples == 0);
+    ASSERT(upperBoundarySamples == 1);
+}
+
+TEST(modulation_normalization_sanitizes_non_finite_values)
+{
+    const float nonFiniteBase = four_v2::normalize_modulated_unit_value(
+        NAN, 10.f, 0.5f, true);
+    const float nonFiniteCv = four_v2::normalize_modulated_unit_value(
+        0.8f, INFINITY, 0.5f, true);
+    const float nonFiniteAtten = four_v2::normalize_modulated_unit_value(
+        0.8f, 10.f, NAN, true);
+    ASSERT(isfinite(nonFiniteBase));
+    ASSERT_NEAR(nonFiniteBase, 1.f / 1.5f, 1e-6f);
+    ASSERT_NEAR(nonFiniteCv, 0.8f / 1.3f, 1e-6f);
+    ASSERT_NEAR(nonFiniteAtten, 0.8f, 0.f);
+}
+
+TEST(modulation_normalization_clamps_voltages_beyond_rack_range)
+{
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.8f, 100.f, 0.5f, true), 1.f, 1e-6f);
+    ASSERT_NEAR(four_v2::normalize_modulated_unit_value(
+        0.8f, -100.f, 0.5f, true), 0.3f / 1.3f, 1e-6f);
+}
+
 TEST(oscillator_sine_landmarks)
 {
     ASSERT_NEAR(four_v2::oscillator_sine(0.0f), 0.0f, 1e-6f);
@@ -238,6 +342,16 @@ TEST(flush_denormal_handles_tiny_values)
 int main()
 {
     printf("Four V2 DSP tests:\n");
+    run_modulation_normalization_is_identity_when_input_is_disconnected();
+    run_modulation_normalization_is_identity_when_attenuverter_is_zero();
+    run_modulation_normalization_is_identity_when_excursion_fits_unit_range();
+    run_modulation_normalization_expands_the_upper_bound();
+    run_modulation_normalization_expands_the_lower_bound();
+    run_modulation_normalization_expands_both_bounds();
+    run_negative_attenuverter_reverses_phase_without_changing_excursion();
+    run_sampled_sine_remains_affine_without_clipped_plateaus();
+    run_modulation_normalization_sanitizes_non_finite_values();
+    run_modulation_normalization_clamps_voltages_beyond_rack_range();
     run_oscillator_sine_landmarks();
     run_phase_advance_wraps();
     run_frequency_helpers_preserve_v1_behavior();

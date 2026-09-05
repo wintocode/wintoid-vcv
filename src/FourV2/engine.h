@@ -114,7 +114,8 @@ inline float wrap_phase(float phase)
     return phase;
 }
 
-// Return internal and self-feedback PM, plus External PM for carriers only.
+// Return routed and self-feedback PM scaled together by PM Depth, plus
+// External PM for carriers only.
 inline float operator_pm_cycles(
     int op,
     const float opOut[4],
@@ -144,10 +145,11 @@ inline float operator_pm_cycles(
     }
 
     const float safePmDepth = engine_unit(pmDepth, 0.f);
-    float pm = gather_modulation(op, safeOpOut, safeOutput,
-                                 safePmDepth, algorithm);
-    pm = finite_or(pm, 0.f);
-    pm += calc_feedback(safePrevious[op], safeFeedbackAmount[op]);
+    float internalPm = gather_modulation(
+        op, safeOpOut, safeOutput, 1.f, algorithm);
+    internalPm += calc_feedback(
+        safePrevious[op], safeFeedbackAmount[op]);
+    float pm = safePmDepth * finite_or(internalPm, 0.f);
 
     const float safeExternalPm = finite_or(externalPmCycles, 0.f);
     if (algorithm.carrier[op])
@@ -166,9 +168,10 @@ inline float prepared_operator_pm_cycles(
     float externalPmCycles,
     const Algorithm& algorithm)
 {
-    float pm = gather_modulation(
-        op, opOut, output, pmDepth, algorithm);
-    pm += calc_feedback(previous[op], feedbackAmount[op]);
+    float internalPm = gather_modulation(
+        op, opOut, output, 1.f, algorithm);
+    internalPm += calc_feedback(previous[op], feedbackAmount[op]);
+    float pm = pmDepth * finite_or(internalPm, 0.f);
     if (algorithm.carrier[op])
         pm += externalPmCycles;
     return finite_or(pm, 0.f);

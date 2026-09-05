@@ -73,14 +73,21 @@ The Algorithm control is numbered 1–16, matching the topology number below.
   wavefolding, with Symmetric, Asymmetric, and Soft Clip types. **FEEDBACK**
   adds self-phase modulation for that operator.
 - Each operator keeps the Output, Warp, Fold, and Feedback knob beside its CV
-  input and bipolar attenuverter in the same four-row control block. The
-  effective control is the knob plus scaled CV, clamped to its documented
-  range.
+  input and bipolar attenuverter in the same four-row control block. When a CV
+  input is connected, FourV2 conservatively assumes that its unknown source can
+  span -10 V to +10 V. It statically maps the knob plus that complete theoretical
+  attenuverter excursion into 0–1, preserving the CV waveform instead of
+  flattening peaks at the parameter bounds. VCV inputs do not expose source
+  polarity, so this bipolar assumption also applies to unipolar sources. With
+  no cable, or with a centred attenuverter, the knob value is unchanged.
 
 #### PM, output level, and polyphony
 
-- **PM DEPTH** scales the internal operator-to-operator phase modulation after
-  each source operator's Output level. Its CV input uses a bipolar attenuverter.
+- **PM DEPTH** scales all internally generated phase modulation after each
+  source operator's Output level, including routed operator PM and
+  self-feedback. It does not scale carrier audio or External PM. Its CV input
+  uses the same bipolar attenuverter and static excursion normalization as the
+  operator CV rows.
 - **External PM affects every carrier** directly in phase, before waveform
   generation, Warp, and Fold. The input is bipolar, and the external phase
   contribution is `input volts × attenuator × 0.1` cycles; the attenuator scales

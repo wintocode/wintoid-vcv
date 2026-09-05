@@ -90,6 +90,12 @@ layout as a matched revision boundary:
 - Map `EXT_PM_ATTEN_PARAM` as a unipolar `0–1` parameter. The External PM
   signal itself remains signed, so positive and negative input voltages retain
   their polarity; the consumer must not expose a negative attenuator value.
+- Preserve FourV2's static excursion normalization for PM Depth and every
+  operator Output, Warp, Fold, and Feedback CV input. Because host inputs do
+  not expose source polarity, each connected socket is treated as potentially
+  bipolar over `-10 V…+10 V`; disconnected sockets retain the exact base
+  value. PM Depth scales routed internal PM and self-feedback together, but
+  does not scale carrier audio or External PM.
 - Register both `AlgorithmRoutingDisplay` and
   `OperatorFrequencyDisplay` through supported SDK display facilities. These
   displays are read-only informational graphics; no parameter write, click,
