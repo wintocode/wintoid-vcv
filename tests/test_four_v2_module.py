@@ -399,7 +399,7 @@ class FourV2ModuleContractTest(unittest.TestCase):
             },
             four_v2_entries[0],
         )
-        self.assertEqual("2.3.1", self.manifest["version"])
+        self.assertEqual("2.3.2", self.manifest["version"])
 
     def test_readme_documents_four_v2_without_rewriting_four(self):
         four_v2_start = self.readme.index("### FourV2")

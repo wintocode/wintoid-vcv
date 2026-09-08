@@ -17,7 +17,7 @@ for name in ("Four", "Vortex", "Brink"):
     assert modules[name].get("hidden") is True, f"legacy {name} must be hidden"
 for name in ("FourV2", "VortexV2", "BrinkV2"):
     assert modules[name].get("hidden", False) is False, f"{name} must remain visible"
-assert manifest["version"] == "2.3.1"
+assert manifest["version"] == "2.3.2"
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
 assert "voice count follows the **V/OCT** input" in readme
