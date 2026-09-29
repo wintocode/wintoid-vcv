@@ -26,3 +26,4 @@ tests/test_four_v2_dsp
 tests/test_four_v2_engine
 tests/test_vortex_v2_dsp
 tests/test_vortex_v2_runtime
+tests/test_text_entry

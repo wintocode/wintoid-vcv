@@ -1,6 +1,7 @@
 #include "../plugin.hpp"
 #include "../polyphony.h"
 #include "../finite.h"
+#include "../text_entry.h"
 #include "../ui_geometry.h"
 #include "dsp.h"
 #include "layout.h"
@@ -13,6 +14,15 @@ struct VortexV2CutoffParamQuantity : ParamQuantity {
 
     void setDisplayValue(float hz) override {
         setValue(vortex_v2::cutoff_hz_to_param(hz));
+    }
+
+    // Accept the displayed "Hz"/"kHz" units; fall back to Rack's parser.
+    void setDisplayValueString(std::string s) override {
+        float hz = 0.f;
+        if (wintoid::text_entry::parse_frequency_hz(s, hz))
+            setDisplayValue(hz);
+        else
+            ParamQuantity::setDisplayValueString(s);
     }
 
     std::string getDisplayValueString() override {

@@ -302,13 +302,16 @@ class FourV2ModuleContractTest(unittest.TestCase):
             with self.subTest(sanitizer=contract):
                 self.assertIn(contract, source)
 
-    def test_quantity_only_changes_display_text_and_displays_are_not_controls(self):
+    def test_quantity_converts_text_both_ways_and_displays_are_not_controls(self):
         source = self.require_source()
         self.assertIn("struct CoarseParamQuantity", source)
         self.assertIn("four_v2::frequency_label", source)
         self.assertIn("int fineParamId = 0", source)
         self.assertIn("module->params[fineParamId].getValue()", source)
-        self.assertIn("frequency_label(getValue(), mode, fine)", source)
+        self.assertIn("frequency_label(getValue(), mode(), fine())", source)
+        self.assertIn("void setDisplayValueString(std::string s) override", source)
+        self.assertIn("four_v2::coarse_from_fixed_frequency(hz, fine())", source)
+        self.assertIn("four_v2::coarse_from_ratio(ratio)", source)
         self.assertIn("coarse_quantity->fineParamId = fine_ids[op]", source)
         self.assertNotIn("void setValue", source)
         self.assertNotIn("onButton(", source)

@@ -1,6 +1,7 @@
 #include "../plugin.hpp"
 #include "../polyphony.h"
 #include "../finite.h"
+#include "../text_entry.h"
 #include "../ui_geometry.h"
 #include "engine.h"
 #include "layout.h"
@@ -37,16 +38,32 @@ struct CoarseParamQuantity : ParamQuantity {
     int freqModeParamId = 0;
     int fineParamId = 0;
 
+    int mode() {
+        return module ? four_v2::clamp_mode(
+                            module->params[freqModeParamId].getValue())
+                      : four_v2::RATIO_MODE;
+    }
+
+    float fine() {
+        return module ? module->params[fineParamId].getValue() : 0.f;
+    }
+
     std::string getDisplayValueString() override {
-        int mode = four_v2::RATIO_MODE;
-        float fine = 0.f;
-        if (module)
-        {
-            mode = four_v2::clamp_mode(
-                module->params[freqModeParamId].getValue());
-            fine = module->params[fineParamId].getValue();
+        return four_v2::frequency_label(getValue(), mode(), fine());
+    }
+
+    // Typed text is read in the displayed units: hertz in Fixed mode, a
+    // ratio such as "3:2" in Ratio mode. Unparseable text is ignored.
+    void setDisplayValueString(std::string s) override {
+        if (mode() == four_v2::FIXED_MODE) {
+            float hz = 0.f;
+            if (wintoid::text_entry::parse_frequency_hz(s, hz))
+                setValue(four_v2::coarse_from_fixed_frequency(hz, fine()));
+            return;
         }
-        return four_v2::frequency_label(getValue(), mode, fine);
+        float ratio = 0.f;
+        if (wintoid::text_entry::parse_ratio(s, ratio))
+            setValue(four_v2::coarse_from_ratio(ratio));
     }
 };
 
@@ -230,8 +247,9 @@ struct FourV2 : Module {
             const std::string name = "Op " + std::to_string(op + 1);
             const float output_default = op == 0 ? 1.f : 0.f;
 
-            // The typed quantity changes display text only; the parameter
-            // range, default, and snapping remain ordinary Rack metadata.
+            // The typed quantity converts display text in both directions;
+            // the parameter range, default, and snapping remain ordinary
+            // Rack metadata.
             auto* coarse_quantity = configParam<CoarseParamQuantity>(
                 coarse_ids[op], 0.f, 14.f, 5.f,
                 name + " Coarse");

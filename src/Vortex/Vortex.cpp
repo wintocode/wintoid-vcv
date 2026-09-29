@@ -1,9 +1,19 @@
 #include "../plugin.hpp"
 #include "../polyphony.h"
 #include "../finite.h"
+#include "../text_entry.h"
 #include "dsp.h"
 
 struct CutoffParamQuantity : ParamQuantity {
+    // Accept the displayed "Hz"/"kHz" units; fall back to Rack's parser.
+    void setDisplayValueString(std::string s) override {
+        float hz = 0.f;
+        if (wintoid::text_entry::parse_frequency_hz(s, hz))
+            setDisplayValue(hz);
+        else
+            ParamQuantity::setDisplayValueString(s);
+    }
+
     std::string getDisplayValueString() override {
         float hz = getValue();
         if (hz >= 1000.f)

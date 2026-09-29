@@ -101,6 +101,34 @@ inline float fixed_frequency(float coarse, float fineCents) {
     return finite_or(fixed_hz(coarse) * fine_multiplier(fineCents), 0.f);
 }
 
+// Inverse of fixed_frequency() for a given Fine setting, clamped to Coarse.
+inline float coarse_from_fixed_frequency(float hz, float fineCents) {
+    hz = finite_or(hz, 1.f) / fine_multiplier(fineCents);
+    if (!(hz > 1.f))
+        return COARSE_MIN;
+    const float coarse = logf(hz) / logf(10000.f) * COARSE_MAX;
+    return fmaxf(COARSE_MIN, fminf(COARSE_MAX, coarse));
+}
+
+// Coarse position of the table ratio closest (in octaves) to `ratio`.
+inline float coarse_from_ratio(float ratio) {
+    ratio = finite_or(ratio, 1.f);
+    if (!(ratio > 0.f))
+        return (float)DEFAULT_RATIO_INDEX;
+    int best = DEFAULT_RATIO_INDEX;
+    float bestDistance = INFINITY;
+    for (int i = 0; i < RATIO_COUNT; ++i) {
+        const float value =
+            (float)RATIOS[i].numerator / (float)RATIOS[i].denominator;
+        const float distance = fabsf(log2f(ratio / value));
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            best = i;
+        }
+    }
+    return (float)best;
+}
+
 inline std::string frequency_label(float coarse, int mode,
                                    float fineCents = 0.f) {
     char buffer[32];

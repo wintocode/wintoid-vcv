@@ -373,6 +373,35 @@ inline float coarse_fixed_from_param( float param )
     return expf( param / 64.0f * logf( 9999.0f ) );
 }
 
+// Inverse of coarse_fixed_from_param(), clamped to the knob range.
+inline float coarse_param_from_fixed( float hz )
+{
+    if ( !( hz > 1.0f ) )
+        return 0.0f;
+    const float param = logf( hz ) / logf( 9999.0f ) * 64.0f;
+    return param < 64.0f ? param : 64.0f;
+}
+
+// Knob index of the coarse ratio closest (in octaves) to `ratio`.
+inline float coarse_index_from_ratio( float ratio )
+{
+    if ( !( ratio > 0.0f ) || !isfinite( ratio ) )
+        return 3.0f;
+    int best = 0;
+    float bestDistance = INFINITY;
+    for ( int idx = 0; idx <= 64; idx++ )
+    {
+        const float distance =
+            fabsf( log2f( ratio / coarse_ratio_from_index( idx ) ) );
+        if ( distance < bestDistance )
+        {
+            bestDistance = distance;
+            best = idx;
+        }
+    }
+    return (float)best;
+}
+
 // Algorithm display strings (matching Four)
 static const char* algorithmStrings[ALGORITHM_COUNT] = {
     "4 => 3 => 2 => 1",

@@ -1,16 +1,35 @@
 #include "../plugin.hpp"
 #include "../polyphony.h"
 #include "../finite.h"
+#include "../text_entry.h"
 #include "engine.h"
 
 struct CoarseParamQuantity : ParamQuantity {
     int freqModeParamId = 0;
 
+    bool fixedMode() {
+        return module
+            && (int)module->params[freqModeParamId].getValue() == 1;
+    }
+
+    // Typed text is read in the displayed units: hertz in Fixed mode, a
+    // ratio such as "1.5:1" in Ratio mode. Unparseable text is ignored.
+    void setDisplayValueString(std::string s) override {
+        if (fixedMode()) {
+            float hz = 0.f;
+            if (wintoid::text_entry::parse_frequency_hz(s, hz))
+                setValue(four::coarse_param_from_fixed(hz));
+            return;
+        }
+        float ratio = 0.f;
+        if (wintoid::text_entry::parse_ratio(s, ratio))
+            setValue(four::coarse_index_from_ratio(ratio));
+    }
+
     std::string getDisplayValueString() override {
         float val = getValue();
         if (module) {
-            int freqMode = (int)module->params[freqModeParamId].getValue();
-            if (freqMode == 1) {
+            if (fixedMode()) {
                 float hz = four::coarse_fixed_from_param(val);
                 if (hz >= 1000.f)
                     return string::f("%.1f kHz", hz / 1000.f);
