@@ -36,6 +36,8 @@ struct WindowDisplayFrame {
 struct AtomicDisplayFrame {
     static constexpr std::memory_order WRITER_BEGIN_ORDER =
         std::memory_order_acq_rel;
+    static constexpr std::memory_order WRITER_PAYLOAD_FENCE_ORDER =
+        std::memory_order_release;
     static constexpr std::memory_order WRITER_END_ORDER =
         std::memory_order_release;
     static constexpr std::memory_order READER_BEGIN_ORDER =
@@ -57,6 +59,9 @@ struct AtomicDisplayFrame {
     void store(const WindowFrame& frame) noexcept
     {
         sequence.fetch_add(1, WRITER_BEGIN_ORDER);
+        // Pairs with the reader's validation fence: a reader that sees any
+        // payload store below must also see the odd marker above.
+        std::atomic_thread_fence(WRITER_PAYLOAD_FENCE_ORDER);
         signal.store(frame.signal, std::memory_order_relaxed);
         center.store(frame.center, std::memory_order_relaxed);
         lower.store(frame.lower, std::memory_order_relaxed);

@@ -36,6 +36,10 @@ static_assert(
     brink::AtomicDisplayFrame::WRITER_BEGIN_ORDER == std::memory_order_acq_rel,
     "the odd sequence marker must precede payload stores");
 static_assert(
+    brink::AtomicDisplayFrame::WRITER_PAYLOAD_FENCE_ORDER ==
+        std::memory_order_release,
+    "payload stores must carry the odd marker to validating readers");
+static_assert(
     brink::AtomicDisplayFrame::WRITER_END_ORDER == std::memory_order_release,
     "the even sequence marker must publish the payload");
 static_assert(
