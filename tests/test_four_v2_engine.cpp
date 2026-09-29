@@ -120,6 +120,26 @@ TEST(pm_depth_scales_self_feedback)
         0.f, 0.f, algorithm), 0.f, 1e-6f);
 }
 
+TEST(self_feedback_is_independent_of_operator_output)
+{
+    // Documented contract: Output scales an operator's outgoing audio and
+    // modulation, but its own Feedback uses the unscaled waveform.
+    const four_v2::Algorithm& algorithm = four_v2::ALGORITHMS[6];
+    float opOut[4] = {};
+    float previous[4] = {0.8f, 0.f, 0.f, 0.f};
+    float feedbackAmount[4] = {0.5f, 0.f, 0.f, 0.f};
+    const float levels[] = {0.f, 0.25f, 1.f};
+    for (float level : levels) {
+        float output[4] = {level, 1.f, 1.f, 1.f};
+        ASSERT_NEAR(four_v2::operator_pm_cycles(
+            0, opOut, output, previous, feedbackAmount,
+            1.f, 0.f, algorithm), 0.381997f, 1e-6f);
+        ASSERT_NEAR(four_v2::prepared_operator_pm_cycles(
+            0, opOut, output, previous, feedbackAmount,
+            1.f, 0.f, algorithm), 0.381997f, 1e-6f);
+    }
+}
+
 TEST(pm_depth_does_not_scale_carrier_amplitude)
 {
     four_v2::EngineParams zeroDepth = sine_params();
@@ -391,6 +411,7 @@ int main()
     run_all_carriers_receive_the_same_external_pm();
     run_pm_depth_scales_routed_inter_operator_pm_after_source_output();
     run_pm_depth_scales_self_feedback();
+    run_self_feedback_is_independent_of_operator_output();
     run_pm_depth_does_not_scale_carrier_amplitude();
     run_pm_depth_does_not_scale_external_pm();
     run_over_detector_holds_for_250_ms();

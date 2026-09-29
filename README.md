@@ -52,11 +52,12 @@ The Algorithm control is numbered 1–16, matching the topology number below.
 | 15 | `4 → (1, 2)` and `3 → 1` | 1 and 2 |
 | 16 | `4 → (2, 3) → 1` | 1 |
 
-- **15 curated harmonic ratios** — Ratio mode selects equally sized zones in
+- **15 curated harmonic ratios** — Ratio mode selects from these ratios in
   this exact order: `4:1`, `3:1`, `2:1`, `3:2`, `4:3`, `1:1`, `3:4`, `2:3`, `1:2`, `1:3`, `1:4`, `1:5`, `1:6`, `1:7`, `1:8`. The values are reduced canonical ratios, so `1:4` is used instead of `0.25:1`.
 - **Ratio mode** quantises the continuous Coarse control to the nearest one of
-  those 15 zones. `1:1` is the sixth selection; it is not moved to the knob's
-  geometric centre.
+  those 15 positions, so each interior ratio spans one step of knob travel and
+  the two end ratios, `4:1` and `1:8`, span half a step each. `1:1` is the
+  sixth selection; it is not moved to the knob's geometric centre.
 - **Fixed mode** uses the same Coarse control continuously and maps it
   exponentially from approximately 1 Hz to 10 kHz. It is not quantised to the
   ratio zones. Fine tuning is in cents and applies in both modes.
@@ -65,10 +66,12 @@ The Algorithm control is numbered 1–16, matching the topology number below.
 
 #### Output, Warp, Fold, and Feedback CV controls
 
-- **OUTPUT** controls every destination of its operator. For a carrier it sets
-  audible mix level; for a modulator it sets modulation depth; an operator with
-  both roles uses the same level for both. Operators continue running when
-  their Output is zero, so restoring a level does not restart their phase.
+- **OUTPUT** controls every outgoing destination of its operator. For a carrier
+  it sets audible mix level; for a modulator it sets modulation depth; an
+  operator with both roles uses the same level for both. It does not scale the
+  operator's own Feedback, which uses the unscaled waveform, so changing Output
+  does not change that operator's feedback timbre. Operators continue running
+  when their Output is zero, so restoring a level does not restart their phase.
 - **WARP** continuously morphs Sine → Triangle → Saw → Pulse. **FOLD** adds
   wavefolding, with Symmetric, Asymmetric, and Soft Clip types. **FEEDBACK**
   adds self-phase modulation for that operator.
@@ -83,9 +86,10 @@ The Algorithm control is numbered 1–16, matching the topology number below.
 
 #### PM, output level, and polyphony
 
-- **PM DEPTH** scales all internally generated phase modulation after each
-  source operator's Output level, including routed operator PM and
-  self-feedback. It does not scale carrier audio or External PM. Its CV input
+- **PM DEPTH** scales all internally generated phase modulation: routed
+  operator PM, after each source operator's Output level, and self-feedback,
+  which is independent of Output. It does not scale carrier audio or External
+  PM. Its CV input
   uses the same bipolar attenuverter and static excursion normalization as the
   operator CV rows.
 - **External PM affects every carrier** directly in phase, before waveform
