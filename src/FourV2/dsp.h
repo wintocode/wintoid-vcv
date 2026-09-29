@@ -198,6 +198,11 @@ inline float fold_asymmetric(float x)
         return soft_clip(x);
 }
 
+// Fold amounts below this crossfade from the dry signal. Soft Clip and the
+// Asymmetric negative half are already nonlinear at unity drive, so without
+// the fade any positive amount would jump away from the amount-zero bypass.
+static const float FOLD_FADE_IN = 0.02f;
+
 // Wave fold: drive input, then select symmetric, asymmetric, or soft fold.
 // foldType is clamped to 0=symmetric, 1=asymmetric, 2=soft.
 inline float wave_fold(float signal, float amount, int foldType)
@@ -211,17 +216,23 @@ inline float wave_fold(float signal, float amount, int foldType)
         foldType = 2;
 
     float driven = signal * (1.0f + amount * 4.0f);
+    float folded;
     switch (foldType)
     {
     case 0:
-        return fold_symmetric(driven);
+        folded = fold_symmetric(driven);
+        break;
     case 1:
-        return fold_asymmetric(driven);
-    case 2:
-        return soft_clip(driven);
+        folded = fold_asymmetric(driven);
+        break;
+    default:
+        folded = soft_clip(driven);
+        break;
     }
 
-    return soft_clip(driven);
+    if (amount < FOLD_FADE_IN)
+        return signal + (folded - signal) * (amount / FOLD_FADE_IN);
+    return folded;
 }
 
 // Gather phase modulation for a target operator from all source operators.

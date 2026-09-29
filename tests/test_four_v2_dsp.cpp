@@ -206,6 +206,35 @@ TEST(fold_zero_is_passthrough)
     ASSERT_NEAR(four_v2::wave_fold(0.7f, 0.0f, 2), 0.7f, 1e-6f);
 }
 
+TEST(fold_is_continuous_as_amount_leaves_zero)
+{
+    const float inputs[] = {-1.0f, -0.6f, -0.1f, 0.1f, 0.6f, 1.0f};
+    for (int type = 0; type <= 2; ++type)
+    {
+        for (float input : inputs)
+        {
+            ASSERT_NEAR(four_v2::wave_fold(input, 1e-8f, type),
+                        four_v2::wave_fold(input, 0.0f, type), 1e-6f);
+            ASSERT_NEAR(four_v2::wave_fold(input, 1e-4f, type),
+                        four_v2::wave_fold(input, 0.0f, type), 0.002f);
+            // No step where the fade-in hands over to the full fold.
+            ASSERT_NEAR(
+                four_v2::wave_fold(input, four_v2::FOLD_FADE_IN * 0.9999f, type),
+                four_v2::wave_fold(input, four_v2::FOLD_FADE_IN, type), 1e-4f);
+        }
+    }
+}
+
+TEST(fold_above_fade_in_is_unchanged)
+{
+    ASSERT_NEAR(four_v2::wave_fold(-1.0f, 0.5f, 2),
+                four_v2::soft_clip(-3.0f), 0.f);
+    ASSERT_NEAR(four_v2::wave_fold(-0.4f, 0.25f, 1),
+                four_v2::fold_asymmetric(-0.8f), 0.f);
+    ASSERT_NEAR(four_v2::wave_fold(0.7f, 1.0f, 0),
+                four_v2::fold_symmetric(3.5f), 0.f);
+}
+
 TEST(fold_symmetric_stays_bounded)
 {
     for (float input = -1.0f; input <= 1.0f; input += 0.1f)
@@ -360,6 +389,8 @@ int main()
     run_warp_morphs_through_triangle_saw_and_pulse();
     run_warp_outputs_stay_normalized();
     run_fold_zero_is_passthrough();
+    run_fold_is_continuous_as_amount_leaves_zero();
+    run_fold_above_fade_in_is_unchanged();
     run_fold_symmetric_stays_bounded();
     run_fold_asymmetric_stays_bounded();
     run_fold_soft_clip_stays_bounded();
