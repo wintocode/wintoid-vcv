@@ -246,8 +246,7 @@ inline float engine_process(EngineState& state,
 
     state.dcBlocker.prevInput = finite_or(state.dcBlocker.prevInput, 0.f);
     state.dcBlocker.prevOutput = finite_or(state.dcBlocker.prevOutput, 0.f);
-    state.dcBlocker.R = engine_clamp(
-        finite_or(state.dcBlocker.R, 0.999f), 0.f, 1.f);
+    state.dcBlocker.R = dc_blocker_pole(safeSampleTime);
 
     float result[2] = {};
     for (int pass = 0; pass < 2; ++pass)

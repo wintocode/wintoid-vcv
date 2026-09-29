@@ -46,7 +46,20 @@ inline void flush_denormal(float& x)
         x = 0.0f;
 }
 
-// DC blocker: 1-pole highpass filter at ~20Hz.
+// DC blocker pole distance from 1, per second of sample period. The original
+// fixed pole of 0.999 was tuned at 48 kHz; scaling its distance from 1 with
+// the sample period keeps that response (a cutoff of about 7.6 Hz) at every
+// host rate and reproduces 0.999 exactly at 48 kHz.
+static const float DC_BLOCKER_POLE_RATE = 48.0f;
+
+inline float dc_blocker_pole(float sampleTime)
+{
+    if (!(sampleTime > 0.0f) || !isfinite(sampleTime))
+        return 0.999f;
+    return fmaxf(0.0f, 1.0f - DC_BLOCKER_POLE_RATE * sampleTime);
+}
+
+// DC blocker: 1-pole highpass filter; see dc_blocker_pole() for its cutoff.
 struct DCBlocker
 {
     float prevInput = 0.0f;

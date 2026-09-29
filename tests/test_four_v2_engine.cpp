@@ -387,6 +387,41 @@ TEST(interleaved_lane_states_match_separately_processed_reference_states)
     }
 }
 
+TEST(dc_blocker_pole_matches_the_48k_reference_exactly)
+{
+    ASSERT(four_v2::dc_blocker_pole(1.f / 48000.f) == 0.999f);
+    ASSERT(four_v2::dc_blocker_pole(0.f) == 0.999f);
+    ASSERT(four_v2::dc_blocker_pole(NAN) == 0.999f);
+    ASSERT(four_v2::dc_blocker_pole(1.f) == 0.f);
+}
+
+static float low_bass_amplitude(float sampleRate)
+{
+    four_v2::EngineParams params = sine_params();
+    params.baseFreq = 20.f;
+    four_v2::EngineState state;
+    const float sampleTime = 1.f / sampleRate;
+    const int total = (int)(3.f * sampleRate);
+    const int settled = total - (int)sampleRate;
+    float peak = 0.f;
+    for (int n = 0; n < total; ++n)
+    {
+        const float output = four_v2::engine_process(state, params, sampleTime);
+        if (n >= settled)
+            peak = fmaxf(peak, fabsf(output));
+    }
+    return peak;
+}
+
+TEST(bass_response_is_independent_of_sample_rate)
+{
+    const float reference = low_bass_amplitude(48000.f);
+    ASSERT_NEAR(reference, 0.9346f, 0.002f);
+    const float rates[] = {44100.f, 96000.f, 192000.f};
+    for (float rate : rates)
+        ASSERT_NEAR(low_bass_amplitude(rate), reference, 0.002f);
+}
+
 TEST(reset_clears_operator_and_filter_state)
 {
     four_v2::EngineState state;
@@ -412,6 +447,8 @@ int main()
     run_pm_depth_scales_routed_inter_operator_pm_after_source_output();
     run_pm_depth_scales_self_feedback();
     run_self_feedback_is_independent_of_operator_output();
+    run_dc_blocker_pole_matches_the_48k_reference_exactly();
+    run_bass_response_is_independent_of_sample_rate();
     run_pm_depth_does_not_scale_carrier_amplitude();
     run_pm_depth_does_not_scale_external_pm();
     run_over_detector_holds_for_250_ms();
