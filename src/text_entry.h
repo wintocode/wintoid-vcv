@@ -2,6 +2,7 @@
 
 #include <cctype>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <string>
 
@@ -40,6 +41,20 @@ inline std::string lower_trimmed(const char* p)
            && std::isspace(static_cast<unsigned char>(rest.back())))
         rest.pop_back();
     return rest;
+}
+
+// Frequency text for a parameter field. Rack pre-fills the field with this
+// string, so it must survive being typed back: five significant figures keep
+// the round trip within 0.1 cent (a one-decimal "1.0 kHz" for 1049 Hz would
+// retune by 83 cents).
+inline std::string format_frequency_hz(float hz)
+{
+    char buffer[32];
+    if (fabsf(hz) >= 1000.f)
+        snprintf(buffer, sizeof(buffer), "%.5g kHz", (double)(hz / 1000.f));
+    else
+        snprintf(buffer, sizeof(buffer), "%.5g Hz", (double)hz);
+    return std::string(buffer);
 }
 
 // "440", "440 Hz", "2.5k", "2.00 kHz" (units case-insensitive) -> hertz.

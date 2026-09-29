@@ -26,10 +26,7 @@ struct VortexV2CutoffParamQuantity : ParamQuantity {
     }
 
     std::string getDisplayValueString() override {
-        const float hz = getDisplayValue();
-        if (hz >= 1000.f)
-            return string::f("%.2f kHz", hz / 1000.f);
-        return string::f("%.1f Hz", hz);
+        return wintoid::text_entry::format_frequency_hz(getDisplayValue());
     }
 
     json_t* toJson() override {

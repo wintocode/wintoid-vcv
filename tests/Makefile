@@ -39,7 +39,7 @@ test_polyphony: test_polyphony.cpp ../src/polyphony.h
 test_ui_geometry: test_ui_geometry.cpp ../src/ui_geometry.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
-test_text_entry: test_text_entry.cpp ../src/text_entry.h ../src/FourV2/model.h ../src/Four/dsp.h
+test_text_entry: test_text_entry.cpp ../src/text_entry.h ../src/FourV2/model.h ../src/Four/dsp.h ../src/VortexV2/dsp.h ../src/Vortex/dsp.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
 test_panel_geometry:

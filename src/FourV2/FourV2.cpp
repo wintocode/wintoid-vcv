@@ -48,7 +48,12 @@ struct CoarseParamQuantity : ParamQuantity {
         return module ? module->params[fineParamId].getValue() : 0.f;
     }
 
+    // The panel display keeps the compact frequency_label(); the editable
+    // text needs full precision so resubmitting it does not retune.
     std::string getDisplayValueString() override {
+        if (mode() == four_v2::FIXED_MODE)
+            return wintoid::text_entry::format_frequency_hz(
+                four_v2::fixed_frequency(getValue(), fine()));
         return four_v2::frequency_label(getValue(), mode(), fine());
     }
 

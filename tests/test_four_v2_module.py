@@ -309,6 +309,7 @@ class FourV2ModuleContractTest(unittest.TestCase):
         self.assertIn("int fineParamId = 0", source)
         self.assertIn("module->params[fineParamId].getValue()", source)
         self.assertIn("frequency_label(getValue(), mode(), fine())", source)
+        self.assertIn("text_entry::format_frequency_hz(", source)
         self.assertIn("void setDisplayValueString(std::string s) override", source)
         self.assertIn("four_v2::coarse_from_fixed_frequency(hz, fine())", source)
         self.assertIn("four_v2::coarse_from_ratio(ratio)", source)

@@ -15,10 +15,7 @@ struct CutoffParamQuantity : ParamQuantity {
     }
 
     std::string getDisplayValueString() override {
-        float hz = getValue();
-        if (hz >= 1000.f)
-            return string::f("%.2f kHz", hz / 1000.f);
-        return string::f("%.1f Hz", hz);
+        return wintoid::text_entry::format_frequency_hz(getValue());
     }
 };
 

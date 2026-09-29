@@ -29,12 +29,9 @@ struct CoarseParamQuantity : ParamQuantity {
     std::string getDisplayValueString() override {
         float val = getValue();
         if (module) {
-            if (fixedMode()) {
-                float hz = four::coarse_fixed_from_param(val);
-                if (hz >= 1000.f)
-                    return string::f("%.1f kHz", hz / 1000.f);
-                return string::f("%.1f Hz", hz);
-            }
+            if (fixedMode())
+                return wintoid::text_entry::format_frequency_hz(
+                    four::coarse_fixed_from_param(val));
         }
         int idx = (int)roundf(val);
         float ratio = four::coarse_ratio_from_index(idx);
