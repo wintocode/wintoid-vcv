@@ -167,11 +167,12 @@ inline float process_branch(BranchState& branch,
                             float signal,
                             float sampleRate,
                             float cutoff,
-                            float damping,
-                            bool reuseCoefficients = true)
+                            float damping)
 {
+    // Configuration is a pure function of these inputs, so reusing the last
+    // coefficients on an exact match is output-identical to reconfiguring.
     const bool coefficientsMatch =
-        reuseCoefficients && branch.configuredMode == (int)mode &&
+        branch.configuredMode == (int)mode &&
         branch.configuredSampleRate == sampleRate &&
         branch.configuredCutoff == cutoff &&
         branch.configuredDamping == damping;

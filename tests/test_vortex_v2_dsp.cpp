@@ -245,6 +245,29 @@ TEST(cached_branches_follow_audio_rate_cutoff_and_resonance_changes)
     }
 }
 
+TEST(cached_branches_match_reconfiguring_for_held_and_stepped_controls)
+{
+    for (int output = 0; output < vortex_v2::OUTPUT_COUNT; ++output) {
+        const vortex_v2::OutputMode mode = vortex_v2::OUTPUT_MODES[output];
+        vortex_v2::BranchState actual;
+        vortex::Filter1 referenceF1;
+        vortex::Filter2 referenceA;
+        vortex::Filter2 referenceB;
+        for (int sample = 0; sample < 1024; ++sample) {
+            // Held for 64-sample runs, as with a constant CV, then stepped.
+            const int run = sample / 64;
+            const float signal = sinf(0.013f * sample) * 0.8f;
+            const float cutoff = 150.f + (run % 7) * 900.f;
+            const float damping = 0.05f + (run % 5) * 0.12f;
+            const float expected = reference_branch(referenceF1, referenceA,
+                referenceB, (int)mode, signal, 48000.f, cutoff, damping);
+            const float received = vortex_v2::process_branch(actual, mode,
+                signal, 48000.f, cutoff, damping);
+            ASSERT_NEAR(received, expected, 0.f);
+        }
+    }
+}
+
 TEST(all_valid_branches_remain_finite)
 {
     vortex_v2::VoiceState voice;
@@ -307,6 +330,7 @@ int main()
     run_voice_state_reset_clears_all_twelve_branches();
     run_branches_remain_independent_when_interleaved();
     run_cached_branches_follow_audio_rate_cutoff_and_resonance_changes();
+    run_cached_branches_match_reconfiguring_for_held_and_stepped_controls();
     run_all_valid_branches_remain_finite();
     run_branch_recovers_after_single_nan_sample();
     run_drive_saturate_preserves_v1_curve_below_the_bound();
