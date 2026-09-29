@@ -4,6 +4,21 @@ Date: 2026-08-29
 
 Status: approved in conversation; awaiting written-spec review
 
+## Post-release decisions (2026-09-29)
+
+The 2026-09-29 code review found two places where the shipped behaviour
+differs from this design. Both were resolved by documenting the shipped
+behaviour, not changing the DSP, so saved FourV2 patches keep their sound.
+The original text below is kept as a record and marked where superseded.
+
+- **D1 — Self-feedback is independent of Output.** An operator's Output
+  scales its outgoing audio and routed modulation, but not its own Feedback,
+  which uses the unscaled waveform. Changing Output therefore does not change
+  that operator's feedback timbre. PM Depth still scales self-feedback.
+- **D2 — Ratio zones round to the nearest position.** The 13 interior ratios
+  each span one step of Coarse travel; the end ratios `4:1` and `1:8` span
+  half a step each. Zones are not equal-width.
+
 ## Purpose
 
 FourV2 is a new four-operator phase-modulation oscillator for VCV Rack. It preserves the useful synthesis engine of Four while replacing controls and panel organisation that are confusing in VCV or cannot be represented faithfully by 4ms MetaModule.
@@ -89,6 +104,8 @@ Each of the four operator sections contains the same controls in the same positi
 
 `OUTPUT` replaces the ambiguous `LEVEL` panel label. For a carrier it controls audible mix level; for a modulator it controls modulation depth; for an operator with both roles it controls both. FourV2 does not split carrier volume and modulation level into separate controls.
 
+> **Superseded (D1, 2026-09-29):** Output controls every *outgoing* destination; it does not scale the operator's own self-feedback. See [Post-release decisions](#post-release-decisions-2026-09-29).
+
 ### Ratio mode
 
 Ratio mode has 15 evenly sized selection zones. Ratios decrease clockwise, with `4:1` at the counter-clockwise/left end and `1:8` at the clockwise/right end:
@@ -96,6 +113,8 @@ Ratio mode has 15 evenly sized selection zones. Ratios decrease clockwise, with 
 `4:1, 3:1, 2:1, 3:2, 4:3, 1:1, 3:4, 2:3, 1:2, 1:3, 1:4, 1:5, 1:6, 1:7, 1:8`
 
 `1:1` is therefore the sixth position rather than the geometric 12 o'clock position. Equal selection-zone width is more important than centring `1:1`.
+
+> **Superseded (D2, 2026-09-29):** the implementation rounds to the nearest of the 15 positions, so the end zones for `4:1` and `1:8` are half the width of the others. See [Post-release decisions](#post-release-decisions-2026-09-29).
 
 All values use reduced canonical notation. Examples include `1:4`, not `0.25:1`; `3:2`, not `1.5:1`; and `2:3`, not `1:1.5`.
 
@@ -143,6 +162,8 @@ The global section contains:
 - red `OVER` light.
 
 `PM DEPTH` replaces the cryptic `XMod` label. It scales all internally generated phase modulation after each source operator's Output level. Routed inter-operator PM and operator self-feedback are combined first, then multiplied once by PM Depth. PM Depth does not scale carrier audio or External PM.
+
+> **Superseded (D1, 2026-09-29):** only routed PM follows the source operator's Output level; self-feedback is not scaled by Output before PM Depth is applied. See [Post-release decisions](#post-release-decisions-2026-09-29).
 
 ### External PM
 
