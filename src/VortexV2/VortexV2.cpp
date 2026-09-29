@@ -221,17 +221,13 @@ struct VortexV2 : Module {
         for (int lane = 0; lane < channels; ++lane) {
             float signal = readBroadcast(inputs[AUDIO_INPUT], lane) / 5.f;
 
-            float cutoff = vortex_v2::cutoff_param_to_hz(cutoffKnob);
             const float voct = readBroadcast(inputs[VOCT_INPUT], lane)
                 * voctAtten;
-            cutoff = vortex_v2::cutoff_with_voct(cutoff, voct);
-            if (cutoffCvConnected) {
-                const float cutoffCv = readBroadcast(
-                    inputs[CUTOFF_CV_INPUT], lane) * cutoffCvAtten;
-                cutoff *= vortex::voct_to_mult(cutoffCv);
-            }
-            cutoff = clamp(cutoff, vortex_v2::MIN_CUTOFF_HZ,
-                           vortex_v2::MAX_CUTOFF_HZ);
+            const float cutoffCv = cutoffCvConnected
+                ? readBroadcast(inputs[CUTOFF_CV_INPUT], lane) * cutoffCvAtten
+                : 0.f;
+            const float cutoff = vortex_v2::cutoff_with_modulation(
+                vortex_v2::cutoff_param_to_hz(cutoffKnob), voct, cutoffCv);
 
             float damping = baseDamping;
             if (resonanceCvConnected) {

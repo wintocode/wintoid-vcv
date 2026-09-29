@@ -39,6 +39,18 @@ inline float cutoff_with_voct(float cutoff, float voltage)
     return fminf(MAX_CUTOFF_HZ, fmaxf(MIN_CUTOFF_HZ, shifted));
 }
 
+// V/Oct and Cutoff CV are both octave offsets. Sum them before the single
+// range limit so opposing modulation cancels even when either alone would
+// push the cutoff past 20 Hz or 20 kHz.
+inline float cutoff_with_modulation(float cutoff, float voct, float cutoffCv)
+{
+    if (!std::isfinite(voct))
+        voct = 0.0f;
+    if (!std::isfinite(cutoffCv))
+        cutoffCv = 0.0f;
+    return cutoff_with_voct(cutoff, voct + cutoffCv);
+}
+
 enum OutputMode {
     LP6 = 0, LP12, LP24,
     HP6, HP12, HP24,

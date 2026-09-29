@@ -52,6 +52,32 @@ TEST(cutoff_voct_shifts_frequency_by_octaves_and_clamps)
     ASSERT_NEAR(vortex_v2::cutoff_with_voct(30.0f, -1.0f), 20.0f, 0.01f);
 }
 
+TEST(opposing_voct_and_cutoff_cv_cancel_before_clamping)
+{
+    ASSERT_NEAR(vortex_v2::cutoff_with_modulation(1000.0f, 5.0f, -5.0f),
+                1000.0f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_with_modulation(40.0f, -2.0f, 2.0f),
+                40.0f, 0.01f);
+}
+
+TEST(cutoff_modulation_tracks_each_input_and_clamps_the_sum)
+{
+    ASSERT_NEAR(vortex_v2::cutoff_with_modulation(1000.0f, 1.0f, 0.0f),
+                2000.0f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_with_modulation(1000.0f, 0.0f, -1.0f),
+                500.0f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_with_modulation(1000.0f, 1.0f, 1.0f),
+                4000.0f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_with_modulation(1000.0f, 5.0f, 5.0f),
+                20000.0f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_with_modulation(1000.0f, -5.0f, -5.0f),
+                20.0f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_with_modulation(1000.0f, 1000.0f, 1000.0f),
+                20000.0f, 0.01f);
+    ASSERT_NEAR(vortex_v2::cutoff_with_modulation(1000.0f, NAN, 1.0f),
+                2000.0f, 0.01f);
+}
+
 static float reference_branch(vortex::Filter1& f1,
                               vortex::Filter2& f2a,
                               vortex::Filter2& f2b,
@@ -275,6 +301,8 @@ int main()
     run_cutoff_knob_travels_exponentially_across_the_audio_range();
     run_one_khz_sits_at_the_correct_logarithmic_knob_position();
     run_cutoff_voct_shifts_frequency_by_octaves_and_clamps();
+    run_opposing_voct_and_cutoff_cv_cancel_before_clamping();
+    run_cutoff_modulation_tracks_each_input_and_clamps_the_sum();
     run_each_output_matches_the_equivalent_vortex_mode();
     run_voice_state_reset_clears_all_twelve_branches();
     run_branches_remain_independent_when_interleaved();

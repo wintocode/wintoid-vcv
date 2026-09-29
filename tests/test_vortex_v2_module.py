@@ -168,7 +168,7 @@ class VortexV2ModuleContractTest(unittest.TestCase):
             'readBroadcast(inputs[VOCT_INPUT], lane)',
             'params[VOCT_ATTEN_PARAM].getValue()',
             'vortex_v2::cutoff_param_to_hz(cutoffKnob)',
-            'vortex_v2::cutoff_with_voct(cutoff, voct)',
+            'vortex_v2::cutoff_with_modulation(',
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, source)
